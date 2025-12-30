@@ -11,6 +11,7 @@ interface AiOrbProps {
 
 const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLanguage = 'en-IN' }: AiOrbProps) => {
   const [isActive, setIsActive] = useState(false);
+  const [continuousMode, setContinuousMode] = useState(true); // Auto-listen after speaking
   const { isListening, transcript, detectedLanguage, startListening, stopListening, resetTranscript, isSupported: speechSupported } = useSpeechRecognition();
   const { isSpeaking, speak, stop: stopSpeaking, isSupported: ttsSupported } = useTextToSpeech();
   
@@ -18,6 +19,7 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
   const autoSendTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastTranscriptRef = useRef<string>('');
   const hasSpokenRef = useRef<boolean>(false);
+  const wasSpeakingRef = useRef<boolean>(false);
 
   // Clear timer on unmount
   useEffect(() => {
@@ -63,6 +65,31 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
       hasSpokenRef.current = false;
     }
   }, [responseText, isProcessing, speak, ttsSupported, responseLanguage]);
+
+  // Continuous conversation: auto-start listening when speaking ends
+  useEffect(() => {
+    // Track when speaking starts
+    if (isSpeaking) {
+      wasSpeakingRef.current = true;
+    }
+    
+    // When speaking ends and we were speaking, auto-start listening
+    if (!isSpeaking && wasSpeakingRef.current && continuousMode && speechSupported && !isProcessing) {
+      wasSpeakingRef.current = false;
+      // Small delay before starting to listen (gives audio time to fully stop)
+      const timer = setTimeout(async () => {
+        if (!isListening && !isProcessing) {
+          try {
+            await startListening();
+            setIsActive(true);
+          } catch (e) {
+            console.error('Failed to auto-start listening:', e);
+          }
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isSpeaking, continuousMode, speechSupported, isProcessing, isListening, startListening]);
 
   const handleOrbClick = async () => {
     if (isSpeaking) {
