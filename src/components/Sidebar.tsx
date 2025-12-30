@@ -4,9 +4,11 @@ import {
   Users, 
   Calculator, 
   LogIn,
-  X
+  X,
+  Home
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Link, useLocation } from 'react-router-dom';
 
 interface SidebarItemProps {
   icon: React.ReactNode;
@@ -14,6 +16,7 @@ interface SidebarItemProps {
   sublabel?: string;
   isActive?: boolean;
   onClick?: () => void;
+  href?: string;
 }
 
 const SidebarItem = ({ 
@@ -21,21 +24,41 @@ const SidebarItem = ({
   label, 
   sublabel, 
   isActive, 
-  onClick
-}: SidebarItemProps) => (
-  <button
-    onClick={onClick}
-    className={`sidebar-item w-full ${isActive ? 'sidebar-item-active' : ''}`}
-  >
-    <span className="text-muted-foreground">{icon}</span>
-    <div className="flex-1 text-left">
-      <span className="text-sm font-medium">{label}</span>
-      {sublabel && (
-        <p className="text-xs text-muted-foreground">{sublabel}</p>
-      )}
-    </div>
-  </button>
-);
+  onClick,
+  href
+}: SidebarItemProps) => {
+  const content = (
+    <>
+      <span className="text-muted-foreground">{icon}</span>
+      <div className="flex-1 text-left">
+        <span className="text-sm font-medium">{label}</span>
+        {sublabel && (
+          <p className="text-xs text-muted-foreground">{sublabel}</p>
+        )}
+      </div>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        to={href}
+        className={`sidebar-item w-full ${isActive ? 'sidebar-item-active' : ''}`}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button
+      onClick={onClick}
+      className={`sidebar-item w-full ${isActive ? 'sidebar-item-active' : ''}`}
+    >
+      {content}
+    </button>
+  );
+};
 
 interface SidebarProps {
   onLoginClick?: () => void;
@@ -44,12 +67,15 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ onLoginClick, isOpen, onClose }: SidebarProps) => {
-  const legalCategories = [
-    { label: 'Legal Intelligence', icon: <Sparkles size={18} /> },
-  ];
+  const location = useLocation();
+  const currentPath = location.pathname;
 
   const handleLoginClick = () => {
     onLoginClick?.();
+    onClose?.();
+  };
+
+  const handleNavClick = () => {
     onClose?.();
   };
 
@@ -80,39 +106,60 @@ const Sidebar = ({ onLoginClick, isOpen, onClose }: SidebarProps) => {
 
         {/* Logo */}
         <div className="p-4 border-b border-sidebar-border">
-          <h1 className="font-serif text-xl font-bold text-foreground">LegalCareAI</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Legal Intelligence</p>
+          <Link to="/" onClick={handleNavClick}>
+            <h1 className="font-serif text-xl font-bold text-foreground">LegalCareAI</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Legal Intelligence</p>
+          </Link>
         </div>
 
         {/* Navigation */}
         <nav className="flex-1 p-3 overflow-y-auto">
-          <p className="text-xs font-medium text-muted-foreground px-3 mb-2">CATEGORIES</p>
+          <p className="text-xs font-medium text-muted-foreground px-3 mb-2">MAIN</p>
           
           <div className="space-y-0.5">
-            {legalCategories.map((item) => (
-              <SidebarItem
-                key={item.label}
-                icon={item.icon}
-                label={item.label}
-              />
-            ))}
+            <SidebarItem
+              icon={<Home size={18} />}
+              label="AI Assistant"
+              sublabel="Ask legal questions"
+              href="/"
+              isActive={currentPath === '/'}
+              onClick={handleNavClick}
+            />
+            <SidebarItem
+              icon={<Sparkles size={18} />}
+              label="Legal Intelligence"
+              href="/"
+              isActive={false}
+              onClick={handleNavClick}
+            />
           </div>
 
-          <div className="mt-4 space-y-0.5">
+          <p className="text-xs font-medium text-muted-foreground px-3 mb-2 mt-6">SERVICES</p>
+
+          <div className="space-y-0.5">
             <SidebarItem
               icon={<FileText size={18} />}
               label="Documents"
               sublabel="100+ templates"
+              href="/documents"
+              isActive={currentPath === '/documents'}
+              onClick={handleNavClick}
             />
             <SidebarItem
               icon={<Users size={18} />}
               label="Lawyers"
               sublabel="Verified directory"
+              href="/lawyers"
+              isActive={currentPath === '/lawyers'}
+              onClick={handleNavClick}
             />
             <SidebarItem
               icon={<Calculator size={18} />}
               label="Tax Services"
               sublabel="Comprehensive solutions"
+              href="/tax-services"
+              isActive={currentPath === '/tax-services'}
+              onClick={handleNavClick}
             />
           </div>
 
