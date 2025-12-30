@@ -1,11 +1,8 @@
 import { 
-  Sparkles, 
   FileText, 
   Users, 
   Calculator, 
   Home,
-  Plus,
-  MessageSquare,
   Settings
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
@@ -23,7 +20,6 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
 
 const AppSidebar = () => {
   const location = useLocation();
@@ -33,7 +29,6 @@ const AppSidebar = () => {
 
   const mainItems = [
     { title: 'AI Assistant', icon: Home, href: '/', sublabel: 'Ask legal questions' },
-    { title: 'Legal Intelligence', icon: Sparkles, href: '/', sublabel: '' },
   ];
 
   const serviceItems = [
@@ -54,42 +49,40 @@ const AppSidebar = () => {
           )}
           <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
         </div>
-        
-        {/* New Chat Button */}
-        <Button 
-          variant="outline" 
-          className={`mt-3 w-full justify-start gap-2 bg-sidebar-accent border-sidebar-border hover:bg-sidebar-accent/80 ${isCollapsed ? 'px-2' : ''}`}
-        >
-          <Plus size={18} />
-          {!isCollapsed && <span>New Chat</span>}
-        </Button>
       </SidebarHeader>
 
       <SidebarContent className="px-2">
-        {/* Recent Chats (placeholder) */}
+        {/* Main Navigation */}
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs text-muted-foreground px-2">
-            {!isCollapsed && 'TODAY'}
+            {!isCollapsed && 'MAIN'}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton 
-                  asChild 
-                  isActive={currentPath === '/'}
-                  className="hover:bg-sidebar-accent"
-                >
-                  <Link to="/" className="flex items-center gap-3">
-                    <MessageSquare size={18} className="text-muted-foreground" />
-                    {!isCollapsed && <span className="truncate text-sm">New conversation</span>}
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {mainItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={currentPath === item.href}
+                    className="hover:bg-sidebar-accent"
+                  >
+                    <Link to={item.href} className="flex items-center gap-3">
+                      <item.icon size={18} className="text-muted-foreground" />
+                      {!isCollapsed && (
+                        <div className="flex flex-col">
+                          <span className="text-sm">{item.title}</span>
+                          {item.sublabel && (
+                            <span className="text-xs text-muted-foreground">{item.sublabel}</span>
+                          )}
+                        </div>
+                      )}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        {/* Main Navigation */}
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs text-muted-foreground px-2">
             {!isCollapsed && 'MAIN'}

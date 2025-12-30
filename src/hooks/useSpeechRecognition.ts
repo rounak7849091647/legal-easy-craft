@@ -123,8 +123,8 @@ export const useSpeechRecognition = (): SpeechRecognitionHook => {
     const recognition = recognitionRef.current;
     recognition.continuous = true;
     recognition.interimResults = true;
-    // Use a broad language setting that works with multiple Indian languages
-    recognition.lang = 'hi-IN'; // Start with Hindi which works well for multiple Indian languages
+    // Use English as primary language
+    recognition.lang = 'en-US';
 
     recognition.onstart = () => {
       setIsListening(true);
