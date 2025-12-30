@@ -140,26 +140,22 @@ export const useSpeechRecognition = (): SpeechRecognitionHook => {
     };
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let finalTranscript = '';
-      let interimTranscript = '';
+      let fullTranscript = '';
 
-      for (let i = event.resultIndex; i < event.results.length; i++) {
+      // Build complete transcript from all results (not just new ones)
+      for (let i = 0; i < event.results.length; i++) {
         const result = event.results[i];
-        if (result.isFinal) {
-          finalTranscript += result[0].transcript;
-        } else {
-          interimTranscript += result[0].transcript;
-        }
+        fullTranscript += result[0].transcript;
       }
 
-      const newTranscript = finalTranscript + interimTranscript;
-      if (newTranscript) {
+      if (fullTranscript) {
         // Detect language from the transcript
-        const detected = detectIndianLanguage(newTranscript);
+        const detected = detectIndianLanguage(fullTranscript);
         setDetectedLanguage(detected);
       }
 
-      setTranscript(prev => prev + finalTranscript + interimTranscript);
+      // Replace entire transcript instead of appending (prevents duplicates)
+      setTranscript(fullTranscript);
     };
 
     return () => {

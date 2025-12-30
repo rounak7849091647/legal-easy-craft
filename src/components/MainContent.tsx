@@ -55,43 +55,53 @@ const MainContent = ({ onLoginClick, isMobile = false }: MainContentProps) => {
   const hasMessages = messages.length > 0;
 
   return (
-    <main className="flex-1 relative overflow-hidden flex flex-col">
-      {/* Background image with overlay */}
+    <main className="flex-1 relative overflow-hidden flex flex-col h-full">
+      {/* Fixed Background image with overlay */}
       <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${supremeCourtBg})` }}
       >
         <div className="absolute inset-0 bg-background/70 backdrop-blur-[2px]" />
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 md:px-12 lg:px-16">
+      {/* Content - ChatGPT style layout */}
+      <div className="relative z-10 flex-1 flex flex-col h-full">
         {hasMessages ? (
-          // Chat mode
-          <div className="flex-1 w-full max-w-4xl flex flex-col">
-            <ChatMessages messages={messages} isLoading={isLoading} />
-            <div className="py-4 pb-8">
-              <ChatInput
-                onSend={handleSendMessage}
-                isLoading={isLoading}
-                isSpeaking={isSpeaking}
-              />
+          // Chat mode - messages scroll, input fixed at bottom
+          <div className="flex-1 flex flex-col h-full">
+            <div className="flex-1 overflow-y-auto">
+              <div className="max-w-3xl mx-auto w-full px-4">
+                <ChatMessages messages={messages} isLoading={isLoading} />
+              </div>
+            </div>
+            <div className="sticky bottom-0 w-full bg-gradient-to-t from-background via-background to-transparent pt-6 pb-4">
+              <div className="max-w-3xl mx-auto w-full px-4">
+                <ChatInput
+                  onSend={handleSendMessage}
+                  isLoading={isLoading}
+                  isSpeaking={isSpeaking}
+                />
+              </div>
             </div>
           </div>
         ) : (
-          // Initial orb mode
-          <div className="flex flex-col items-center gap-8 md:gap-10 animate-fade-in w-full max-w-2xl">
-            <AiOrb 
-              onTranscript={handleVoiceTranscript}
-              isProcessing={isLoading}
-              responseText={lastVoiceResponse}
-              responseLanguage={lastResponseLanguage}
-            />
-            <ChatInput
-              onSend={handleSendMessage}
-              isLoading={isLoading}
-              isSpeaking={isSpeaking}
-            />
+          // Initial orb mode - centered
+          <div className="flex-1 flex flex-col items-center justify-center px-4">
+            <div className="flex flex-col items-center gap-8 md:gap-10 animate-fade-in w-full max-w-2xl">
+              <AiOrb 
+                onTranscript={handleVoiceTranscript}
+                isProcessing={isLoading}
+                responseText={lastVoiceResponse}
+                responseLanguage={lastResponseLanguage}
+              />
+              <div className="w-full max-w-3xl">
+                <ChatInput
+                  onSend={handleSendMessage}
+                  isLoading={isLoading}
+                  isSpeaking={isSpeaking}
+                />
+              </div>
+            </div>
           </div>
         )}
       </div>
