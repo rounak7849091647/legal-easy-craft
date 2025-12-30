@@ -1,14 +1,23 @@
 import { useState, useEffect } from 'react';
-import { Paperclip, Send, Mic } from 'lucide-react';
+import { Paperclip, Send, Mic, Volume2, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 
 interface ChatInputProps {
   onSend: (message: string) => void;
   isLoading?: boolean;
+  canSpeak?: boolean;
+  isSpeaking?: boolean;
+  onToggleSpeak?: () => void;
 }
 
-const ChatInput = ({ onSend, isLoading = false }: ChatInputProps) => {
+const ChatInput = ({
+  onSend,
+  isLoading = false,
+  canSpeak = false,
+  isSpeaking = false,
+  onToggleSpeak,
+}: ChatInputProps) => {
   const [message, setMessage] = useState('');
   const { isListening, transcript, startListening, stopListening, resetTranscript, isSupported } = useSpeechRecognition();
 
@@ -35,27 +44,57 @@ const ChatInput = ({ onSend, isLoading = false }: ChatInputProps) => {
     }
   };
 
-  const handleMicClick = () => {
+  const handleMicClick = async () => {
     if (isListening) {
       stopListening();
     } else {
       resetTranscript();
       setMessage('');
-      startListening();
+      try {
+        await startListening();
+      } catch (error) {
+        console.error('Failed to start listening:', error);
+      }
     }
   };
+
+  const placeholder = isSpeaking
+    ? 'CARE is speaking...'
+    : isListening
+    ? 'Listening...'
+    : 'Type your legal question...';
 
   return (
     <div className="w-full max-w-lg mx-auto px-2 sm:px-0">
       <form onSubmit={handleSubmit} className="relative">
+        {canSpeak && onToggleSpeak && (
+          <div className="absolute left-2 top-1/2 -translate-y-1/2 z-10">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={onToggleSpeak}
+              className={`h-8 w-8 rounded-full ${
+                isSpeaking
+                  ? 'text-white bg-white/20 hover:bg-white/25'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+              aria-label={isSpeaking ? 'Stop speaking' : 'Play voice reply'}
+            >
+              {isSpeaking ? <Square size={16} /> : <Volume2 size={16} />}
+            </Button>
+          </div>
+        )}
+
         <input
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder={isListening ? "Listening..." : "Type your legal question..."}
+          placeholder={placeholder}
           disabled={isLoading}
-          className="w-full px-4 sm:px-5 py-3 sm:py-3.5 pr-28 sm:pr-32 rounded-full bg-white/10 border border-white/30 text-foreground placeholder:text-white/50 focus:outline-none focus:border-white/60 focus:ring-2 focus:ring-white/20 transition-all disabled:opacity-50 text-sm sm:text-base"
+          className={`w-full ${canSpeak ? 'pl-12 sm:pl-14' : 'px-4 sm:px-5'} py-3 sm:py-3.5 pr-28 sm:pr-32 rounded-full bg-white/10 border border-white/30 text-foreground placeholder:text-white/50 focus:outline-none focus:border-white/60 focus:ring-2 focus:ring-white/20 transition-all disabled:opacity-50 text-sm sm:text-base`}
         />
+
         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 sm:gap-1">
           {isSupported && (
             <Button
@@ -64,6 +103,7 @@ const ChatInput = ({ onSend, isLoading = false }: ChatInputProps) => {
               size="icon"
               onClick={handleMicClick}
               className={`h-7 w-7 sm:h-8 sm:w-8 ${isListening ? 'text-white animate-pulse bg-white/20' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+              aria-label={isListening ? 'Stop listening' : 'Start voice input'}
             >
               <Mic size={16} className="sm:hidden" />
               <Mic size={18} className="hidden sm:block" />
@@ -74,6 +114,7 @@ const ChatInput = ({ onSend, isLoading = false }: ChatInputProps) => {
             variant="ghost"
             size="icon"
             className="h-7 w-7 sm:h-8 sm:w-8 text-white/60 hover:text-white hover:bg-white/10 hidden sm:flex"
+            aria-label="Attach file"
           >
             <Paperclip size={18} />
           </Button>
@@ -82,6 +123,7 @@ const ChatInput = ({ onSend, isLoading = false }: ChatInputProps) => {
             size="icon"
             disabled={!message.trim() || isLoading}
             className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white text-black hover:bg-white/90 disabled:opacity-50"
+            aria-label="Send message"
           >
             <Send size={14} className="sm:hidden" />
             <Send size={16} className="hidden sm:block" />
