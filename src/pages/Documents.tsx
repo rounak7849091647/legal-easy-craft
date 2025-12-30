@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Search, Filter, Plus, FileText, Eye, Download, Star, X, Copy, Check } from 'lucide-react';
+import { Search, FileText, Eye, Download, Star, Copy, Check, Briefcase, Home, Users, Scale, Building, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -23,54 +23,42 @@ const documents: DocumentTemplate[] = [
     name: 'House Rental Agreement', 
     downloads: '12.5k', 
     rating: 4.8, 
-    category: 'Rental Agreements',
-    description: 'Standard house rental agreement template for residential properties in India.',
+    category: 'Property',
+    description: 'Standard house rental agreement for residential properties.',
     content: `HOUSE RENTAL AGREEMENT
 
-This Rental Agreement is made and executed on this _____ day of __________, 20__
+This Rental Agreement is made on _____ day of __________, 20__
 
 BETWEEN
 
-[LANDLORD NAME], aged about ____ years, S/o / D/o _________________, residing at ___________________________ (hereinafter called the "LANDLORD/OWNER" which expression shall mean and include his/her heirs, executors, legal representatives and assigns) of the FIRST PART
+[LANDLORD NAME], residing at ___________________________ (hereinafter called the "LANDLORD")
 
 AND
 
-[TENANT NAME], aged about ____ years, S/o / D/o _________________, residing at ___________________________ (hereinafter called the "TENANT" which expression shall mean and include his/her heirs, executors, legal representatives and assigns) of the SECOND PART
+[TENANT NAME], residing at ___________________________ (hereinafter called the "TENANT")
 
-WHEREAS the Owner is the absolute owner of the house/flat/premises situated at _____________________________ (hereinafter referred to as the "Said Premises")
+TERMS AND CONDITIONS:
 
-AND WHEREAS the Tenant has approached the Owner to take the Said Premises on rent for residential purposes and the Owner has agreed to let out the same to the Tenant on the following terms and conditions:
+1. TERM: The tenancy shall be for _____ months from __________ to __________.
 
-1. TERM OF TENANCY: The tenancy shall be for a period of _____ months/years commencing from __________ to __________.
+2. RENT: Monthly rent of Rs. ________/- payable by the 5th of each month.
 
-2. MONTHLY RENT: The Tenant shall pay a monthly rent of Rs. ________/- (Rupees __________________ only) payable on or before the 5th day of every English calendar month.
+3. SECURITY DEPOSIT: Rs. ________/- refundable upon vacating.
 
-3. SECURITY DEPOSIT: The Tenant has paid a sum of Rs. ________/- (Rupees __________________ only) as security deposit, refundable at the time of vacating the premises after deducting any dues.
+4. MAINTENANCE: Rs. ________/- per month separately.
 
-4. MAINTENANCE CHARGES: The Tenant shall pay maintenance charges of Rs. ________/- per month separately.
+5. USE: For residential purposes only. No subletting allowed.
 
-5. USE OF PREMISES: The Said Premises shall be used for residential purposes only.
+6. UTILITIES: Electricity and water charges borne by Tenant.
 
-6. SUBLETTING: The Tenant shall not sublet, assign or transfer the tenancy or any part thereof.
+7. NOTICE: _____ month(s) prior written notice for termination.
 
-7. UTILITIES: Electricity, water charges and other utilities shall be borne by the Tenant.
-
-8. REPAIRS: Minor repairs shall be borne by the Tenant. Major structural repairs shall be borne by the Owner.
-
-9. TERMINATION: Either party may terminate this agreement by giving _____ month(s) prior written notice.
-
-10. POSSESSION: Upon termination, the Tenant shall hand over vacant possession of the premises in the same condition as it was at the time of renting.
-
-IN WITNESS WHEREOF, the parties have set their hands on this agreement on the day, month and year first above written.
-
-LANDLORD/OWNER                           TENANT
-Signature: ____________               Signature: ____________
-Name: ____________                    Name: ____________
-Date: ____________                    Date: ____________
+LANDLORD                           TENANT
+Signature: ____________          Signature: ____________
+Date: ____________               Date: ____________
 
 WITNESSES:
-1. Name: ____________  Signature: ____________
-2. Name: ____________  Signature: ____________`
+1. ____________  2. ____________`
   },
   { 
     id: 2, 
@@ -78,97 +66,66 @@ WITNESSES:
     downloads: '8.2k', 
     rating: 4.9, 
     category: 'Employment',
-    description: 'Comprehensive employment contract template for hiring employees in India.',
+    description: 'Comprehensive employment contract for hiring employees.',
     content: `EMPLOYMENT CONTRACT
 
-This Employment Contract is entered into as of __________, 20__
+Date: __________, 20__
 
 BETWEEN
-
-[COMPANY NAME], a company incorporated under the laws of India, having its registered office at ___________________________ (hereinafter referred to as the "EMPLOYER")
-
+[COMPANY NAME] ("EMPLOYER")
 AND
+[EMPLOYEE NAME] ("EMPLOYEE")
 
-[EMPLOYEE NAME], aged ____ years, residing at ___________________________ (hereinafter referred to as the "EMPLOYEE")
+1. POSITION: [JOB TITLE]
+2. START DATE: __________
+3. COMPENSATION:
+   - Basic: Rs. ________/- per month
+   - HRA: Rs. ________/- per month
+   - Total CTC: Rs. ________/- per annum
 
-1. POSITION AND DUTIES
-The Employer hereby employs the Employee as [JOB TITLE]. The Employee shall perform all duties as assigned by the Employer and shall report to [REPORTING MANAGER].
+4. WORKING HOURS: _____ AM to _____ PM
+5. PROBATION: _____ months
+6. LEAVE: EL: ____ days, SL: ____ days, CL: ____ days
+7. NOTICE PERIOD: _____ days
 
-2. COMMENCEMENT DATE
-The employment shall commence on __________ and shall continue until terminated as per the terms herein.
-
-3. COMPENSATION
-a) Basic Salary: Rs. ________/- per month
-b) HRA: Rs. ________/- per month
-c) Special Allowance: Rs. ________/- per month
-d) Total CTC: Rs. ________/- per annum
-
-4. WORKING HOURS
-The standard working hours are from _____ AM to _____ PM, Monday to Friday/Saturday.
-
-5. PROBATION PERIOD
-The Employee shall be on probation for a period of _____ months from the date of joining.
-
-6. LEAVE ENTITLEMENT
-a) Earned Leave: ____ days per year
-b) Sick Leave: ____ days per year
-c) Casual Leave: ____ days per year
-
-7. TERMINATION
-Either party may terminate this contract by giving _____ days' written notice.
-
-IN WITNESS WHEREOF, the parties have executed this Employment Contract.
-
-EMPLOYER                                 EMPLOYEE
-Signature: ____________               Signature: ____________
-Name: ____________                    Name: ____________
-Date: ____________                    Date: ____________`
+EMPLOYER                           EMPLOYEE
+Signature: ____________          Signature: ____________`
   },
   { 
     id: 3, 
-    name: 'NDA Agreement', 
+    name: 'Non-Disclosure Agreement', 
     downloads: '15.3k', 
     rating: 4.7, 
     category: 'Business',
-    description: 'Non-Disclosure Agreement for protecting confidential business information.',
-    content: `NON-DISCLOSURE AGREEMENT (NDA)
+    description: 'NDA for protecting confidential business information.',
+    content: `NON-DISCLOSURE AGREEMENT
 
-This Non-Disclosure Agreement is entered into as of __________, 20__
+Date: __________, 20__
 
 BETWEEN
+[DISCLOSING PARTY] AND [RECEIVING PARTY]
 
-[DISCLOSING PARTY NAME] (hereinafter referred to as the "Disclosing Party")
+1. CONFIDENTIAL INFORMATION includes business plans, financial data, trade secrets, and proprietary processes.
 
-AND
+2. OBLIGATIONS: Receiving Party shall maintain strict confidence and not disclose without written consent.
 
-[RECEIVING PARTY NAME] (hereinafter referred to as the "Receiving Party")
+3. TERM: This Agreement remains in effect for _____ years.
 
-1. DEFINITION OF CONFIDENTIAL INFORMATION
-"Confidential Information" means any information disclosed by the Disclosing Party including business plans, financial information, technical data, trade secrets, and proprietary processes.
+4. RETURN: All materials to be returned upon termination.
 
-2. OBLIGATIONS
-The Receiving Party agrees to hold and maintain the Confidential Information in strict confidence and not disclose to any third parties without prior written consent.
-
-3. TERM
-This Agreement shall remain in effect for _____ years from the date of execution.
-
-IN WITNESS WHEREOF, the parties have executed this Agreement.
-
-DISCLOSING PARTY                        RECEIVING PARTY
-Signature: ____________               Signature: ____________
-Name: ____________                    Name: ____________
-Date: ____________                    Date: ____________`
+DISCLOSING PARTY                   RECEIVING PARTY
+Signature: ____________          Signature: ____________`
   },
   { 
     id: 4, 
     name: 'Power of Attorney', 
     downloads: '6.8k', 
     rating: 4.6, 
-    category: 'Family Law',
-    description: 'General Power of Attorney format for authorizing someone to act on your behalf.',
+    category: 'Legal',
+    description: 'General POA for authorizing someone to act on your behalf.',
     content: `GENERAL POWER OF ATTORNEY
 
-I, [PRINCIPAL NAME], do hereby appoint [ATTORNEY NAME] as my true and lawful Attorney to act in my name and on my behalf.
+I, [PRINCIPAL NAME], appoint [ATTORNEY NAME] as my lawful Attorney.
 
 AUTHORITY GRANTED:
 1. Property matters
@@ -176,12 +133,10 @@ AUTHORITY GRANTED:
 3. Legal proceedings
 4. Government matters
 
-This Power of Attorney shall remain in force until revoked by me in writing.
+This remains in force until revoked in writing.
 
-PRINCIPAL                               ATTORNEY
-Signature: ____________               Signature: ____________
-Name: ____________                    Name: ____________
-Date: ____________                    Date: ____________`
+PRINCIPAL                          ATTORNEY
+Signature: ____________          Signature: ____________`
   },
   { 
     id: 5, 
@@ -189,22 +144,18 @@ Date: ____________                    Date: ____________`
     downloads: '9.1k', 
     rating: 4.8, 
     category: 'Property',
-    description: 'Sale deed template for property transfer and registration.',
+    description: 'Sale deed template for property transfer.',
     content: `SALE DEED
 
-This Sale Deed is made on __________, 20__
+Date: __________, 20__
 
-BETWEEN [SELLER NAME] (VENDOR) AND [BUYER NAME] (VENDEE)
-
-The Vendor hereby sells, transfers, and conveys the property described in the Schedule for Rs. ________/-.
+[SELLER] hereby sells and transfers to [BUYER] the property for Rs. ________/-.
 
 SCHEDULE OF PROPERTY:
-[Property details]
+[Address and details]
 
-VENDOR                                   VENDEE
-Signature: ____________               Signature: ____________
-Name: ____________                    Name: ____________
-Date: ____________                    Date: ____________`
+VENDOR                             VENDEE
+Signature: ____________          Signature: ____________`
   },
   { 
     id: 6, 
@@ -212,26 +163,301 @@ Date: ____________                    Date: ____________`
     downloads: '7.4k', 
     rating: 4.5, 
     category: 'Business',
-    description: 'Personal/Business loan agreement template between lender and borrower.',
+    description: 'Loan agreement between lender and borrower.',
     content: `LOAN AGREEMENT
 
-This Loan Agreement is made on __________, 20__
+Date: __________, 20__
 
-BETWEEN [LENDER NAME] AND [BORROWER NAME]
+BETWEEN [LENDER] AND [BORROWER]
+
+1. Loan Amount: Rs. ________/-
+2. Interest: ____% per annum
+3. Repayment: ____ months
+4. EMI: Rs. ________/-
+
+LENDER                             BORROWER
+Signature: ____________          Signature: ____________`
+  },
+  { 
+    id: 7, 
+    name: 'Will/Testament', 
+    downloads: '5.2k', 
+    rating: 4.9, 
+    category: 'Family',
+    description: 'Last will and testament for asset distribution.',
+    content: `LAST WILL AND TESTAMENT
+
+I, [NAME], being of sound mind, declare this my Last Will.
+
+1. I revoke all previous Wills.
+2. EXECUTOR: [NAME]
+3. BEQUESTS:
+   - [Asset 1] to [Beneficiary 1]
+   - [Asset 2] to [Beneficiary 2]
+
+TESTATOR: ____________
+Date: ____________
+
+WITNESSES:
+1. ____________  2. ____________`
+  },
+  { 
+    id: 8, 
+    name: 'Partnership Deed', 
+    downloads: '4.8k', 
+    rating: 4.7, 
+    category: 'Business',
+    description: 'Partnership deed for starting a business partnership.',
+    content: `PARTNERSHIP DEED
+
+Date: __________, 20__
+
+PARTNERS:
+1. [Partner 1] - ___% share
+2. [Partner 2] - ___% share
 
 TERMS:
-1. Loan Amount: Rs. ________/-
-2. Interest Rate: ____% per annum
-3. Repayment Period: ____ months
+1. FIRM NAME: __________
+2. BUSINESS: __________
+3. CAPITAL: Rs. ________/-
+4. PROFIT SHARING: As per ownership
 
-LENDER                                   BORROWER
-Signature: ____________               Signature: ____________
-Name: ____________                    Name: ____________
-Date: ____________                    Date: ____________`
+Partner 1: ____________
+Partner 2: ____________`
+  },
+  { 
+    id: 9, 
+    name: 'Divorce Petition', 
+    downloads: '3.5k', 
+    rating: 4.4, 
+    category: 'Family',
+    description: 'Mutual consent divorce petition format.',
+    content: `PETITION FOR DIVORCE BY MUTUAL CONSENT
+
+IN THE FAMILY COURT AT __________
+
+PETITIONER NO. 1: [HUSBAND]
+PETITIONER NO. 2: [WIFE]
+
+PRAYER: Dissolution of marriage solemnized on __________
+
+GROUNDS: Mutual consent as per Section 13-B of Hindu Marriage Act.
+
+Petitioner 1: ____________
+Petitioner 2: ____________`
+  },
+  { 
+    id: 10, 
+    name: 'Commercial Lease', 
+    downloads: '6.1k', 
+    rating: 4.6, 
+    category: 'Property',
+    description: 'Commercial property lease agreement.',
+    content: `COMMERCIAL LEASE AGREEMENT
+
+Date: __________, 20__
+
+LESSOR: [LANDLORD]
+LESSEE: [TENANT]
+PROPERTY: [ADDRESS]
+
+TERMS:
+1. Period: _____ years
+2. Rent: Rs. ________/- per month
+3. Security: Rs. ________/-
+4. Use: Commercial purposes only
+
+LESSOR: ____________
+LESSEE: ____________`
+  },
+  { 
+    id: 11, 
+    name: 'Service Agreement', 
+    downloads: '8.9k', 
+    rating: 4.8, 
+    category: 'Business',
+    description: 'Service agreement for freelancers and contractors.',
+    content: `SERVICE AGREEMENT
+
+Date: __________, 20__
+
+CLIENT: [NAME]
+SERVICE PROVIDER: [NAME]
+
+SCOPE OF SERVICES:
+[Description of services]
+
+COMPENSATION: Rs. ________/-
+DURATION: __________
+PAYMENT TERMS: __________
+
+CLIENT: ____________
+PROVIDER: ____________`
+  },
+  { 
+    id: 12, 
+    name: 'Affidavit Format', 
+    downloads: '11.2k', 
+    rating: 4.5, 
+    category: 'Legal',
+    description: 'General affidavit format for legal declarations.',
+    content: `AFFIDAVIT
+
+I, [NAME], S/o D/o [PARENT], aged ____, residing at __________, do hereby solemnly affirm and declare:
+
+1. That I am the deponent herein.
+2. That [STATEMENT OF FACTS].
+3. That the above statements are true to my knowledge.
+
+DEPONENT
+
+Verified at __________ on __________
+
+Before me,
+Notary Public`
+  },
+  { 
+    id: 13, 
+    name: 'Indemnity Bond', 
+    downloads: '4.3k', 
+    rating: 4.6, 
+    category: 'Legal',
+    description: 'Indemnity bond for protection against loss.',
+    content: `INDEMNITY BOND
+
+Date: __________, 20__
+
+I, [INDEMNIFIER], agree to indemnify [BENEFICIARY] against all losses arising from __________.
+
+Amount: Rs. ________/-
+
+This bond is binding upon my heirs and successors.
+
+INDEMNIFIER: ____________
+WITNESS: ____________`
+  },
+  { 
+    id: 14, 
+    name: 'Gift Deed', 
+    downloads: '5.7k', 
+    rating: 4.7, 
+    category: 'Property',
+    description: 'Gift deed for transferring property as gift.',
+    content: `GIFT DEED
+
+Date: __________, 20__
+
+DONOR: [NAME]
+DONEE: [NAME]
+
+The Donor gifts the property at [ADDRESS] to the Donee out of natural love and affection.
+
+DONOR: ____________
+DONEE: ____________
+
+WITNESSES:
+1. ____________  2. ____________`
+  },
+  { 
+    id: 15, 
+    name: 'Appointment Letter', 
+    downloads: '7.8k', 
+    rating: 4.8, 
+    category: 'Employment',
+    description: 'Job appointment letter for new employees.',
+    content: `APPOINTMENT LETTER
+
+Date: __________
+
+Dear [EMPLOYEE NAME],
+
+We are pleased to offer you the position of [DESIGNATION] at [COMPANY].
+
+CTC: Rs. ________/- per annum
+Start Date: __________
+Location: __________
+
+Please sign and return the acceptance.
+
+HR Manager
+[COMPANY NAME]`
+  },
+  { 
+    id: 16, 
+    name: 'Termination Letter', 
+    downloads: '3.9k', 
+    rating: 4.3, 
+    category: 'Employment',
+    description: 'Employment termination letter format.',
+    content: `TERMINATION LETTER
+
+Date: __________
+
+To: [EMPLOYEE NAME]
+
+This letter confirms termination of your employment effective __________.
+
+Reason: __________
+
+Final settlement will be processed within 30 days.
+
+HR Manager
+[COMPANY NAME]`
+  },
+  { 
+    id: 17, 
+    name: 'Experience Letter', 
+    downloads: '9.4k', 
+    rating: 4.9, 
+    category: 'Employment',
+    description: 'Work experience certificate format.',
+    content: `EXPERIENCE LETTER
+
+Date: __________
+
+TO WHOM IT MAY CONCERN
+
+This is to certify that [NAME] was employed with [COMPANY] as [DESIGNATION] from __________ to __________.
+
+During this period, their performance was satisfactory.
+
+We wish them success.
+
+HR Manager
+[COMPANY NAME]`
+  },
+  { 
+    id: 18, 
+    name: 'Legal Notice', 
+    downloads: '6.5k', 
+    rating: 4.6, 
+    category: 'Legal',
+    description: 'Legal notice format for disputes.',
+    content: `LEGAL NOTICE
+
+Date: __________
+
+To: [RECIPIENT]
+From: [SENDER] through Advocate
+
+NOTICE is hereby given that:
+
+[Statement of facts and grievance]
+
+You are called upon to [remedy required] within 15 days.
+
+Advocate for Sender`
   },
 ];
 
-const categories = ['All', 'Rental Agreements', 'Employment', 'Business', 'Family Law', 'Property'];
+const categories = [
+  { name: 'All', icon: FileText },
+  { name: 'Property', icon: Home },
+  { name: 'Business', icon: Briefcase },
+  { name: 'Employment', icon: Users },
+  { name: 'Legal', icon: Scale },
+  { name: 'Family', icon: Heart },
+];
 
 const Documents = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -250,10 +476,10 @@ const Documents = () => {
     try {
       await navigator.clipboard.writeText(doc.content);
       setCopiedId(doc.id);
-      toast.success('Document copied to clipboard');
+      toast.success('Copied to clipboard');
       setTimeout(() => setCopiedId(null), 2000);
     } catch {
-      toast.error('Failed to copy document');
+      toast.error('Failed to copy');
     }
   };
 
@@ -267,7 +493,7 @@ const Documents = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast.success('Document downloaded');
+    toast.success('Downloaded');
   };
 
   return (
@@ -277,96 +503,91 @@ const Documents = () => {
         <meta name="description" content="Access 100+ legal document templates. Download rental agreements, employment contracts, NDAs, and more." />
       </Helmet>
 
-      <div className="p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="p-3 sm:p-6 lg:p-8">
         {/* Header */}
-        <div className="text-center mb-6 sm:mb-8">
-          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-white/10 flex items-center justify-center mx-auto mb-3 sm:mb-4">
-            <FileText size={24} className="text-white sm:hidden" />
-            <FileText size={28} className="text-white hidden sm:block" />
-          </div>
+        <div className="mb-4 sm:mb-6">
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-foreground">Legal Documents</h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-1 sm:mt-2">100+ professional legal templates</p>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">{documents.length}+ professional templates</p>
         </div>
 
-        {/* Search and Filters */}
-        <div className="flex flex-col gap-3 mb-4 sm:mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-            <Input
-              placeholder="Search documents..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-white/5 border-white/20 text-foreground text-sm sm:text-base"
-            />
-          </div>
-          
-          {/* Horizontal scrolling category filters */}
-          <div className="relative -mx-3 sm:mx-0">
-            <div className="flex gap-2 overflow-x-auto pb-2 px-3 sm:px-0 scrollbar-hide">
-              {categories.map(cat => (
-                <Button
-                  key={cat}
-                  variant={selectedCategory === cat ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`shrink-0 text-xs sm:text-sm ${selectedCategory === cat 
-                    ? 'bg-white text-black hover:bg-white/90' 
-                    : 'bg-white/5 border-white/20 text-foreground hover:bg-white/10'
-                  }`}
-                >
-                  {cat}
-                </Button>
-              ))}
-            </div>
-          </div>
+        {/* Search */}
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+          <Input
+            placeholder="Search documents..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 bg-white/5 border-white/20 text-foreground text-sm h-10"
+          />
         </div>
 
-        {/* Documents Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        {/* Category Pills */}
+        <div className="flex gap-2 overflow-x-auto pb-3 mb-4 -mx-3 px-3 sm:mx-0 sm:px-0 scrollbar-hide">
+          {categories.map(cat => (
+            <button
+              key={cat.name}
+              onClick={() => setSelectedCategory(cat.name)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium shrink-0 transition-all ${
+                selectedCategory === cat.name 
+                  ? 'bg-white text-black' 
+                  : 'bg-white/10 text-foreground hover:bg-white/20'
+              }`}
+            >
+              <cat.icon size={12} />
+              {cat.name}
+            </button>
+          ))}
+        </div>
+
+        {/* Results Count */}
+        <p className="text-xs text-muted-foreground mb-3">
+          {filteredDocuments.length} document{filteredDocuments.length !== 1 ? 's' : ''} found
+        </p>
+
+        {/* Documents List - Optimized for mobile */}
+        <div className="space-y-2 sm:space-y-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-3">
           {filteredDocuments.map((doc) => (
             <div 
               key={doc.id}
-              className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 hover:bg-white/10 transition-all"
+              className="bg-white/5 border border-white/10 rounded-xl p-3 hover:bg-white/10 transition-all"
             >
-              <div className="flex items-start justify-between mb-2 sm:mb-3">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/10 flex items-center justify-center">
-                  <FileText size={16} className="text-white/70 sm:hidden" />
-                  <FileText size={20} className="text-white/70 hidden sm:block" />
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                  <FileText size={16} className="text-white/70" />
                 </div>
-                <div className="flex items-center gap-1 text-xs sm:text-sm">
-                  <Star size={12} className="text-yellow-500 fill-yellow-500 sm:hidden" />
-                  <Star size={14} className="text-yellow-500 fill-yellow-500 hidden sm:block" />
-                  <span className="text-foreground">{doc.rating}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-medium text-foreground text-sm leading-tight line-clamp-1">{doc.name}</h3>
+                    <div className="flex items-center gap-0.5 shrink-0">
+                      <Star size={10} className="text-yellow-500 fill-yellow-500" />
+                      <span className="text-xs text-foreground">{doc.rating}</span>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{doc.description}</p>
+                  <div className="flex items-center gap-2 mt-1.5 text-[10px] text-muted-foreground">
+                    <span className="bg-white/10 px-1.5 py-0.5 rounded">{doc.category}</span>
+                    <span>{doc.downloads}</span>
+                  </div>
                 </div>
               </div>
               
-              <h3 className="font-medium text-foreground text-sm sm:text-base mb-1 line-clamp-1">{doc.name}</h3>
-              <p className="text-xs text-muted-foreground mb-2 sm:mb-3 line-clamp-2">{doc.description}</p>
-              
-              <div className="flex items-center justify-between text-[10px] sm:text-xs text-muted-foreground mb-3 sm:mb-4">
-                <span className="truncate">{doc.category}</span>
-                <span className="shrink-0 ml-2">{doc.downloads} downloads</span>
-              </div>
-
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-3">
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="flex-1 bg-white/5 border-white/20 text-foreground hover:bg-white/10 text-xs sm:text-sm h-8 sm:h-9"
+                  className="flex-1 bg-white/5 border-white/20 text-foreground hover:bg-white/10 text-xs h-8"
                   onClick={() => setSelectedDocument(doc)}
                 >
-                  <Eye size={12} className="mr-1 sm:hidden" />
-                  <Eye size={14} className="mr-1 hidden sm:block" />
-                  Preview
+                  <Eye size={12} className="mr-1" />
+                  View
                 </Button>
                 <Button 
                   size="sm" 
-                  className="flex-1 bg-white text-black hover:bg-white/90 text-xs sm:text-sm h-8 sm:h-9"
+                  className="flex-1 bg-white text-black hover:bg-white/90 text-xs h-8"
                   onClick={() => handleDownload(doc)}
                 >
-                  <Download size={12} className="mr-1 sm:hidden" />
-                  <Download size={14} className="mr-1 hidden sm:block" />
-                  Download
+                  <Download size={12} className="mr-1" />
+                  Get
                 </Button>
               </div>
             </div>
@@ -374,48 +595,57 @@ const Documents = () => {
         </div>
 
         {filteredDocuments.length === 0 && (
-          <div className="text-center py-8 sm:py-12">
-            <FileText size={36} className="mx-auto text-muted-foreground mb-3 sm:mb-4 sm:hidden" />
-            <FileText size={48} className="mx-auto text-muted-foreground mb-3 sm:mb-4 hidden sm:block" />
-            <p className="text-sm sm:text-base text-muted-foreground">No documents found</p>
+          <div className="text-center py-12">
+            <FileText size={32} className="mx-auto text-muted-foreground mb-3" />
+            <p className="text-sm text-muted-foreground">No documents found</p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-3 bg-white/5 border-white/20"
+              onClick={() => {setSearchQuery(''); setSelectedCategory('All');}}
+            >
+              Clear filters
+            </Button>
           </div>
         )}
       </div>
 
-      {/* Document Preview Dialog - Mobile optimized */}
+      {/* Document Preview Dialog */}
       <Dialog open={!!selectedDocument} onOpenChange={() => setSelectedDocument(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[85vh] bg-background border-white/20 p-3 sm:p-6">
-          <DialogHeader className="space-y-2">
-            <DialogTitle className="text-sm sm:text-base text-foreground pr-8">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] bg-background border-white/20 p-0 gap-0">
+          <DialogHeader className="p-3 sm:p-4 border-b border-white/10">
+            <DialogTitle className="text-sm sm:text-base text-foreground pr-8 line-clamp-1">
               {selectedDocument?.name}
             </DialogTitle>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => selectedDocument && handleCopy(selectedDocument)}
-                className="flex-1 sm:flex-none bg-white/5 border-white/20 text-foreground hover:bg-white/10 text-xs sm:text-sm h-8"
-              >
-                {copiedId === selectedDocument?.id ? (
-                  <><Check size={12} className="mr-1" /> Copied</>
-                ) : (
-                  <><Copy size={12} className="mr-1" /> Copy</>
-                )}
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => selectedDocument && handleDownload(selectedDocument)}
-                className="flex-1 sm:flex-none bg-white text-black hover:bg-white/90 text-xs sm:text-sm h-8"
-              >
-                <Download size={12} className="mr-1" />
-                Download
-              </Button>
-            </div>
           </DialogHeader>
-          <div className="overflow-auto max-h-[60vh] bg-white/5 rounded-lg p-3 sm:p-4 mt-3">
-            <pre className="text-xs sm:text-sm text-foreground whitespace-pre-wrap font-mono leading-relaxed">
+          
+          <div className="overflow-auto flex-1 max-h-[60vh] p-3 sm:p-4">
+            <pre className="text-xs sm:text-sm text-foreground whitespace-pre-wrap font-mono leading-relaxed bg-white/5 rounded-lg p-3">
               {selectedDocument?.content}
             </pre>
+          </div>
+
+          <div className="p-3 sm:p-4 border-t border-white/10 flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => selectedDocument && handleCopy(selectedDocument)}
+              className="flex-1 bg-white/5 border-white/20 text-foreground hover:bg-white/10 text-xs h-9"
+            >
+              {copiedId === selectedDocument?.id ? (
+                <><Check size={14} className="mr-1.5" /> Copied</>
+              ) : (
+                <><Copy size={14} className="mr-1.5" /> Copy</>
+              )}
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => selectedDocument && handleDownload(selectedDocument)}
+              className="flex-1 bg-white text-black hover:bg-white/90 text-xs h-9"
+            >
+              <Download size={14} className="mr-1.5" />
+              Download
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
