@@ -12,7 +12,7 @@ const ChatHeader = () => {
         </SidebarTrigger>
         
         <div className="flex items-center gap-2">
-          <span className="font-serif text-lg font-semibold text-foreground">CARE</span>
+          <span className="text-lg font-semibold text-foreground tracking-wider">CARE</span>
           <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">AI</span>
         </div>
       </div>

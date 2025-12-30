@@ -44,7 +44,7 @@ const AppSidebar = () => {
         <div className="flex items-center justify-between">
           {!isCollapsed && (
             <Link to="/" className="flex flex-col">
-              <h1 className="font-serif text-lg font-bold text-foreground">LegalCareAI</h1>
+              <h1 className="text-lg font-semibold text-foreground tracking-tight">LegalCareAI</h1>
               <p className="text-xs text-muted-foreground">Legal Intelligence</p>
             </Link>
           )}

@@ -204,7 +204,7 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
 
       {/* Text labels */}
       <div className="text-center">
-        <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-foreground tracking-wider">
+        <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-widest">
           CARE
         </h2>
         <p className="text-muted-foreground text-xs sm:text-sm mt-1">
