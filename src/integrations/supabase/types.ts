@@ -14,7 +14,149 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      calendar_events: {
+        Row: {
+          case_id: string | null
+          created_at: string
+          description: string | null
+          end_time: string | null
+          event_type: string | null
+          id: string
+          is_all_day: boolean | null
+          location: string | null
+          reminder_before: number | null
+          start_time: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          case_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_time?: string | null
+          event_type?: string | null
+          id?: string
+          is_all_day?: boolean | null
+          location?: string | null
+          reminder_before?: number | null
+          start_time: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          case_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_time?: string | null
+          event_type?: string | null
+          id?: string
+          is_all_day?: boolean | null
+          location?: string | null
+          reminder_before?: number | null
+          start_time?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cases: {
+        Row: {
+          case_number: string | null
+          case_type: string
+          client_name: string | null
+          court_name: string | null
+          created_at: string
+          description: string | null
+          id: string
+          next_hearing_date: string | null
+          notes: string | null
+          opposing_party: string | null
+          priority: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          case_number?: string | null
+          case_type: string
+          client_name?: string | null
+          court_name?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          next_hearing_date?: string | null
+          notes?: string | null
+          opposing_party?: string | null
+          priority?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          case_number?: string | null
+          case_type?: string
+          client_name?: string | null
+          court_name?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          next_hearing_date?: string | null
+          notes?: string | null
+          opposing_party?: string | null
+          priority?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
