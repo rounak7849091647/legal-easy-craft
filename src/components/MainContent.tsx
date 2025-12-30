@@ -4,7 +4,7 @@ import ChatInput from './ChatInput';
 import ChatMessages from './ChatMessages';
 
 import { useLegalChat } from '@/hooks/useLegalChat';
-import { useTextToSpeech } from '@/hooks/useTextToSpeech';
+import { useElevenLabsTTS } from '@/hooks/useElevenLabsTTS';
 import supremeCourtBg from '@/assets/supreme-court-bg.jpg';
 
 interface MainContentProps {
@@ -13,7 +13,7 @@ interface MainContentProps {
 
 const MainContent = ({ isMobile = false }: MainContentProps) => {
   const { messages, isLoading, sendMessage, summarizeDocument, lastLanguage, lastVoiceResponse } = useLegalChat();
-  const { isSpeaking, speak, stop } = useTextToSpeech();
+  const { isSpeaking, speak, stop } = useElevenLabsTTS();
   const [lastResponseLanguage, setLastResponseLanguage] = useState<string>('en-IN');
   const [continuousVoiceMode, setContinuousVoiceMode] = useState(false);
   const lastSpokenIdRef = useRef<string | null>(null);
