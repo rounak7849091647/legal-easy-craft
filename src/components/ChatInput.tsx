@@ -54,7 +54,7 @@ const ChatInput = ({ onSend, isLoading = false }: ChatInputProps) => {
           onChange={(e) => setMessage(e.target.value)}
           placeholder={isListening ? "Listening..." : "Type your legal question..."}
           disabled={isLoading}
-          className="w-full px-5 py-3.5 pr-32 rounded-full bg-muted/50 border border-border/50 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all disabled:opacity-50"
+          className="w-full px-5 py-3.5 pr-32 rounded-full bg-white/10 border border-white/30 text-foreground placeholder:text-white/50 focus:outline-none focus:border-white/60 focus:ring-2 focus:ring-white/20 transition-all disabled:opacity-50"
         />
         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
           {isSupported && (
@@ -63,7 +63,7 @@ const ChatInput = ({ onSend, isLoading = false }: ChatInputProps) => {
               variant="ghost"
               size="icon"
               onClick={handleMicClick}
-              className={`h-8 w-8 ${isListening ? 'text-red-500 animate-pulse' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`h-8 w-8 ${isListening ? 'text-white animate-pulse bg-white/20' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
             >
               <Mic size={18} />
             </Button>
@@ -72,7 +72,7 @@ const ChatInput = ({ onSend, isLoading = false }: ChatInputProps) => {
             type="button"
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10"
           >
             <Paperclip size={18} />
           </Button>
@@ -80,7 +80,7 @@ const ChatInput = ({ onSend, isLoading = false }: ChatInputProps) => {
             type="submit"
             size="icon"
             disabled={!message.trim() || isLoading}
-            className="h-8 w-8 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            className="h-8 w-8 rounded-full bg-white text-black hover:bg-white/90 disabled:opacity-50"
           >
             <Send size={16} />
           </Button>

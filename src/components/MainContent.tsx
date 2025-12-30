@@ -51,7 +51,7 @@ const MainContent = ({ onLoginClick }: MainContentProps) => {
         <Button 
           variant="outline" 
           onClick={onLoginClick}
-          className="bg-muted/50 border-border/50 text-foreground hover:bg-muted"
+          className="bg-white/10 border-white/30 text-white hover:bg-white/20"
         >
           Login
         </Button>
