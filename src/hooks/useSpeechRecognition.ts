@@ -4,7 +4,7 @@ interface SpeechRecognitionHook {
   isListening: boolean;
   transcript: string;
   detectedLanguage: string;
-  startListening: () => void;
+  startListening: () => Promise<void>;
   stopListening: () => void;
   resetTranscript: () => void;
   isSupported: boolean;
@@ -88,6 +88,24 @@ export const useSpeechRecognition = (): SpeechRecognitionHook => {
   const isSupported = typeof window !== 'undefined' && 
     ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
+  // Initialize audio context for noise cancellation
+  const setupNoiseCancellation = async (): Promise<MediaStream | null> => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 16000,
+        }
+      });
+      return stream;
+    } catch (error) {
+      console.error('Failed to setup audio with noise cancellation:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     if (!isSupported) return;
 
@@ -143,13 +161,19 @@ export const useSpeechRecognition = (): SpeechRecognitionHook => {
     };
   }, [isSupported]);
 
-  const startListening = useCallback(() => {
+  const startListening = useCallback(async () => {
     if (recognitionRef.current && !isListening) {
       setTranscript('');
       setDetectedLanguage('en-IN');
+      
+      // Setup noise cancellation before starting
+      await setupNoiseCancellation();
+      
       recognitionRef.current.start();
     }
   }, [isListening]);
+
+  
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current && isListening) {
