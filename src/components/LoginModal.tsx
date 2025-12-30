@@ -9,7 +9,7 @@ interface LoginModalProps {
 const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[800px] p-0 border-0 bg-transparent overflow-hidden">
+      <DialogContent className="max-w-[95vw] md:max-w-[800px] p-0 border-0 bg-transparent overflow-hidden max-h-[90vh] overflow-y-auto">
         <AuthPage onSuccess={onClose} />
       </DialogContent>
     </Dialog>
