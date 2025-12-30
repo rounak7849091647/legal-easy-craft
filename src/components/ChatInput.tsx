@@ -46,7 +46,7 @@ const ChatInput = ({ onSend, isLoading = false }: ChatInputProps) => {
   };
 
   return (
-    <div className="w-full max-w-lg">
+    <div className="w-full max-w-lg mx-auto px-2 sm:px-0">
       <form onSubmit={handleSubmit} className="relative">
         <input
           type="text"
@@ -54,25 +54,26 @@ const ChatInput = ({ onSend, isLoading = false }: ChatInputProps) => {
           onChange={(e) => setMessage(e.target.value)}
           placeholder={isListening ? "Listening..." : "Type your legal question..."}
           disabled={isLoading}
-          className="w-full px-5 py-3.5 pr-32 rounded-full bg-white/10 border border-white/30 text-foreground placeholder:text-white/50 focus:outline-none focus:border-white/60 focus:ring-2 focus:ring-white/20 transition-all disabled:opacity-50"
+          className="w-full px-4 sm:px-5 py-3 sm:py-3.5 pr-28 sm:pr-32 rounded-full bg-white/10 border border-white/30 text-foreground placeholder:text-white/50 focus:outline-none focus:border-white/60 focus:ring-2 focus:ring-white/20 transition-all disabled:opacity-50 text-sm sm:text-base"
         />
-        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 sm:gap-1">
           {isSupported && (
             <Button
               type="button"
               variant="ghost"
               size="icon"
               onClick={handleMicClick}
-              className={`h-8 w-8 ${isListening ? 'text-white animate-pulse bg-white/20' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+              className={`h-7 w-7 sm:h-8 sm:w-8 ${isListening ? 'text-white animate-pulse bg-white/20' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
             >
-              <Mic size={18} />
+              <Mic size={16} className="sm:hidden" />
+              <Mic size={18} className="hidden sm:block" />
             </Button>
           )}
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10"
+            className="h-7 w-7 sm:h-8 sm:w-8 text-white/60 hover:text-white hover:bg-white/10 hidden sm:flex"
           >
             <Paperclip size={18} />
           </Button>
@@ -80,15 +81,16 @@ const ChatInput = ({ onSend, isLoading = false }: ChatInputProps) => {
             type="submit"
             size="icon"
             disabled={!message.trim() || isLoading}
-            className="h-8 w-8 rounded-full bg-white text-black hover:bg-white/90 disabled:opacity-50"
+            className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white text-black hover:bg-white/90 disabled:opacity-50"
           >
-            <Send size={16} />
+            <Send size={14} className="sm:hidden" />
+            <Send size={16} className="hidden sm:block" />
           </Button>
         </div>
       </form>
       
-      <p className="text-center text-xs text-muted-foreground/60 mt-3">
-        Ask about BNS, IPC, Civil Laws, Labour Law & more • Hindi & English supported
+      <p className="text-center text-[10px] sm:text-xs text-muted-foreground/60 mt-2 sm:mt-3 px-2">
+        Ask about BNS, IPC, Civil Laws, Labour Law & more
       </p>
     </div>
   );

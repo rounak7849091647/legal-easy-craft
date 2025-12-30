@@ -66,7 +66,7 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText }: AiOrbProps)
         }`} />
         
         {/* Main orb */}
-        <div className={`relative w-36 h-36 rounded-full backdrop-blur-sm border flex items-center justify-center orb-glow orb-pulse transition-all duration-300 ${
+        <div className={`relative w-28 h-28 sm:w-36 sm:h-36 rounded-full backdrop-blur-sm border flex items-center justify-center orb-glow orb-pulse transition-all duration-300 ${
           displayState !== 'idle' ? 'scale-110' : 'scale-100'
         } ${
           displayState === 'speaking' 
@@ -107,10 +107,10 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText }: AiOrbProps)
 
       {/* Text labels */}
       <div className="text-center">
-        <h2 className="font-serif text-3xl font-semibold text-foreground tracking-wider">
+        <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-foreground tracking-wider">
           CARE
         </h2>
-        <p className="text-muted-foreground text-sm mt-1">
+        <p className="text-muted-foreground text-xs sm:text-sm mt-1">
           {displayState === 'thinking' && 'Thinking...'}
           {displayState === 'speaking' && 'Speaking...'}
           {displayState === 'listening' && 'Listening...'}
@@ -120,12 +120,12 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText }: AiOrbProps)
 
       {/* Live transcript */}
       {isListening && transcript && (
-        <div className="text-center max-w-md">
-          <p className="text-foreground/80 text-sm italic">"{transcript}"</p>
+        <div className="text-center max-w-xs sm:max-w-md px-4">
+          <p className="text-foreground/80 text-xs sm:text-sm italic">"{transcript}"</p>
         </div>
       )}
 
-      <p className="text-muted-foreground/70 text-sm">
+      <p className="text-muted-foreground/70 text-xs sm:text-sm hidden sm:block">
         {isSpeaking ? 'Tap to stop' : 'Tap the orb to start speaking'}
       </p>
     </div>
