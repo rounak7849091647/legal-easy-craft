@@ -34,16 +34,15 @@ const ConnectExpert = () => {
         {/* Consultation Options */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           {[
-            { icon: MessageCircle, title: 'Live Chat', price: 'Free', desc: 'Quick queries' },
-            { icon: Phone, title: 'Voice Call', price: '₹499/30min', desc: 'Detailed discussion' },
-            { icon: Video, title: 'Video Call', price: '₹799/30min', desc: 'Face-to-face' },
+            { icon: MessageCircle, title: 'Live Chat', desc: 'Quick queries' },
+            { icon: Phone, title: 'Voice Call', desc: 'Detailed discussion' },
+            { icon: Video, title: 'Video Call', desc: 'Face-to-face' },
           ].map((option, index) => (
             <Card key={index} className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors cursor-pointer">
-              <CardContent className="p-6 text-center">
-                <option.icon size={32} className="mx-auto text-white mb-3" />
-                <h3 className="font-medium text-foreground">{option.title}</h3>
-                <p className="text-xl font-bold text-foreground mt-1">{option.price}</p>
-                <p className="text-xs text-muted-foreground">{option.desc}</p>
+              <CardContent className="p-4 sm:p-6 text-center">
+                <option.icon size={28} className="mx-auto text-white mb-3" />
+                <h3 className="font-medium text-foreground text-sm sm:text-base">{option.title}</h3>
+                <p className="text-xs text-muted-foreground mt-1">{option.desc}</p>
               </CardContent>
             </Card>
           ))}

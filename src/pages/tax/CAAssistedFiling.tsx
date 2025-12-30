@@ -1,29 +1,24 @@
 import { Helmet } from 'react-helmet-async';
-import { Users, ArrowLeft, CheckCircle, Star, Phone, ArrowRight } from 'lucide-react';
+import { Users, ArrowLeft, CheckCircle, Star, Clock, FileText, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageLayout from '@/components/PageLayout';
 import { Link } from 'react-router-dom';
 
-const packages = [
-  {
-    name: 'Basic Filing',
-    price: '₹999',
-    features: ['ITR-1/ITR-4 Filing', 'Form 16 Processing', 'Basic Deductions', 'Email Support'],
-    popular: false
-  },
-  {
-    name: 'Standard Filing',
-    price: '₹2,499',
-    features: ['Any ITR Form', 'Capital Gains', 'Tax Planning', 'Phone Support', 'Document Review'],
-    popular: true
-  },
-  {
-    name: 'Premium Filing',
-    price: '₹4,999',
-    features: ['Complex Returns', 'Foreign Income', 'Dedicated CA', 'Priority Support', 'Audit Assistance'],
-    popular: false
-  }
+const process = [
+  { step: 1, title: 'Upload Documents', description: 'Share your Form 16, bank statements, and investment proofs' },
+  { step: 2, title: 'CA Review', description: 'Our CA reviews your documents and identifies all deductions' },
+  { step: 3, title: 'Filing', description: 'CA files your return with maximum tax benefits' },
+  { step: 4, title: 'Verification', description: 'E-verify your return and receive acknowledgment' },
+];
+
+const benefits = [
+  'Expert CA with 10+ years experience',
+  'Maximum tax saving guaranteed',
+  'Error-free filing',
+  'Post-filing support for queries',
+  'Notice response assistance',
+  'Dedicated support team',
 ];
 
 const CAAssistedFiling = () => {
@@ -34,7 +29,7 @@ const CAAssistedFiling = () => {
         <meta name="description" content="Get expert CA support for your tax filing. Professional chartered accountants to help you file accurately." />
       </Helmet>
 
-      <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto">
         <Link to="/tax-services" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors">
           <ArrowLeft size={16} />
           <span className="text-sm">Back to Tax Services</span>
@@ -50,40 +45,31 @@ const CAAssistedFiling = () => {
           </div>
         </div>
 
-        {/* Packages */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          {packages.map((pkg, index) => (
-            <Card key={index} className={`relative bg-white/5 border-white/10 ${pkg.popular ? 'ring-2 ring-white/30' : ''}`}>
-              {pkg.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white text-black text-xs font-medium px-3 py-1 rounded-full">
-                  Most Popular
+        {/* Process */}
+        <Card className="bg-white/5 border-white/10 mb-6">
+          <CardHeader>
+            <CardTitle className="text-foreground flex items-center gap-2">
+              <Clock size={20} />
+              How It Works
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {process.map((item) => (
+                <div key={item.step} className="bg-white/5 rounded-lg p-4 text-center">
+                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-3 text-lg font-bold text-foreground">
+                    {item.step}
+                  </div>
+                  <h3 className="font-medium text-foreground text-sm">{item.title}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
                 </div>
-              )}
-              <CardHeader className="text-center pb-2">
-                <CardTitle className="text-foreground text-lg">{pkg.name}</CardTitle>
-                <p className="text-3xl font-bold text-foreground">{pkg.price}</p>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3 mb-6">
-                  {pkg.features.map((feature, i) => (
-                    <li key={i} className="flex items-center gap-2 text-sm">
-                      <CheckCircle size={14} className="text-green-500 shrink-0" />
-                      <span className="text-foreground">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button 
-                  className={`w-full ${pkg.popular ? 'bg-white text-black hover:bg-white/90' : 'bg-white/10 text-foreground hover:bg-white/20'}`}
-                >
-                  Choose Plan
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Why Choose */}
-        <Card className="bg-white/5 border-white/10">
+        {/* Benefits */}
+        <Card className="bg-white/5 border-white/10 mb-6">
           <CardHeader>
             <CardTitle className="text-foreground flex items-center gap-2">
               <Star size={20} />
@@ -91,21 +77,48 @@ const CAAssistedFiling = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {[
-                { title: '10+ Years', desc: 'Average Experience' },
-                { title: '50,000+', desc: 'Returns Filed' },
-                { title: '4.9★', desc: 'Customer Rating' },
-                { title: '100%', desc: 'Accuracy Guaranteed' }
-              ].map((stat, index) => (
-                <div key={index} className="text-center p-4 bg-white/5 rounded-lg">
-                  <p className="text-2xl font-bold text-foreground">{stat.title}</p>
-                  <p className="text-xs text-muted-foreground">{stat.desc}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {benefits.map((benefit, index) => (
+                <div key={index} className="flex items-center gap-3">
+                  <CheckCircle size={16} className="text-green-500 shrink-0" />
+                  <span className="text-sm text-foreground">{benefit}</span>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
+
+        {/* Stats */}
+        <Card className="bg-white/5 border-white/10 mb-6">
+          <CardContent className="p-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+              {[
+                { value: '10+', label: 'Years Experience' },
+                { value: '50,000+', label: 'Returns Filed' },
+                { value: '4.9★', label: 'Customer Rating' },
+                { value: '100%', label: 'Accuracy' }
+              ].map((stat, index) => (
+                <div key={index} className="p-3 bg-white/5 rounded-lg">
+                  <p className="text-xl font-bold text-foreground">{stat.value}</p>
+                  <p className="text-xs text-muted-foreground">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* CTA */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button className="flex-1 bg-white text-black hover:bg-white/90 h-12">
+            <FileText size={18} className="mr-2" />
+            Get Started
+            <ArrowRight size={16} className="ml-2" />
+          </Button>
+          <Button variant="outline" className="flex-1 bg-white/5 border-white/20 text-foreground hover:bg-white/10 h-12">
+            <Users size={18} className="mr-2" />
+            Talk to a CA
+          </Button>
+        </div>
       </div>
     </PageLayout>
   );
