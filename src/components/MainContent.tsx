@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import AiOrb from './AiOrb';
 import ChatInput from './ChatInput';
 import ChatMessages from './ChatMessages';
@@ -17,15 +17,24 @@ const MainContent = ({ onLoginClick, isMobile = false }: MainContentProps) => {
   const { isSpeaking, speak, stop } = useTextToSpeech();
   const [lastResponse, setLastResponse] = useState<string>('');
   const [lastResponseLanguage, setLastResponseLanguage] = useState<string>('en-IN');
+  const lastSpokenIdRef = useRef<string | null>(null);
 
-  // Track last assistant response for TTS
+  // Auto-speak new assistant responses (Jarvis-style)
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
-    if (lastMessage?.role === 'assistant' && lastMessage.content !== lastResponse) {
+    if (
+      lastMessage?.role === 'assistant' &&
+      lastMessage.content &&
+      lastMessage.id !== lastSpokenIdRef.current &&
+      !isLoading
+    ) {
       setLastResponse(lastMessage.content);
       setLastResponseLanguage(lastMessage.language || lastLanguage);
+      lastSpokenIdRef.current = lastMessage.id;
+      // Auto-speak the response
+      speak(lastMessage.content, lastMessage.language || lastLanguage);
     }
-  }, [messages, lastResponse, lastLanguage]);
+  }, [messages, isLoading, lastLanguage, speak]);
 
   const handleVoiceTranscript = async (transcript: string, language: string) => {
     if (transcript.trim()) {
@@ -34,17 +43,12 @@ const MainContent = ({ onLoginClick, isMobile = false }: MainContentProps) => {
   };
 
   const handleSendMessage = async (message: string) => {
-    // For typed messages, default to English
-    await sendMessage(message, 'en-IN');
-  };
-
-  const handleToggleSpeak = async () => {
-    if (!lastResponse?.trim() || isLoading) return;
+    // Stop any ongoing speech when user sends a new message
     if (isSpeaking) {
       stop();
-      return;
     }
-    await speak(lastResponse, lastResponseLanguage);
+    // For typed messages, default to English
+    await sendMessage(message, 'en-IN');
   };
 
   const hasMessages = messages.length > 0;
@@ -80,9 +84,7 @@ const MainContent = ({ onLoginClick, isMobile = false }: MainContentProps) => {
               <ChatInput
                 onSend={handleSendMessage}
                 isLoading={isLoading}
-                canSpeak={!!lastResponse}
                 isSpeaking={isSpeaking}
-                onToggleSpeak={handleToggleSpeak}
               />
             </div>
           </div>
@@ -98,9 +100,7 @@ const MainContent = ({ onLoginClick, isMobile = false }: MainContentProps) => {
             <ChatInput
               onSend={handleSendMessage}
               isLoading={isLoading}
-              canSpeak={!!lastResponse}
               isSpeaking={isSpeaking}
-              onToggleSpeak={handleToggleSpeak}
             />
           </div>
         )}

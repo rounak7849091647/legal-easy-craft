@@ -51,7 +51,7 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
     }
   }, [transcript, isListening, onTranscript, stopListening, resetTranscript, detectedLanguage]);
 
-  // Speak response when received (only once per response)
+  // Auto-speak response when received (Jarvis-style)
   useEffect(() => {
     if (responseText && !isProcessing && ttsSupported && !hasSpokenRef.current) {
       hasSpokenRef.current = true;

@@ -54,10 +54,18 @@ declare global {
   }
 }
 
-// Indian language detection patterns
+// Indian language detection patterns - supports mixed Hindi+English (Hinglish)
 const detectIndianLanguage = (text: string): string => {
-  // Hindi/Devanagari script
-  if (/[\u0900-\u097F]/.test(text)) return 'hi-IN';
+  // Count Devanagari characters for Hindi detection
+  const devanagariCount = (text.match(/[\u0900-\u097F]/g) || []).length;
+  const latinCount = (text.match(/[a-zA-Z]/g) || []).length;
+  const totalChars = devanagariCount + latinCount;
+  
+  // If mostly Devanagari, it's Hindi
+  if (devanagariCount > 0 && devanagariCount >= latinCount * 0.3) {
+    return 'hi-IN'; // Hindi (works for Hinglish too)
+  }
+  
   // Tamil script
   if (/[\u0B80-\u0BFF]/.test(text)) return 'ta-IN';
   // Telugu script
@@ -70,12 +78,12 @@ const detectIndianLanguage = (text: string): string => {
   if (/[\u0980-\u09FF]/.test(text)) return 'bn-IN';
   // Gujarati script
   if (/[\u0A80-\u0AFF]/.test(text)) return 'gu-IN';
-  // Marathi uses Devanagari, detected above as Hindi
   // Punjabi/Gurmukhi script
   if (/[\u0A00-\u0A7F]/.test(text)) return 'pa-IN';
   // Odia script
   if (/[\u0B00-\u0B7F]/.test(text)) return 'or-IN';
-  // Default to English (India)
+  
+  // Default to English (India) for pure English or Romanized Hindi
   return 'en-IN';
 };
 
