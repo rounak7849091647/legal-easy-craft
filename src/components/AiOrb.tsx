@@ -64,7 +64,7 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
     }
   }, [responseText, isProcessing, speak, ttsSupported, responseLanguage]);
 
-  const handleOrbClick = () => {
+  const handleOrbClick = async () => {
     if (isSpeaking) {
       stopSpeaking();
       return;
@@ -83,7 +83,7 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
       stopListening();
       setIsActive(false);
     } else if (speechSupported) {
-      startListening();
+      await startListening();
       setIsActive(true);
     }
   };
