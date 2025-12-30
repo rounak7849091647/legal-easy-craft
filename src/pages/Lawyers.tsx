@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Search, Users, CheckCircle, Globe, Star, BadgeCheck, MapPin, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,99 +6,42 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import PageLayout from '@/components/PageLayout';
-
-const lawyers = [
-  { 
-    id: 1, 
-    name: 'Adv. Rajesh Kumar', 
-    rating: 4.8, 
-    reviews: 156, 
-    experience: 12, 
-    barCouncil: 'D/2015/12345',
-    practiceAreas: ['Criminal Law', 'Bail Applications'],
-    state: 'Delhi',
-    city: 'New Delhi',
-    verified: true
-  },
-  { 
-    id: 2, 
-    name: 'Adv. Anita Desai', 
-    rating: 4.6, 
-    reviews: 142, 
-    experience: 8, 
-    barCouncil: 'D/2018/77223',
-    practiceAreas: ['Family Law', 'Divorce'],
-    state: 'Maharashtra',
-    city: 'Mumbai',
-    verified: true
-  },
-  { 
-    id: 3, 
-    name: 'Adv. Arjun Malhotra', 
-    rating: 4.9, 
-    reviews: 187, 
-    experience: 14, 
-    barCouncil: 'D/2013/7989',
-    practiceAreas: ['Intellectual Property', 'Trademark'],
-    state: 'Karnataka',
-    city: 'Bangalore',
-    verified: true
-  },
-  { 
-    id: 4, 
-    name: 'Adv. Priya Sharma', 
-    rating: 4.7, 
-    reviews: 98, 
-    experience: 6, 
-    barCouncil: 'D/2020/45678',
-    practiceAreas: ['Corporate Law', 'Contracts'],
-    state: 'Delhi',
-    city: 'New Delhi',
-    verified: true
-  },
-  { 
-    id: 5, 
-    name: 'Adv. Vikram Singh', 
-    rating: 4.5, 
-    reviews: 203, 
-    experience: 15, 
-    barCouncil: 'D/2010/11223',
-    practiceAreas: ['Property Law', 'Real Estate'],
-    state: 'Gujarat',
-    city: 'Ahmedabad',
-    verified: true
-  },
-  { 
-    id: 6, 
-    name: 'Adv. Meera Patel', 
-    rating: 4.8, 
-    reviews: 124, 
-    experience: 10, 
-    barCouncil: 'D/2016/33445',
-    practiceAreas: ['Labour Law', 'Employment'],
-    state: 'Tamil Nadu',
-    city: 'Chennai',
-    verified: true
-  },
-];
-
-const states = ['All States', 'Delhi', 'Maharashtra', 'Karnataka', 'Gujarat', 'Tamil Nadu', 'Uttar Pradesh', 'Rajasthan'];
-const practiceAreas = ['All Practice Areas', 'Criminal Law', 'Family Law', 'Corporate Law', 'Property Law', 'Labour Law', 'Intellectual Property'];
+import { lawyers, indianStates, citiesByState, practiceAreas } from '@/data/lawyersData';
 
 const Lawyers = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedState, setSelectedState] = useState('All States');
+  const [selectedCity, setSelectedCity] = useState('All Cities');
   const [selectedPractice, setSelectedPractice] = useState('All Practice Areas');
   const [pincode, setPincode] = useState('');
 
-  const filteredLawyers = lawyers.filter(lawyer => {
-    const matchesSearch = lawyer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lawyer.practiceAreas.some(area => area.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesState = selectedState === 'All States' || lawyer.state === selectedState;
-    const matchesPractice = selectedPractice === 'All Practice Areas' || 
-      lawyer.practiceAreas.some(area => area.includes(selectedPractice.replace('All Practice Areas', '')));
-    return matchesSearch && matchesState && matchesPractice;
-  });
+  // Get cities for selected state
+  const availableCities = useMemo(() => {
+    return citiesByState[selectedState] || ['All Cities'];
+  }, [selectedState]);
+
+  // Reset city when state changes
+  const handleStateChange = (state: string) => {
+    setSelectedState(state);
+    setSelectedCity('All Cities');
+  };
+
+  const filteredLawyers = useMemo(() => {
+    return lawyers.filter(lawyer => {
+      const matchesSearch = searchQuery === '' || 
+        lawyer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        lawyer.practiceAreas.some(area => area.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      const matchesState = selectedState === 'All States' || lawyer.state === selectedState;
+      
+      const matchesCity = selectedCity === 'All Cities' || lawyer.city === selectedCity;
+      
+      const matchesPractice = selectedPractice === 'All Practice Areas' || 
+        lawyer.practiceAreas.some(area => area === selectedPractice);
+      
+      return matchesSearch && matchesState && matchesCity && matchesPractice;
+    });
+  }, [searchQuery, selectedState, selectedCity, selectedPractice]);
 
   return (
     <PageLayout>
@@ -129,7 +72,7 @@ const Lawyers = () => {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
           <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
             <Users size={20} className="mx-auto text-muted-foreground mb-2" />
-            <p className="text-xl font-bold text-foreground">2M+</p>
+            <p className="text-xl font-bold text-foreground">{lawyers.length}+</p>
             <p className="text-xs text-muted-foreground">Verified Lawyers</p>
           </div>
           <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
@@ -139,12 +82,12 @@ const Lawyers = () => {
           </div>
           <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
             <Globe size={20} className="mx-auto text-muted-foreground mb-2" />
-            <p className="text-xl font-bold text-foreground">28</p>
+            <p className="text-xl font-bold text-foreground">{indianStates.length - 1}</p>
             <p className="text-xs text-muted-foreground">States & UTs</p>
           </div>
           <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
             <Star size={20} className="mx-auto text-muted-foreground mb-2" />
-            <p className="text-xl font-bold text-foreground">4.8★</p>
+            <p className="text-xl font-bold text-foreground">4.6★</p>
             <p className="text-xs text-muted-foreground">Average Rating</p>
           </div>
         </div>
@@ -154,12 +97,12 @@ const Lawyers = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">State</label>
-              <Select value={selectedState} onValueChange={setSelectedState}>
+              <Select value={selectedState} onValueChange={handleStateChange}>
                 <SelectTrigger className="bg-white/5 border-white/20 text-foreground">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-background border-white/20">
-                  {states.map(state => (
+                <SelectContent className="bg-background border-white/20 max-h-[300px]">
+                  {indianStates.map(state => (
                     <SelectItem key={state} value={state}>{state}</SelectItem>
                   ))}
                 </SelectContent>
@@ -167,12 +110,14 @@ const Lawyers = () => {
             </div>
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">City</label>
-              <Select defaultValue="all">
+              <Select value={selectedCity} onValueChange={setSelectedCity}>
                 <SelectTrigger className="bg-white/5 border-white/20 text-foreground">
-                  <SelectValue placeholder="All Cities" />
+                  <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-background border-white/20">
-                  <SelectItem value="all">All Cities</SelectItem>
+                <SelectContent className="bg-background border-white/20 max-h-[300px]">
+                  {availableCities.map(city => (
+                    <SelectItem key={city} value={city}>{city}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -182,7 +127,7 @@ const Lawyers = () => {
                 <SelectTrigger className="bg-white/5 border-white/20 text-foreground">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-background border-white/20">
+                <SelectContent className="bg-background border-white/20 max-h-[300px]">
                   {practiceAreas.map(area => (
                     <SelectItem key={area} value={area}>{area}</SelectItem>
                   ))}
@@ -214,7 +159,7 @@ const Lawyers = () => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Users size={16} className="text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">{filteredLawyers.length} lawyers</span>
+            <span className="text-sm text-muted-foreground">{filteredLawyers.length} lawyers found</span>
           </div>
         </div>
 
@@ -278,6 +223,7 @@ const Lawyers = () => {
           <div className="text-center py-12">
             <Users size={48} className="mx-auto text-muted-foreground mb-4" />
             <p className="text-muted-foreground">No lawyers found matching your criteria</p>
+            <p className="text-sm text-muted-foreground mt-2">Try adjusting your filters or search terms</p>
           </div>
         )}
       </div>
