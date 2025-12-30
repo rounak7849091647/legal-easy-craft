@@ -8,6 +8,8 @@ interface ChatInputProps {
   isLoading?: boolean;
   isSpeaking?: boolean;
   onVoiceTranscript?: (transcript: string, language: string) => void;
+  continuousMode?: boolean;
+  onContinuousModeChange?: (active: boolean) => void;
 }
 
 const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
@@ -15,13 +17,16 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
   isLoading = false,
   isSpeaking = false,
   onVoiceTranscript,
+  continuousMode = false,
+  onContinuousModeChange,
 }, ref) => {
   const [message, setMessage] = useState('');
-  const [voiceMode, setVoiceMode] = useState(false); // Track if user activated voice
+  const [voiceMode, setVoiceMode] = useState(false);
   const { isListening, transcript, detectedLanguage, startListening, stopListening, resetTranscript, isSupported } = useSpeechRecognition();
   const autoSendTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastTranscriptRef = useRef<string>('');
   const restartTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const wasSpeakingRef = useRef<boolean>(false);
 
   // Clear timers on unmount
   useEffect(() => {
@@ -61,19 +66,16 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
   }, [transcript, detectedLanguage, onSend, onVoiceTranscript, resetTranscript, voiceMode]);
 
   // Restart listening when it stops (browser auto-stops after silence)
-  // Only if voiceMode is active
+  // Only if voiceMode is active and not currently speaking
   useEffect(() => {
-    if (voiceMode && !isListening && isSupported) {
-      // Clear any existing restart timer
+    if (voiceMode && !isListening && isSupported && !isSpeaking && !isLoading) {
       if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
       
-      // Restart after a short delay
       restartTimerRef.current = setTimeout(async () => {
-        if (voiceMode) { // Double-check voiceMode is still active
+        if (voiceMode && !isSpeaking && !isLoading) {
           try {
             await startListening();
           } catch (e) {
-            // Browser may block - user needs to interact again
             console.log('Auto-restart blocked, user interaction needed');
           }
         }
@@ -83,7 +85,41 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
     return () => {
       if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
     };
-  }, [isListening, voiceMode, isSupported, startListening]);
+  }, [isListening, voiceMode, isSupported, startListening, isSpeaking, isLoading]);
+
+  // Jarvis-style: Auto-resume listening after AI finishes speaking
+  useEffect(() => {
+    if (isSpeaking) {
+      wasSpeakingRef.current = true;
+      // Pause listening while AI is speaking
+      if (isListening) {
+        stopListening();
+      }
+    }
+    
+    // When AI stops speaking and we were in voice mode, resume listening
+    if (!isSpeaking && wasSpeakingRef.current && voiceMode && isSupported && !isLoading) {
+      wasSpeakingRef.current = false;
+      
+      // Small delay to let audio fully stop
+      const timer = setTimeout(async () => {
+        if (voiceMode && !isListening && !isLoading) {
+          try {
+            await startListening();
+          } catch (e) {
+            console.log('Failed to auto-resume listening:', e);
+          }
+        }
+      }, 600);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isSpeaking, voiceMode, isSupported, isLoading, isListening, startListening, stopListening]);
+
+  // Notify parent about voice mode changes
+  useEffect(() => {
+    onContinuousModeChange?.(voiceMode);
+  }, [voiceMode, onContinuousModeChange]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,14 +169,14 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
   };
 
   const placeholder = voiceMode
-    ? (isListening ? 'Listening...' : 'Voice mode active')
+    ? (isSpeaking ? 'AI speaking...' : isListening ? 'Listening...' : isLoading ? 'Processing...' : 'Ready to listen')
     : isLoading
     ? 'Processing...'
     : 'Type or tap mic to speak...';
 
   return (
     <div ref={ref} className="w-full max-w-lg mx-auto px-2 sm:px-0">
-      <form onSubmit={handleSubmit} className="relative">
+      <form onSubmit={handleSubmit} className={`relative ${voiceMode && isSpeaking ? 'jarvis-speaking rounded-full' : ''}`}>
         {/* Voice mode indicator */}
         {voiceMode && (
           <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex items-center gap-1">
@@ -148,7 +184,13 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
               {[...Array(4)].map((_, i) => (
                 <div
                   key={i}
-                  className={`w-0.5 rounded-full ${isListening ? 'bg-green-500 waveform-bar' : 'bg-green-500/50 h-2'}`}
+                  className={`w-0.5 rounded-full transition-all ${
+                    isSpeaking 
+                      ? 'bg-primary waveform-bar' 
+                      : isListening 
+                      ? 'bg-green-500 waveform-bar' 
+                      : 'bg-muted-foreground/50 h-2'
+                  }`}
                   style={{ animationDelay: `${i * 0.1}s` }}
                 />
               ))}
@@ -161,8 +203,14 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder={placeholder}
-          disabled={isLoading}
-          className={`w-full ${voiceMode ? 'pl-10' : 'px-4 sm:px-5'} py-3 sm:py-3.5 pr-24 sm:pr-28 rounded-full bg-white/10 border ${voiceMode ? 'border-green-500/50' : 'border-white/30'} text-foreground placeholder:text-white/50 focus:outline-none focus:border-white/60 focus:ring-2 focus:ring-white/20 transition-all disabled:opacity-50 text-sm sm:text-base`}
+          disabled={isLoading || isSpeaking}
+          className={`w-full ${voiceMode ? 'pl-10' : 'px-4 sm:px-5'} py-3 sm:py-3.5 pr-24 sm:pr-28 rounded-full bg-white/10 border ${
+            isSpeaking 
+              ? 'border-primary/50' 
+              : voiceMode 
+              ? 'border-green-500/50' 
+              : 'border-white/30'
+          } text-foreground placeholder:text-white/50 focus:outline-none focus:border-white/60 focus:ring-2 focus:ring-white/20 transition-all disabled:opacity-50 text-sm sm:text-base`}
         />
 
         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 sm:gap-1">
@@ -174,7 +222,9 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
               onClick={handleMicClick}
               className={`h-8 w-8 sm:h-9 sm:w-9 rounded-full transition-all ${
                 voiceMode 
-                  ? 'bg-green-500 text-white hover:bg-green-600' 
+                  ? isSpeaking 
+                    ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                    : 'bg-green-500 text-white hover:bg-green-600' 
                   : 'text-white/60 hover:text-white hover:bg-white/10'
               }`}
               aria-label={voiceMode ? 'Stop voice mode' : 'Start voice mode'}
@@ -198,14 +248,19 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
         </div>
       </form>
       
-      {voiceMode && transcript && (
-        <p className="text-center text-xs text-green-400 mt-2 animate-pulse">
-          Auto-sending after pause...
+      {voiceMode && (
+        <p className={`text-center text-xs mt-2 ${
+          isSpeaking ? 'text-primary' : isListening ? 'text-green-400 animate-pulse' : 'text-muted-foreground'
+        }`}>
+          {isSpeaking ? 'AI speaking... will resume listening after' : 
+           isListening && transcript ? 'Auto-sending after pause...' :
+           isListening ? 'Listening...' : 
+           isLoading ? 'Processing...' : 'Ready'}
         </p>
       )}
       
       <p className="text-center text-[10px] sm:text-xs text-muted-foreground/60 mt-2 sm:mt-3 px-2">
-        {voiceMode ? 'Voice mode ON • Speak continuously • Tap square to stop' : 'Tap mic for hands-free voice mode'}
+        {voiceMode ? '🎙️ Jarvis Mode ON • Continuous conversation • Tap square to stop' : 'Tap mic for Jarvis-style voice mode'}
       </p>
     </div>
   );
