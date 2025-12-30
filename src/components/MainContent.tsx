@@ -45,11 +45,11 @@ const MainContent = ({ isMobile = false }: MainContentProps) => {
     }
   }, [sendMessage, isSpeaking, stop]);
 
-  const handleSendMessage = useCallback(async (message: string) => {
+  const handleSendMessage = useCallback(async (message: string, documentContent?: string) => {
     if (isSpeaking) {
       stop();
     }
-    await sendMessage(message, 'en-IN');
+    await sendMessage(message, 'en-IN', documentContent);
   }, [sendMessage, isSpeaking, stop]);
 
   const handleContinuousModeChange = useCallback((active: boolean) => {

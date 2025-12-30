@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Message {
@@ -16,8 +16,10 @@ interface LegalChatHook {
   sessionId: string;
   lastLanguage: string;
   lastVoiceResponse: string;
-  sendMessage: (message: string, detectedLanguage?: string) => Promise<void>;
+  documentContext: string | null;
+  sendMessage: (message: string, detectedLanguage?: string, documentContent?: string) => Promise<void>;
   clearMessages: () => void;
+  setDocumentContext: (content: string | null) => void;
 }
 
 export const useLegalChat = (): LegalChatHook => {
@@ -25,10 +27,24 @@ export const useLegalChat = (): LegalChatHook => {
   const [isLoading, setIsLoading] = useState(false);
   const [lastLanguage, setLastLanguage] = useState('en-IN');
   const [lastVoiceResponse, setLastVoiceResponse] = useState('');
+  const [documentContext, setDocumentContext] = useState<string | null>(null);
+  const documentContextRef = useRef<string | null>(null);
   const [sessionId] = useState(() => `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
 
-  const sendMessage = useCallback(async (message: string, detectedLanguage: string = 'en-IN') => {
+  // Keep ref in sync for callbacks
+  const updateDocumentContext = useCallback((content: string | null) => {
+    setDocumentContext(content);
+    documentContextRef.current = content;
+  }, []);
+
+  const sendMessage = useCallback(async (message: string, detectedLanguage: string = 'en-IN', documentContent?: string) => {
     if (!message.trim() || isLoading) return;
+
+    // If document content is passed, store it
+    if (documentContent) {
+      documentContextRef.current = documentContent;
+      setDocumentContext(documentContent);
+    }
 
     const userMessage: Message = {
       id: `user-${Date.now()}`,
@@ -47,7 +63,8 @@ export const useLegalChat = (): LegalChatHook => {
         body: { 
           message: message.trim(),
           sessionId,
-          detectedLanguage
+          detectedLanguage,
+          documentContent: documentContextRef.current || undefined
         }
       });
 
@@ -87,6 +104,8 @@ export const useLegalChat = (): LegalChatHook => {
 
   const clearMessages = useCallback(() => {
     setMessages([]);
+    setDocumentContext(null);
+    documentContextRef.current = null;
   }, []);
 
   return {
@@ -95,7 +114,9 @@ export const useLegalChat = (): LegalChatHook => {
     sessionId,
     lastLanguage,
     lastVoiceResponse,
+    documentContext,
     sendMessage,
-    clearMessages
+    clearMessages,
+    setDocumentContext: updateDocumentContext
   };
 };

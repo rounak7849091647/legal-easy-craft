@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, sessionId, detectedLanguage } = await req.json();
+    const { message, sessionId, detectedLanguage, documentContent } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!message) {
@@ -26,14 +26,44 @@ serve(async (req) => {
     }
 
     const isHindi = detectedLanguage === 'hi-IN';
-    const isEnglish = !isHindi; // Default to English for all other cases
+    const hasDocument = documentContent && documentContent.length > 0;
 
-    // Simple, fast prompt
-    const systemPrompt = isHindi 
-      ? `You are CARE, a friendly Indian legal assistant. Respond in Hindi (Devanagari script). Be warm, concise (2-3 sentences). Provide helpful legal guidance on Indian laws.`
-      : `You are CARE, a friendly Indian legal assistant. Respond in simple English. Be warm, concise (2-3 sentences). Provide helpful legal guidance on Indian laws.`;
+    // Build system prompt based on context
+    let systemPrompt = '';
+    
+    if (hasDocument) {
+      // Document analysis mode
+      systemPrompt = isHindi 
+        ? `You are CARE, an expert Indian legal document analyzer. A document has been provided for analysis. 
+           
+DOCUMENT CONTENT:
+${documentContent.slice(0, 6000)}
 
-    console.log(`Language: ${detectedLanguage}, isHindi: ${isHindi}, message: ${message.substring(0, 50)}...`);
+Analyze this document and answer questions about it in Hindi (Devanagari script). Be thorough but concise. Focus on:
+- Key legal clauses and terms
+- Rights and obligations of parties
+- Important dates and deadlines
+- Potential risks or concerns
+- Suggestions for improvement`
+        : `You are CARE, an expert Indian legal document analyzer. A document has been provided for analysis.
+
+DOCUMENT CONTENT:
+${documentContent.slice(0, 6000)}
+
+Analyze this document and answer questions about it in simple English. Be thorough but concise. Focus on:
+- Key legal clauses and terms
+- Rights and obligations of parties
+- Important dates and deadlines
+- Potential risks or concerns
+- Suggestions for improvement`;
+    } else {
+      // Normal legal chat mode
+      systemPrompt = isHindi 
+        ? `You are CARE, a friendly Indian legal assistant. Respond in Hindi (Devanagari script). Be warm, concise (2-3 sentences). Provide helpful legal guidance on Indian laws.`
+        : `You are CARE, a friendly Indian legal assistant. Respond in simple English. Be warm, concise (2-3 sentences). Provide helpful legal guidance on Indian laws.`;
+    }
+
+    console.log(`Language: ${detectedLanguage}, hasDocument: ${hasDocument}, message: ${message.substring(0, 50)}...`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -47,7 +77,7 @@ serve(async (req) => {
           { role: "system", content: systemPrompt },
           { role: "user", content: message }
         ],
-        max_tokens: 500, // Shorter for faster responses
+        max_tokens: hasDocument ? 1000 : 500, // More tokens for document analysis
         temperature: 0.7,
       }),
     });
@@ -73,13 +103,10 @@ serve(async (req) => {
     const data = await response.json();
     const aiResponse = data.choices?.[0]?.message?.content || "I couldn't generate a response. Please try again.";
     
-    // For Hindi: voice in Hindi, display in English (we'd need translation)
-    // For English: both same
-    // For now, keep it simple - same language for both
     return new Response(
       JSON.stringify({ 
-        response: aiResponse, // Display text
-        voiceResponse: aiResponse, // Voice text (same language)
+        response: aiResponse,
+        voiceResponse: aiResponse,
         sessionId: sessionId || `session-${Date.now()}`,
         language: detectedLanguage || 'en-IN'
       }),
