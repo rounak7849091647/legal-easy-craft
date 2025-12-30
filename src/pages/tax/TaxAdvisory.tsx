@@ -38,16 +38,15 @@ const TaxAdvisory = () => {
         {/* Consultation Types */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           {[
-            { icon: MessageCircle, title: 'Chat', price: '₹499', duration: '30 min' },
-            { icon: Phone, title: 'Call', price: '₹799', duration: '30 min' },
-            { icon: Video, title: 'Video', price: '₹999', duration: '30 min' },
+            { icon: MessageCircle, title: 'Chat', desc: 'Quick text-based queries' },
+            { icon: Phone, title: 'Call', desc: 'Voice consultation' },
+            { icon: Video, title: 'Video', desc: 'Face-to-face session' },
           ].map((type, index) => (
             <Card key={index} className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors cursor-pointer">
-              <CardContent className="p-6 text-center">
-                <type.icon size={32} className="mx-auto text-white mb-3" />
-                <h3 className="font-medium text-foreground">{type.title}</h3>
-                <p className="text-xl font-bold text-foreground mt-2">{type.price}</p>
-                <p className="text-xs text-muted-foreground">{type.duration}</p>
+              <CardContent className="p-4 sm:p-6 text-center">
+                <type.icon size={28} className="mx-auto text-white mb-3" />
+                <h3 className="font-medium text-foreground text-sm sm:text-base">{type.title}</h3>
+                <p className="text-xs text-muted-foreground mt-1">{type.desc}</p>
               </CardContent>
             </Card>
           ))}
@@ -58,16 +57,16 @@ const TaxAdvisory = () => {
           <CardHeader>
             <CardTitle className="text-foreground">Available Experts</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
             {experts.map((expert, index) => (
-              <div key={index} className="flex items-center justify-between bg-white/5 rounded-lg p-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-lg font-medium text-foreground">
+              <div key={index} className="flex flex-col sm:flex-row sm:items-center justify-between bg-white/5 rounded-lg p-3 sm:p-4 gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 flex items-center justify-center text-sm sm:text-lg font-medium text-foreground shrink-0">
                     {expert.name.split(' ')[1][0]}
                   </div>
-                  <div>
-                    <h3 className="font-medium text-foreground">{expert.name}</h3>
-                    <p className="text-sm text-muted-foreground">{expert.specialty}</p>
+                  <div className="min-w-0">
+                    <h3 className="font-medium text-foreground text-sm sm:text-base truncate">{expert.name}</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground">{expert.specialty}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <Star size={12} className="text-yellow-500 fill-yellow-500" />
                       <span className="text-xs text-foreground">{expert.rating}</span>
@@ -75,8 +74,8 @@ const TaxAdvisory = () => {
                     </div>
                   </div>
                 </div>
-                <Button size="sm" className="bg-white text-black hover:bg-white/90">
-                  Book
+                <Button size="sm" className="bg-white text-black hover:bg-white/90 w-full sm:w-auto">
+                  Connect
                 </Button>
               </div>
             ))}
