@@ -62,18 +62,18 @@ const MainContent = ({ onLoginClick, isMobile = false }: MainContentProps) => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4">
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 md:px-12 lg:px-16">
         {hasMessages ? (
           // Chat mode
-          <div className="flex-1 w-full max-w-3xl flex flex-col">
+          <div className="flex-1 w-full max-w-4xl flex flex-col">
             <ChatMessages messages={messages} isLoading={isLoading} />
-            <div className="py-4 pb-6">
+            <div className="py-4 pb-8">
               <ChatInput onSend={handleSendMessage} isLoading={isLoading} />
             </div>
           </div>
         ) : (
           // Initial orb mode
-          <div className="flex flex-col items-center gap-6 md:gap-8 animate-fade-in">
+          <div className="flex flex-col items-center gap-8 md:gap-10 animate-fade-in w-full max-w-2xl">
             <AiOrb 
               onTranscript={handleVoiceTranscript}
               isProcessing={isLoading}
