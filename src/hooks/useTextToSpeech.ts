@@ -36,12 +36,21 @@ export const useTextToSpeech = (): TextToSpeechHook => {
         utterance.pitch = 1.0;
         utterance.volume = 1.0;
 
-        // Try to find a good voice for the language
+        // Try to find a female voice for the language
         const voices = window.speechSynthesis.getVoices();
         const langCode = language.split('-')[0]; // e.g., 'en' from 'en-IN'
         
-        // Find a voice that matches the language
+        // Prefer female voices - common female voice names
+        const femaleVoiceNames = ['female', 'woman', 'zira', 'samantha', 'victoria', 'karen', 'moira', 'tessa', 'fiona', 'veena', 'lekha', 'priya', 'heera', 'google us english', 'google uk english female'];
+        
+        // Find a female voice that matches the language
         const matchingVoice = voices.find(
+          (v) => {
+            const isLangMatch = v.lang.startsWith(langCode) || v.lang === language;
+            const isFemale = femaleVoiceNames.some(name => v.name.toLowerCase().includes(name));
+            return isLangMatch && isFemale;
+          }
+        ) || voices.find(
           (v) => v.lang.startsWith(langCode) || v.lang === language
         );
         
