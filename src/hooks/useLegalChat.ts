@@ -4,7 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 export interface Message {
   id: string;
   role: 'user' | 'assistant';
-  content: string;
+  content: string; // Display text (always English for assistant)
+  voiceContent?: string; // Voice text (in user's language for TTS)
   timestamp: Date;
   language?: string;
 }
@@ -14,6 +15,7 @@ interface LegalChatHook {
   isLoading: boolean;
   sessionId: string;
   lastLanguage: string;
+  lastVoiceResponse: string;
   sendMessage: (message: string, detectedLanguage?: string) => Promise<void>;
   clearMessages: () => void;
 }
@@ -22,6 +24,7 @@ export const useLegalChat = (): LegalChatHook => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [lastLanguage, setLastLanguage] = useState('en-IN');
+  const [lastVoiceResponse, setLastVoiceResponse] = useState('');
   const [sessionId] = useState(() => `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
 
   const sendMessage = useCallback(async (message: string, detectedLanguage: string = 'en-IN') => {
@@ -52,16 +55,22 @@ export const useLegalChat = (): LegalChatHook => {
         throw error;
       }
 
+      // Get both display (English) and voice (native language) responses
+      const displayContent = data.response || 'I apologize, but I could not generate a response. Please try again.';
+      const voiceContent = data.voiceResponse || displayContent;
+
       const assistantMessage: Message = {
         id: `assistant-${Date.now()}`,
         role: 'assistant',
-        content: data.response || 'I apologize, but I could not generate a response. Please try again.',
+        content: displayContent,
+        voiceContent: voiceContent,
         timestamp: new Date(),
         language: data.language || detectedLanguage
       };
 
       setMessages(prev => [...prev, assistantMessage]);
       setLastLanguage(data.language || detectedLanguage);
+      setLastVoiceResponse(voiceContent);
     } catch (error) {
       console.error('Chat error:', error);
       const errorMessage: Message = {
@@ -85,6 +94,7 @@ export const useLegalChat = (): LegalChatHook => {
     isLoading,
     sessionId,
     lastLanguage,
+    lastVoiceResponse,
     sendMessage,
     clearMessages
   };

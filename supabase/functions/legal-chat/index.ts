@@ -41,17 +41,21 @@ serve(async (req) => {
     };
 
     const userLanguage = languageMap[detectedLanguage || 'en-IN'] || 'English';
+    const isHindi = detectedLanguage === 'hi-IN';
+    const isEnglish = detectedLanguage === 'en-IN' || !detectedLanguage;
 
+    // System prompt that generates both versions
     const systemPrompt = `You are CARE (Comprehensive Assistance for Rights and Empowerment), a warm, empathetic, and knowledgeable Indian legal assistant. You speak in a friendly, conversational tone like a caring friend who happens to be a legal expert.
 
-CRITICAL LANGUAGE RULES:
-1. The user is speaking in ${userLanguage}. You MUST respond in the SAME language.
-2. If the user speaks Hindi, respond entirely in Hindi using Devanagari script.
-3. If the user speaks Tamil, respond entirely in Tamil script.
-4. If the user speaks Telugu, respond entirely in Telugu script.
-5. If the user speaks any other Indian language, respond in that same language and script.
-6. If the user speaks English, respond in simple, clear English.
-7. NEVER mix languages unless the user does so naturally.
+CRITICAL RESPONSE FORMAT:
+You MUST respond with a JSON object containing two fields:
+1. "voiceResponse": Your response in the USER'S LANGUAGE (${userLanguage}) - this will be spoken aloud
+2. "displayResponse": The SAME response translated to English - this will be shown as text
+
+${isEnglish ? `Since the user is speaking English, both voiceResponse and displayResponse should be the same English text.` : 
+`The user is speaking ${userLanguage}. 
+- voiceResponse: Respond in ${userLanguage} (use native script like Devanagari for Hindi)
+- displayResponse: The same content but in clear, simple English`}
 
 PERSONALITY & TONE:
 - Be warm, friendly, and approachable - like a caring elder sister or friend
@@ -80,7 +84,13 @@ LEGAL EXPERTISE AREAS:
 - Tenant and landlord disputes
 - Document drafting guidance
 
-Remember: You're having a one-on-one conversation. Be personal, warm, and helpful.`;
+EXAMPLE RESPONSE FORMAT:
+{
+  "voiceResponse": "नमस्ते! मैं आपकी मदद करने के लिए यहाँ हूँ। आपका सवाल बहुत अच्छा है।",
+  "displayResponse": "Hello! I'm here to help you. That's a great question."
+}
+
+Remember: Always respond with valid JSON containing both voiceResponse and displayResponse fields.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -94,7 +104,7 @@ Remember: You're having a one-on-one conversation. Be personal, warm, and helpfu
           { role: "system", content: systemPrompt },
           { role: "user", content: message }
         ],
-        max_tokens: 1000,
+        max_tokens: 1500,
         temperature: 0.7,
       }),
     });
@@ -118,11 +128,45 @@ Remember: You're having a one-on-one conversation. Be personal, warm, and helpfu
     }
 
     const data = await response.json();
-    const aiResponse = data.choices?.[0]?.message?.content || "I apologize, I couldn't generate a response. Please try again.";
+    const aiResponseRaw = data.choices?.[0]?.message?.content || "";
+    
+    // Parse the JSON response
+    let voiceResponse = aiResponseRaw;
+    let displayResponse = aiResponseRaw;
+    
+    try {
+      // Try to extract JSON from the response
+      const jsonMatch = aiResponseRaw.match(/\{[\s\S]*"voiceResponse"[\s\S]*"displayResponse"[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        voiceResponse = parsed.voiceResponse || aiResponseRaw;
+        displayResponse = parsed.displayResponse || aiResponseRaw;
+      } else {
+        // If no JSON found, try parsing the whole response
+        const parsed = JSON.parse(aiResponseRaw);
+        voiceResponse = parsed.voiceResponse || aiResponseRaw;
+        displayResponse = parsed.displayResponse || aiResponseRaw;
+      }
+    } catch (e) {
+      // If JSON parsing fails, use the raw response for both
+      console.log("Could not parse JSON response, using raw text");
+      // Clean up any markdown code blocks if present
+      const cleanResponse = aiResponseRaw.replace(/```json\n?|\n?```/g, '').trim();
+      try {
+        const parsed = JSON.parse(cleanResponse);
+        voiceResponse = parsed.voiceResponse || cleanResponse;
+        displayResponse = parsed.displayResponse || cleanResponse;
+      } catch {
+        // Still failed, use as-is
+        voiceResponse = aiResponseRaw;
+        displayResponse = aiResponseRaw;
+      }
+    }
     
     return new Response(
       JSON.stringify({ 
-        response: aiResponse,
+        response: displayResponse, // English text for display
+        voiceResponse: voiceResponse, // Native language for TTS
         sessionId: sessionId || `session-${Date.now()}`,
         language: detectedLanguage || 'en-IN'
       }),
