@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef } from 'react';
 import { Paperclip, Send, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
@@ -9,11 +9,11 @@ interface ChatInputProps {
   isSpeaking?: boolean;
 }
 
-const ChatInput = ({
+const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
   onSend,
   isLoading = false,
   isSpeaking = false,
-}: ChatInputProps) => {
+}, ref) => {
   const [message, setMessage] = useState('');
   const { isListening, transcript, startListening, stopListening, resetTranscript, isSupported } = useSpeechRecognition();
 
@@ -23,13 +23,6 @@ const ChatInput = ({
       setMessage(transcript);
     }
   }, [transcript]);
-
-  // Send message when stopped listening and has transcript
-  useEffect(() => {
-    if (!isListening && transcript) {
-      // User stopped speaking, could auto-send here if desired
-    }
-  }, [isListening, transcript]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +54,7 @@ const ChatInput = ({
     : 'Type your legal question...';
 
   return (
-    <div className="w-full max-w-lg mx-auto px-2 sm:px-0">
+    <div ref={ref} className="w-full max-w-lg mx-auto px-2 sm:px-0">
       <form onSubmit={handleSubmit} className="relative">
         {/* Speaking indicator - shows waveform when CARE is speaking */}
         {isSpeaking && (
@@ -128,6 +121,8 @@ const ChatInput = ({
       </p>
     </div>
   );
-};
+});
+
+ChatInput.displayName = 'ChatInput';
 
 export default ChatInput;
