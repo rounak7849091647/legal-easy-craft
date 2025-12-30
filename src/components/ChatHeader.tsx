@@ -1,14 +1,7 @@
 import { Menu } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
-interface ChatHeaderProps {
-  onLoginClick?: () => void;
-}
-
-const ChatHeader = ({ onLoginClick }: ChatHeaderProps) => {
-  const { isMobile, state } = useSidebar();
-  
+const ChatHeader = () => {
   return (
     <header className="sticky top-0 z-40 flex items-center justify-between h-14 px-4 bg-background/80 backdrop-blur-sm border-b border-border/50">
       <div className="flex items-center gap-3">
@@ -22,15 +15,6 @@ const ChatHeader = ({ onLoginClick }: ChatHeaderProps) => {
           <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">AI</span>
         </div>
       </div>
-
-      <Button 
-        variant="outline" 
-        size="sm"
-        onClick={onLoginClick}
-        className="bg-primary text-primary-foreground hover:bg-primary/90 border-0"
-      >
-        Login
-      </Button>
     </header>
   );
 };

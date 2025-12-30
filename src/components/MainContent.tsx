@@ -8,11 +8,10 @@ import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import supremeCourtBg from '@/assets/supreme-court-bg.jpg';
 
 interface MainContentProps {
-  onLoginClick?: () => void;
   isMobile?: boolean;
 }
 
-const MainContent = ({ onLoginClick, isMobile = false }: MainContentProps) => {
+const MainContent = ({ isMobile = false }: MainContentProps) => {
   const { messages, isLoading, sendMessage, lastLanguage, lastVoiceResponse } = useLegalChat();
   const { isSpeaking, speak, stop } = useTextToSpeech();
   const [lastResponseLanguage, setLastResponseLanguage] = useState<string>('en-IN');

@@ -1,15 +1,12 @@
-import { useState } from 'react';
 import { 
   Sparkles, 
   FileText, 
   Users, 
   Calculator, 
-  LogIn,
   Home,
   Plus,
   MessageSquare,
-  Settings,
-  ChevronLeft
+  Settings
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -28,11 +25,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 
-interface AppSidebarProps {
-  onLoginClick?: () => void;
-}
-
-const AppSidebar = ({ onLoginClick }: AppSidebarProps) => {
+const AppSidebar = () => {
   const location = useLocation();
   const currentPath = location.pathname;
   const { state } = useSidebar();
@@ -164,32 +157,12 @@ const AppSidebar = ({ onLoginClick }: AppSidebarProps) => {
       <SidebarFooter className="border-t border-sidebar-border p-3">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton 
-              onClick={onLoginClick}
-              className="hover:bg-sidebar-accent"
-            >
-              <LogIn size={18} className="text-muted-foreground" />
-              {!isCollapsed && (
-                <div className="flex flex-col">
-                  <span className="text-sm">Login / Sign Up</span>
-                  <span className="text-xs text-muted-foreground">Access more features</span>
-                </div>
-              )}
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
             <SidebarMenuButton className="hover:bg-sidebar-accent">
               <Settings size={18} className="text-muted-foreground" />
               {!isCollapsed && <span className="text-sm">Settings</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-        
-        {!isCollapsed && (
-          <p className="text-xs text-muted-foreground mt-3 px-2">
-            Sign in to access Dashboard, Case Management, Calendar and more.
-          </p>
-        )}
       </SidebarFooter>
     </Sidebar>
   );
