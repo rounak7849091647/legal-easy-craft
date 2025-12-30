@@ -1,28 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import Sidebar from '@/components/Sidebar';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import AppSidebar from '@/components/AppSidebar';
 import MainContent from '@/components/MainContent';
 import LoginModal from '@/components/LoginModal';
-import MobileHeader from '@/components/MobileHeader';
+import ChatHeader from '@/components/ChatHeader';
 
 const Index = () => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   const handleLoginClick = () => {
     setIsLoginOpen(true);
-    setIsSidebarOpen(false);
   };
 
   return (
@@ -33,24 +21,16 @@ const Index = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
       </Helmet>
       
-      {/* Mobile Header */}
-      <MobileHeader 
-        onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        onLoginClick={handleLoginClick}
-        isMenuOpen={isSidebarOpen}
-      />
-
-      <div className="flex h-screen bg-background">
-        <Sidebar 
-          onLoginClick={handleLoginClick}
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
-        />
-        <MainContent 
-          onLoginClick={handleLoginClick}
-          isMobile={isMobile}
-        />
-      </div>
+      <SidebarProvider defaultOpen={true}>
+        <div className="flex min-h-screen w-full bg-background">
+          <AppSidebar onLoginClick={handleLoginClick} />
+          
+          <SidebarInset className="flex flex-col flex-1">
+            <ChatHeader onLoginClick={handleLoginClick} />
+            <MainContent onLoginClick={handleLoginClick} />
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
 
       <LoginModal 
         isOpen={isLoginOpen} 
