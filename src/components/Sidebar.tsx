@@ -50,11 +50,7 @@ interface SidebarProps {
 
 const Sidebar = ({ onLoginClick }: SidebarProps) => {
   const legalCategories = [
-    { label: 'General', icon: <Sparkles size={18} /> },
-    { label: 'BNS', colorDot: 'bg-red-500' },
-    { label: 'IPC', colorDot: 'bg-red-500' },
-    { label: 'Civil Laws', icon: <Landmark size={18} /> },
-    { label: 'Labour Law', icon: <Users size={18} /> },
+    { label: 'Legal Intelligence', icon: <Sparkles size={18} /> },
   ];
 
   return (
@@ -75,7 +71,6 @@ const Sidebar = ({ onLoginClick }: SidebarProps) => {
               key={item.label}
               icon={item.icon}
               label={item.label}
-              colorDot={item.colorDot}
             />
           ))}
         </div>
