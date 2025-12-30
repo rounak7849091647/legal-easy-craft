@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import AiOrb from './AiOrb';
 import ChatInput from './ChatInput';
 import ChatMessages from './ChatMessages';
@@ -15,10 +15,10 @@ const MainContent = ({ isMobile = false }: MainContentProps) => {
   const { messages, isLoading, sendMessage, lastLanguage, lastVoiceResponse } = useLegalChat();
   const { isSpeaking, speak, stop } = useTextToSpeech();
   const [lastResponseLanguage, setLastResponseLanguage] = useState<string>('en-IN');
+  const [continuousVoiceMode, setContinuousVoiceMode] = useState(false);
   const lastSpokenIdRef = useRef<string | null>(null);
 
   // Auto-speak new assistant responses (Jarvis-style)
-  // Uses voiceContent (native language) for TTS, while display shows English
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
     if (
@@ -28,7 +28,6 @@ const MainContent = ({ isMobile = false }: MainContentProps) => {
     ) {
       setLastResponseLanguage(lastMessage.language || lastLanguage);
       lastSpokenIdRef.current = lastMessage.id;
-      // Use voiceContent for TTS (native language), fallback to content
       const textToSpeak = lastMessage.voiceContent || lastMessage.content;
       if (textToSpeak) {
         speak(textToSpeak, lastMessage.language || lastLanguage);
@@ -36,20 +35,26 @@ const MainContent = ({ isMobile = false }: MainContentProps) => {
     }
   }, [messages, isLoading, lastLanguage, speak]);
 
-  const handleVoiceTranscript = async (transcript: string, language: string) => {
+  const handleVoiceTranscript = useCallback(async (transcript: string, language: string) => {
     if (transcript.trim()) {
+      // Stop any ongoing speech when user starts speaking
+      if (isSpeaking) {
+        stop();
+      }
       await sendMessage(transcript, language);
     }
-  };
+  }, [sendMessage, isSpeaking, stop]);
 
-  const handleSendMessage = async (message: string) => {
-    // Stop any ongoing speech when user sends a new message
+  const handleSendMessage = useCallback(async (message: string) => {
     if (isSpeaking) {
       stop();
     }
-    // For typed messages, default to English
     await sendMessage(message, 'en-IN');
-  };
+  }, [sendMessage, isSpeaking, stop]);
+
+  const handleContinuousModeChange = useCallback((active: boolean) => {
+    setContinuousVoiceMode(active);
+  }, []);
 
   const hasMessages = messages.length > 0;
 
@@ -82,6 +87,8 @@ const MainContent = ({ isMobile = false }: MainContentProps) => {
                 isLoading={isLoading}
                 isSpeaking={isSpeaking}
                 onVoiceTranscript={handleVoiceTranscript}
+                continuousMode={continuousVoiceMode}
+                onContinuousModeChange={handleContinuousModeChange}
               />
             </div>
           </div>
@@ -102,6 +109,8 @@ const MainContent = ({ isMobile = false }: MainContentProps) => {
                 isLoading={isLoading}
                 isSpeaking={isSpeaking}
                 onVoiceTranscript={handleVoiceTranscript}
+                continuousMode={continuousVoiceMode}
+                onContinuousModeChange={handleContinuousModeChange}
               />
             </div>
           </div>
