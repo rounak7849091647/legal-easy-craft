@@ -1,18 +1,10 @@
-import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
 import MainContent from '@/components/MainContent';
-import LoginModal from '@/components/LoginModal';
 import ChatHeader from '@/components/ChatHeader';
 
 const Index = () => {
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
-
-  const handleLoginClick = () => {
-    setIsLoginOpen(true);
-  };
-
   return (
     <>
       <Helmet>
@@ -23,19 +15,14 @@ const Index = () => {
       
       <SidebarProvider defaultOpen={true}>
         <div className="flex min-h-screen w-full bg-background">
-          <AppSidebar onLoginClick={handleLoginClick} />
+          <AppSidebar />
           
           <SidebarInset className="flex flex-col flex-1">
-            <ChatHeader onLoginClick={handleLoginClick} />
-            <MainContent onLoginClick={handleLoginClick} />
+            <ChatHeader />
+            <MainContent />
           </SidebarInset>
         </div>
       </SidebarProvider>
-
-      <LoginModal 
-        isOpen={isLoginOpen} 
-        onClose={() => setIsLoginOpen(false)} 
-      />
     </>
   );
 };
