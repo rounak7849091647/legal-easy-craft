@@ -1,15 +1,47 @@
-import { useState } from 'react';
-import { Paperclip, Send } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Paperclip, Send, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 
-const ChatInput = () => {
+interface ChatInputProps {
+  onSend: (message: string) => void;
+  isLoading?: boolean;
+}
+
+const ChatInput = ({ onSend, isLoading = false }: ChatInputProps) => {
   const [message, setMessage] = useState('');
+  const { isListening, transcript, startListening, stopListening, resetTranscript, isSupported } = useSpeechRecognition();
+
+  // Update message with transcript
+  useEffect(() => {
+    if (transcript) {
+      setMessage(transcript);
+    }
+  }, [transcript]);
+
+  // Send message when stopped listening and has transcript
+  useEffect(() => {
+    if (!isListening && transcript) {
+      // User stopped speaking, could auto-send here if desired
+    }
+  }, [isListening, transcript]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (message.trim()) {
-      console.log('Sending:', message);
+    if (message.trim() && !isLoading) {
+      onSend(message.trim());
       setMessage('');
+      resetTranscript();
+    }
+  };
+
+  const handleMicClick = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      resetTranscript();
+      setMessage('');
+      startListening();
     }
   };
 
@@ -20,10 +52,22 @@ const ChatInput = () => {
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Or type your question..."
-          className="w-full px-5 py-3.5 pr-24 rounded-full bg-muted/50 border border-border/50 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all"
+          placeholder={isListening ? "Listening..." : "Type your legal question..."}
+          disabled={isLoading}
+          className="w-full px-5 py-3.5 pr-32 rounded-full bg-muted/50 border border-border/50 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all disabled:opacity-50"
         />
         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          {isSupported && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={handleMicClick}
+              className={`h-8 w-8 ${isListening ? 'text-red-500 animate-pulse' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              <Mic size={18} />
+            </Button>
+          )}
           <Button
             type="button"
             variant="ghost"
@@ -35,7 +79,8 @@ const ChatInput = () => {
           <Button
             type="submit"
             size="icon"
-            className="h-8 w-8 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+            disabled={!message.trim() || isLoading}
+            className="h-8 w-8 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
           >
             <Send size={16} />
           </Button>
@@ -43,7 +88,7 @@ const ChatInput = () => {
       </form>
       
       <p className="text-center text-xs text-muted-foreground/60 mt-3">
-        Say "Hi Care" to wake me up • Hindi & English supported
+        Ask about BNS, IPC, Civil Laws, Labour Law & more • Hindi & English supported
       </p>
     </div>
   );

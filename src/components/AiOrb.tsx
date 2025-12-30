@@ -1,36 +1,105 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
+import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 
-const AiOrb = () => {
+interface AiOrbProps {
+  onTranscript?: (transcript: string) => void;
+  isProcessing?: boolean;
+  responseText?: string;
+}
+
+const AiOrb = ({ onTranscript, isProcessing = false, responseText }: AiOrbProps) => {
   const [isActive, setIsActive] = useState(false);
+  const { isListening, transcript, startListening, stopListening, resetTranscript, isSupported: speechSupported } = useSpeechRecognition();
+  const { isSpeaking, speak, stop: stopSpeaking, isSupported: ttsSupported } = useTextToSpeech();
+
+  // Handle transcript changes
+  useEffect(() => {
+    if (transcript && !isListening && onTranscript) {
+      onTranscript(transcript);
+      resetTranscript();
+    }
+  }, [transcript, isListening, onTranscript, resetTranscript]);
+
+  // Speak response when received
+  useEffect(() => {
+    if (responseText && !isProcessing && ttsSupported) {
+      speak(responseText);
+    }
+  }, [responseText, isProcessing, speak, ttsSupported]);
+
+  const handleOrbClick = () => {
+    if (isSpeaking) {
+      stopSpeaking();
+      return;
+    }
+
+    if (isListening) {
+      stopListening();
+      setIsActive(false);
+    } else if (speechSupported) {
+      startListening();
+      setIsActive(true);
+    }
+  };
+
+  const displayState = isProcessing ? 'thinking' : isSpeaking ? 'speaking' : isListening ? 'listening' : 'idle';
 
   return (
     <div className="flex flex-col items-center gap-4">
       <button
-        onClick={() => setIsActive(!isActive)}
-        className="relative group cursor-pointer"
+        onClick={handleOrbClick}
+        disabled={isProcessing}
+        className="relative group cursor-pointer disabled:cursor-wait"
       >
         {/* Outer glow ring */}
-        <div className={`absolute inset-0 rounded-full bg-primary/20 blur-xl transition-all duration-500 ${
-          isActive ? 'scale-150 opacity-100' : 'scale-100 opacity-60'
+        <div className={`absolute inset-0 rounded-full transition-all duration-500 ${
+          displayState !== 'idle' 
+            ? 'scale-150 opacity-100' 
+            : 'scale-100 opacity-60'
+        } ${
+          displayState === 'speaking' 
+            ? 'bg-green-500/30 blur-xl' 
+            : displayState === 'thinking'
+            ? 'bg-yellow-500/30 blur-xl'
+            : 'bg-primary/20 blur-xl'
         }`} />
         
         {/* Main orb */}
-        <div className={`relative w-36 h-36 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 backdrop-blur-sm border border-primary/30 flex items-center justify-center orb-glow orb-pulse transition-all duration-300 ${
-          isActive ? 'scale-110' : 'scale-100'
+        <div className={`relative w-36 h-36 rounded-full backdrop-blur-sm border flex items-center justify-center orb-glow orb-pulse transition-all duration-300 ${
+          displayState !== 'idle' ? 'scale-110' : 'scale-100'
+        } ${
+          displayState === 'speaking' 
+            ? 'bg-gradient-to-br from-green-500/30 to-green-500/10 border-green-500/30' 
+            : displayState === 'thinking'
+            ? 'bg-gradient-to-br from-yellow-500/30 to-yellow-500/10 border-yellow-500/30'
+            : 'bg-gradient-to-br from-primary/30 to-primary/10 border-primary/30'
         }`}>
           {/* Inner glow */}
-          <div className="absolute inset-4 rounded-full bg-gradient-to-br from-primary/20 to-transparent" />
+          <div className={`absolute inset-4 rounded-full bg-gradient-to-br to-transparent ${
+            displayState === 'speaking' 
+              ? 'from-green-500/20' 
+              : displayState === 'thinking'
+              ? 'from-yellow-500/20'
+              : 'from-primary/20'
+          }`} />
           
           {/* Waveform animation */}
           <div className="flex items-center justify-center gap-1 z-10">
             {[...Array(5)].map((_, i) => (
               <div
                 key={i}
-                className={`w-1 bg-primary/80 rounded-full transition-all ${
-                  isActive ? 'waveform-bar' : 'h-1'
+                className={`w-1 rounded-full transition-all ${
+                  displayState !== 'idle' ? 'waveform-bar' : 'h-1'
+                } ${
+                  displayState === 'speaking' 
+                    ? 'bg-green-500/80' 
+                    : displayState === 'thinking'
+                    ? 'bg-yellow-500/80'
+                    : 'bg-primary/80'
                 }`}
                 style={{ 
-                  height: isActive ? undefined : '4px',
+                  height: displayState !== 'idle' ? undefined : '4px',
                   animationDelay: `${i * 0.1}s` 
                 }}
               />
@@ -48,12 +117,22 @@ const AiOrb = () => {
           CARE
         </h2>
         <p className="text-muted-foreground text-sm mt-1">
-          {isActive ? 'Listening...' : 'Tap to speak'}
+          {displayState === 'thinking' && 'Thinking...'}
+          {displayState === 'speaking' && 'Speaking...'}
+          {displayState === 'listening' && 'Listening...'}
+          {displayState === 'idle' && (speechSupported ? 'Tap to speak' : 'Voice not supported')}
         </p>
       </div>
 
+      {/* Live transcript */}
+      {isListening && transcript && (
+        <div className="text-center max-w-md">
+          <p className="text-foreground/80 text-sm italic">"{transcript}"</p>
+        </div>
+      )}
+
       <p className="text-muted-foreground/70 text-sm">
-        Tap the orb or enable wake word
+        {isSpeaking ? 'Tap to stop' : 'Tap the orb to start speaking'}
       </p>
     </div>
   );
