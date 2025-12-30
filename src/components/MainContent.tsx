@@ -13,26 +13,29 @@ interface MainContentProps {
 }
 
 const MainContent = ({ onLoginClick, isMobile = false }: MainContentProps) => {
-  const { messages, isLoading, sendMessage } = useLegalChat();
+  const { messages, isLoading, sendMessage, lastLanguage } = useLegalChat();
   const { speak } = useTextToSpeech();
   const [lastResponse, setLastResponse] = useState<string>('');
+  const [lastResponseLanguage, setLastResponseLanguage] = useState<string>('en-IN');
 
   // Track last assistant response for TTS
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
     if (lastMessage?.role === 'assistant' && lastMessage.content !== lastResponse) {
       setLastResponse(lastMessage.content);
+      setLastResponseLanguage(lastMessage.language || lastLanguage);
     }
-  }, [messages, lastResponse]);
+  }, [messages, lastResponse, lastLanguage]);
 
-  const handleVoiceTranscript = async (transcript: string) => {
+  const handleVoiceTranscript = async (transcript: string, language: string) => {
     if (transcript.trim()) {
-      await sendMessage(transcript);
+      await sendMessage(transcript, language);
     }
   };
 
   const handleSendMessage = async (message: string) => {
-    await sendMessage(message);
+    // For typed messages, default to English
+    await sendMessage(message, 'en-IN');
   };
 
   const hasMessages = messages.length > 0;
@@ -75,6 +78,7 @@ const MainContent = ({ onLoginClick, isMobile = false }: MainContentProps) => {
               onTranscript={handleVoiceTranscript}
               isProcessing={isLoading}
               responseText={lastResponse}
+              responseLanguage={lastResponseLanguage}
             />
             <ChatInput onSend={handleSendMessage} isLoading={isLoading} />
           </div>

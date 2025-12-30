@@ -1,32 +1,68 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 
 interface AiOrbProps {
-  onTranscript?: (transcript: string) => void;
+  onTranscript?: (transcript: string, language: string) => void;
   isProcessing?: boolean;
   responseText?: string;
+  responseLanguage?: string;
 }
 
-const AiOrb = ({ onTranscript, isProcessing = false, responseText }: AiOrbProps) => {
+const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLanguage = 'en-IN' }: AiOrbProps) => {
   const [isActive, setIsActive] = useState(false);
-  const { isListening, transcript, startListening, stopListening, resetTranscript, isSupported: speechSupported } = useSpeechRecognition();
+  const { isListening, transcript, detectedLanguage, startListening, stopListening, resetTranscript, isSupported: speechSupported } = useSpeechRecognition();
   const { isSpeaking, speak, stop: stopSpeaking, isSupported: ttsSupported } = useTextToSpeech();
+  
+  // Auto-send timer ref
+  const autoSendTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastTranscriptRef = useRef<string>('');
+  const hasSpokenRef = useRef<boolean>(false);
 
-  // Handle transcript changes
+  // Clear timer on unmount
   useEffect(() => {
-    if (transcript && !isListening && onTranscript) {
-      onTranscript(transcript);
-      resetTranscript();
-    }
-  }, [transcript, isListening, onTranscript, resetTranscript]);
+    return () => {
+      if (autoSendTimerRef.current) {
+        clearTimeout(autoSendTimerRef.current);
+      }
+    };
+  }, []);
 
-  // Speak response when received
+  // Auto-send after 2 seconds of pause while listening
   useEffect(() => {
-    if (responseText && !isProcessing && ttsSupported) {
-      speak(responseText);
+    if (isListening && transcript && transcript !== lastTranscriptRef.current) {
+      lastTranscriptRef.current = transcript;
+      
+      // Clear existing timer
+      if (autoSendTimerRef.current) {
+        clearTimeout(autoSendTimerRef.current);
+      }
+      
+      // Set new timer for 2 seconds
+      autoSendTimerRef.current = setTimeout(() => {
+        if (transcript.trim() && onTranscript) {
+          stopListening();
+          setIsActive(false);
+          onTranscript(transcript.trim(), detectedLanguage);
+          resetTranscript();
+          lastTranscriptRef.current = '';
+        }
+      }, 2000);
     }
-  }, [responseText, isProcessing, speak, ttsSupported]);
+  }, [transcript, isListening, onTranscript, stopListening, resetTranscript, detectedLanguage]);
+
+  // Speak response when received (only once per response)
+  useEffect(() => {
+    if (responseText && !isProcessing && ttsSupported && !hasSpokenRef.current) {
+      hasSpokenRef.current = true;
+      speak(responseText, responseLanguage);
+    }
+    
+    // Reset the spoken flag when we start processing a new message
+    if (isProcessing) {
+      hasSpokenRef.current = false;
+    }
+  }, [responseText, isProcessing, speak, ttsSupported, responseLanguage]);
 
   const handleOrbClick = () => {
     if (isSpeaking) {
@@ -35,6 +71,15 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText }: AiOrbProps)
     }
 
     if (isListening) {
+      // Manual stop - send immediately if there's a transcript
+      if (autoSendTimerRef.current) {
+        clearTimeout(autoSendTimerRef.current);
+      }
+      if (transcript.trim() && onTranscript) {
+        onTranscript(transcript.trim(), detectedLanguage);
+        resetTranscript();
+        lastTranscriptRef.current = '';
+      }
       stopListening();
       setIsActive(false);
     } else if (speechSupported) {
@@ -44,6 +89,21 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText }: AiOrbProps)
   };
 
   const displayState = isProcessing ? 'thinking' : isSpeaking ? 'speaking' : isListening ? 'listening' : 'idle';
+
+  // Language display names
+  const languageNames: Record<string, string> = {
+    'hi-IN': 'हिंदी',
+    'ta-IN': 'தமிழ்',
+    'te-IN': 'తెలుగు',
+    'kn-IN': 'ಕನ್ನಡ',
+    'ml-IN': 'മലയാളം',
+    'bn-IN': 'বাংলা',
+    'gu-IN': 'ગુજરાતી',
+    'pa-IN': 'ਪੰਜਾਬੀ',
+    'mr-IN': 'मराठी',
+    'or-IN': 'ଓଡ଼ିଆ',
+    'en-IN': 'English'
+  };
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -59,9 +119,11 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText }: AiOrbProps)
             : 'scale-100 opacity-60'
         } ${
           displayState === 'speaking' 
-            ? 'bg-white/30 blur-xl' 
+            ? 'bg-primary/40 blur-xl' 
             : displayState === 'thinking'
-            ? 'bg-white/20 blur-xl'
+            ? 'bg-accent/30 blur-xl'
+            : displayState === 'listening'
+            ? 'bg-green-400/30 blur-xl'
             : 'bg-white/20 blur-xl'
         }`} />
         
@@ -70,17 +132,21 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText }: AiOrbProps)
           displayState !== 'idle' ? 'scale-110' : 'scale-100'
         } ${
           displayState === 'speaking' 
-            ? 'bg-gradient-to-br from-white/30 to-white/10 border-white/50' 
+            ? 'bg-gradient-to-br from-primary/40 to-primary/20 border-primary/60' 
             : displayState === 'thinking'
-            ? 'bg-gradient-to-br from-white/20 to-white/5 border-white/30'
+            ? 'bg-gradient-to-br from-accent/30 to-accent/10 border-accent/40'
+            : displayState === 'listening'
+            ? 'bg-gradient-to-br from-green-400/30 to-green-400/10 border-green-400/50'
             : 'bg-gradient-to-br from-white/20 to-white/5 border-white/30'
         }`}>
           {/* Inner glow */}
           <div className={`absolute inset-4 rounded-full bg-gradient-to-br to-transparent ${
             displayState === 'speaking' 
-              ? 'from-white/30' 
+              ? 'from-primary/30' 
               : displayState === 'thinking'
-              ? 'from-white/20'
+              ? 'from-accent/20'
+              : displayState === 'listening'
+              ? 'from-green-400/20'
               : 'from-white/20'
           }`} />
           
@@ -89,7 +155,11 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText }: AiOrbProps)
             {[...Array(5)].map((_, i) => (
               <div
                 key={i}
-                className={`w-1 rounded-full transition-all bg-white/80 ${
+                className={`w-1 rounded-full transition-all ${
+                  displayState === 'speaking' ? 'bg-primary' :
+                  displayState === 'listening' ? 'bg-green-400' :
+                  'bg-white/80'
+                } ${
                   displayState !== 'idle' ? 'waveform-bar' : 'h-1'
                 }`}
                 style={{ 
@@ -113,20 +183,23 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText }: AiOrbProps)
         <p className="text-muted-foreground text-xs sm:text-sm mt-1">
           {displayState === 'thinking' && 'Thinking...'}
           {displayState === 'speaking' && 'Speaking...'}
-          {displayState === 'listening' && 'Listening...'}
-          {displayState === 'idle' && (speechSupported ? 'Tap to speak' : 'Voice not supported')}
+          {displayState === 'listening' && `Listening... (${languageNames[detectedLanguage] || 'English'})`}
+          {displayState === 'idle' && (speechSupported ? 'Tap to speak in any language' : 'Voice not supported')}
         </p>
       </div>
 
       {/* Live transcript */}
       {isListening && transcript && (
-        <div className="text-center max-w-xs sm:max-w-md px-4">
+        <div className="text-center max-w-xs sm:max-w-md px-4 animate-fade-in">
           <p className="text-foreground/80 text-xs sm:text-sm italic">"{transcript}"</p>
+          <p className="text-muted-foreground/60 text-xs mt-1">
+            Auto-sending in 2 seconds...
+          </p>
         </div>
       )}
 
       <p className="text-muted-foreground/70 text-xs sm:text-sm hidden sm:block">
-        {isSpeaking ? 'Tap to stop' : 'Tap the orb to start speaking'}
+        {isSpeaking ? 'Tap to stop' : 'Speak in Hindi, Tamil, Telugu, or any Indian language'}
       </p>
     </div>
   );
