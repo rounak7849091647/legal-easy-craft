@@ -54,58 +54,59 @@ const MainContent = ({ isMobile = false }: MainContentProps) => {
   const hasMessages = messages.length > 0;
 
   return (
-    <main className="flex-1 relative overflow-hidden flex flex-col h-full">
+    <main className="flex-1 relative flex flex-col h-full min-h-0">
       {/* Fixed Background image with overlay */}
       <div 
-        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat -z-10"
         style={{ backgroundImage: `url(${supremeCourtBg})` }}
       >
         <div className="absolute inset-0 bg-background/70 backdrop-blur-[2px]" />
       </div>
 
       {/* Content - ChatGPT style layout */}
-      <div className="relative z-10 flex-1 flex flex-col h-full">
-        {hasMessages ? (
-          // Chat mode - messages scroll, input fixed at bottom
-          <div className="flex-1 flex flex-col h-full">
-            <div className="flex-1 overflow-y-auto">
-              <div className="max-w-3xl mx-auto w-full px-4">
-                <ChatMessages messages={messages} isLoading={isLoading} />
-              </div>
-            </div>
-            <div className="sticky bottom-0 w-full bg-gradient-to-t from-background via-background to-transparent pt-6 pb-4">
-              <div className="max-w-3xl mx-auto w-full px-4">
-                <ChatInput
-                  onSend={handleSendMessage}
-                  isLoading={isLoading}
-                  isSpeaking={isSpeaking}
-                  onVoiceTranscript={handleVoiceTranscript}
-                />
-              </div>
+      {hasMessages ? (
+        // Chat mode - messages scroll, input fixed at bottom
+        <>
+          {/* Scrollable messages area */}
+          <div className="flex-1 overflow-y-auto min-h-0 pb-4">
+            <div className="max-w-3xl mx-auto w-full px-4 pt-4">
+              <ChatMessages messages={messages} isLoading={isLoading} />
             </div>
           </div>
-        ) : (
-          // Initial orb mode - centered
-          <div className="flex-1 flex flex-col items-center justify-center px-4">
-            <div className="flex flex-col items-center gap-8 md:gap-10 animate-fade-in w-full max-w-2xl">
-              <AiOrb 
-                onTranscript={handleVoiceTranscript}
-                isProcessing={isLoading}
-                responseText={lastVoiceResponse}
-                responseLanguage={lastResponseLanguage}
+          
+          {/* Fixed input at bottom */}
+          <div className="flex-shrink-0 w-full bg-gradient-to-t from-background via-background/95 to-transparent pt-4 pb-6">
+            <div className="max-w-3xl mx-auto w-full px-4">
+              <ChatInput
+                onSend={handleSendMessage}
+                isLoading={isLoading}
+                isSpeaking={isSpeaking}
+                onVoiceTranscript={handleVoiceTranscript}
               />
-              <div className="w-full max-w-3xl">
-                <ChatInput
-                  onSend={handleSendMessage}
-                  isLoading={isLoading}
-                  isSpeaking={isSpeaking}
-                  onVoiceTranscript={handleVoiceTranscript}
-                />
-              </div>
             </div>
           </div>
-        )}
-      </div>
+        </>
+      ) : (
+        // Initial orb mode - centered
+        <div className="flex-1 flex flex-col items-center justify-center px-4">
+          <div className="flex flex-col items-center gap-8 md:gap-10 animate-fade-in w-full max-w-2xl">
+            <AiOrb 
+              onTranscript={handleVoiceTranscript}
+              isProcessing={isLoading}
+              responseText={lastVoiceResponse}
+              responseLanguage={lastResponseLanguage}
+            />
+            <div className="w-full max-w-3xl">
+              <ChatInput
+                onSend={handleSendMessage}
+                isLoading={isLoading}
+                isSpeaking={isSpeaking}
+                onVoiceTranscript={handleVoiceTranscript}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 };
