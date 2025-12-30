@@ -33,9 +33,9 @@ const AppSidebar = () => {
   ];
 
   const serviceItems = [
-    { title: 'Documents', icon: FileText, href: '/documents', sublabel: '100+ templates' },
-    { title: 'Lawyers', icon: Users, href: '/lawyers', sublabel: 'Verified directory' },
-    { title: 'Tax Services', icon: Calculator, href: '/tax-services', sublabel: 'Comprehensive solutions' },
+    { title: 'Documents', icon: FileText, href: '/documents' },
+    { title: 'Lawyers', icon: Users, href: '/lawyers' },
+    { title: 'Tax Services', icon: Calculator, href: '/tax-services' },
   ];
 
   return (
@@ -97,12 +97,7 @@ const AppSidebar = () => {
                     <Link to={item.href} className="flex items-center gap-3">
                       <item.icon size={18} className="text-muted-foreground" />
                       {!isCollapsed && (
-                        <div className="flex flex-col">
-                          <span className="text-sm">{item.title}</span>
-                          {item.sublabel && (
-                            <span className="text-xs text-muted-foreground">{item.sublabel}</span>
-                          )}
-                        </div>
+                        <span className="text-sm">{item.title}</span>
                       )}
                     </Link>
                   </SidebarMenuButton>
@@ -120,10 +115,7 @@ const AppSidebar = () => {
               <Link to="/auth" className="flex items-center gap-3">
                 <LogIn size={18} className="text-muted-foreground" />
                 {!isCollapsed && (
-                  <div className="flex flex-col">
-                    <span className="text-sm">Login / Sign Up</span>
-                    <span className="text-xs text-muted-foreground">Access more features</span>
-                  </div>
+                  <span className="text-sm">Login / Sign Up</span>
                 )}
               </Link>
             </SidebarMenuButton>
