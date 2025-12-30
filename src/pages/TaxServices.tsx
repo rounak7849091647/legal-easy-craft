@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { Link } from 'react-router-dom';
 import { 
   FileText, Upload, Users, TrendingUp, RefreshCw, Receipt, 
   Globe, MessageSquare, BarChart3, Bell, Phone, Calculator,
@@ -11,20 +12,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageLayout from '@/components/PageLayout';
 
 const quickServices = [
-  { icon: FileText, title: 'File Your Return', description: 'ITR filing with step-by-step guidance' },
-  { icon: Upload, title: 'Upload Form 16', description: 'Auto-populate from Form 16' },
-  { icon: Users, title: 'CA Assisted Filing', description: 'Expert CA support' },
-  { icon: TrendingUp, title: 'Tax Planning', description: 'Optimize your savings' },
-  { icon: RefreshCw, title: 'Refund Status', description: 'Track your refund' },
-  { icon: Receipt, title: 'TDS Solution', description: 'TDS filing & certificates' },
+  { icon: FileText, title: 'File Your Return', description: 'ITR filing with step-by-step guidance', path: '/tax-services/file-return' },
+  { icon: Upload, title: 'Upload Form 16', description: 'Auto-populate from Form 16', path: '/tax-services/upload-form16' },
+  { icon: Users, title: 'CA Assisted Filing', description: 'Expert CA support', path: '/tax-services/ca-filing' },
+  { icon: TrendingUp, title: 'Tax Planning', description: 'Optimize your savings', path: '/tax-services/tax-planning' },
+  { icon: RefreshCw, title: 'Refund Status', description: 'Track your refund', path: '/tax-services/refund-status' },
+  { icon: Receipt, title: 'TDS Solution', description: 'TDS filing & certificates', path: '/tax-services/tds-solution' },
 ];
 
 const additionalServices = [
-  { icon: Globe, title: 'NRI Taxes', description: 'Specialized NRI services' },
-  { icon: MessageSquare, title: 'Tax Advisory', description: 'Expert consultation' },
-  { icon: BarChart3, title: 'Capital Gains', description: 'STCG & LTCG filing' },
-  { icon: Bell, title: 'Tax Notices', description: 'Notice response help' },
-  { icon: Phone, title: 'Connect Expert', description: 'One-on-one consultation' },
+  { icon: Globe, title: 'NRI Taxes', description: 'Specialized NRI services', path: '/tax-services/nri-taxes' },
+  { icon: MessageSquare, title: 'Tax Advisory', description: 'Expert consultation', path: '/tax-services/tax-advisory' },
+  { icon: BarChart3, title: 'Capital Gains', description: 'STCG & LTCG filing', path: '/tax-services/capital-gains' },
+  { icon: Bell, title: 'Tax Notices', description: 'Notice response help', path: '/tax-services/tax-notices' },
+  { icon: Phone, title: 'Connect Expert', description: 'One-on-one consultation', path: '/tax-services/connect-expert' },
 ];
 
 const taxSlabsNew = [
@@ -96,36 +97,38 @@ const TaxServices = () => {
         {/* Quick Access Services */}
         <div className="mb-8">
           <h2 className="text-lg font-semibold text-foreground mb-4">Quick Access Services</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
             {quickServices.map((service, index) => (
-              <button
+              <Link
                 key={index}
-                className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all text-left"
+                to={service.path}
+                className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 hover:bg-white/10 transition-all text-left block"
               >
-                <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center mb-3">
-                  <service.icon size={20} className="text-white/70" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/10 flex items-center justify-center mb-2 sm:mb-3">
+                  <service.icon size={18} className="text-white/70" />
                 </div>
-                <h3 className="font-medium text-foreground text-sm">{service.title}</h3>
-                <p className="text-xs text-muted-foreground mt-1">{service.description}</p>
-              </button>
+                <h3 className="font-medium text-foreground text-xs sm:text-sm leading-tight">{service.title}</h3>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 line-clamp-2">{service.description}</p>
+              </Link>
             ))}
           </div>
         </div>
 
         {/* Additional Services */}
         <div className="mb-8">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
             {additionalServices.map((service, index) => (
-              <button
+              <Link
                 key={index}
-                className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all text-left"
+                to={service.path}
+                className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 hover:bg-white/10 transition-all text-left block"
               >
-                <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center mb-3">
-                  <service.icon size={20} className="text-white/70" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/10 flex items-center justify-center mb-2 sm:mb-3">
+                  <service.icon size={18} className="text-white/70" />
                 </div>
-                <h3 className="font-medium text-foreground text-sm">{service.title}</h3>
-                <p className="text-xs text-muted-foreground mt-1">{service.description}</p>
-              </button>
+                <h3 className="font-medium text-foreground text-xs sm:text-sm leading-tight">{service.title}</h3>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 line-clamp-2">{service.description}</p>
+              </Link>
             ))}
           </div>
         </div>
