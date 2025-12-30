@@ -14,7 +14,7 @@ interface MainContentProps {
 
 const MainContent = ({ onLoginClick, isMobile = false }: MainContentProps) => {
   const { messages, isLoading, sendMessage, lastLanguage } = useLegalChat();
-  const { speak } = useTextToSpeech();
+  const { isSpeaking, speak, stop } = useTextToSpeech();
   const [lastResponse, setLastResponse] = useState<string>('');
   const [lastResponseLanguage, setLastResponseLanguage] = useState<string>('en-IN');
 
@@ -36,6 +36,15 @@ const MainContent = ({ onLoginClick, isMobile = false }: MainContentProps) => {
   const handleSendMessage = async (message: string) => {
     // For typed messages, default to English
     await sendMessage(message, 'en-IN');
+  };
+
+  const handleToggleSpeak = async () => {
+    if (!lastResponse?.trim() || isLoading) return;
+    if (isSpeaking) {
+      stop();
+      return;
+    }
+    await speak(lastResponse, lastResponseLanguage);
   };
 
   const hasMessages = messages.length > 0;
@@ -68,7 +77,13 @@ const MainContent = ({ onLoginClick, isMobile = false }: MainContentProps) => {
           <div className="flex-1 w-full max-w-4xl flex flex-col">
             <ChatMessages messages={messages} isLoading={isLoading} />
             <div className="py-4 pb-8">
-              <ChatInput onSend={handleSendMessage} isLoading={isLoading} />
+              <ChatInput
+                onSend={handleSendMessage}
+                isLoading={isLoading}
+                canSpeak={!!lastResponse}
+                isSpeaking={isSpeaking}
+                onToggleSpeak={handleToggleSpeak}
+              />
             </div>
           </div>
         ) : (
@@ -80,7 +95,13 @@ const MainContent = ({ onLoginClick, isMobile = false }: MainContentProps) => {
               responseText={lastResponse}
               responseLanguage={lastResponseLanguage}
             />
-            <ChatInput onSend={handleSendMessage} isLoading={isLoading} />
+            <ChatInput
+              onSend={handleSendMessage}
+              isLoading={isLoading}
+              canSpeak={!!lastResponse}
+              isSpeaking={isSpeaking}
+              onToggleSpeak={handleToggleSpeak}
+            />
           </div>
         )}
       </div>
