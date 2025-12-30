@@ -13,26 +13,27 @@ interface MainContentProps {
 }
 
 const MainContent = ({ onLoginClick, isMobile = false }: MainContentProps) => {
-  const { messages, isLoading, sendMessage, lastLanguage } = useLegalChat();
+  const { messages, isLoading, sendMessage, lastLanguage, lastVoiceResponse } = useLegalChat();
   const { isSpeaking, speak, stop } = useTextToSpeech();
-  const [lastResponse, setLastResponse] = useState<string>('');
   const [lastResponseLanguage, setLastResponseLanguage] = useState<string>('en-IN');
   const lastSpokenIdRef = useRef<string | null>(null);
 
   // Auto-speak new assistant responses (Jarvis-style)
+  // Uses voiceContent (native language) for TTS, while display shows English
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
     if (
       lastMessage?.role === 'assistant' &&
-      lastMessage.content &&
       lastMessage.id !== lastSpokenIdRef.current &&
       !isLoading
     ) {
-      setLastResponse(lastMessage.content);
       setLastResponseLanguage(lastMessage.language || lastLanguage);
       lastSpokenIdRef.current = lastMessage.id;
-      // Auto-speak the response
-      speak(lastMessage.content, lastMessage.language || lastLanguage);
+      // Use voiceContent for TTS (native language), fallback to content
+      const textToSpeak = lastMessage.voiceContent || lastMessage.content;
+      if (textToSpeak) {
+        speak(textToSpeak, lastMessage.language || lastLanguage);
+      }
     }
   }, [messages, isLoading, lastLanguage, speak]);
 
@@ -94,7 +95,7 @@ const MainContent = ({ onLoginClick, isMobile = false }: MainContentProps) => {
             <AiOrb 
               onTranscript={handleVoiceTranscript}
               isProcessing={isLoading}
-              responseText={lastResponse}
+              responseText={lastVoiceResponse}
               responseLanguage={lastResponseLanguage}
             />
             <ChatInput
