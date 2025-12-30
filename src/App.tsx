@@ -8,6 +8,8 @@ import Index from "./pages/Index";
 import Documents from "./pages/Documents";
 import Lawyers from "./pages/Lawyers";
 import TaxServices from "./pages/TaxServices";
+import Auth from "./pages/Auth";
+import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,6 +23,8 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/documents" element={<Documents />} />
             <Route path="/lawyers" element={<Lawyers />} />
             <Route path="/tax-services" element={<TaxServices />} />
