@@ -1,16 +1,11 @@
-import { useState } from 'react';
 import { 
-  MessageSquare, 
   Sparkles, 
   BookOpen, 
-  Scale, 
   Landmark, 
   Users, 
   FileText, 
   Calculator, 
-  LogIn,
-  ChevronDown,
-  ChevronUp
+  LogIn
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -19,8 +14,6 @@ interface SidebarItemProps {
   label: string;
   sublabel?: string;
   isActive?: boolean;
-  hasSubmenu?: boolean;
-  isExpanded?: boolean;
   onClick?: () => void;
   colorDot?: string;
 }
@@ -30,8 +23,6 @@ const SidebarItem = ({
   label, 
   sublabel, 
   isActive, 
-  hasSubmenu, 
-  isExpanded,
   onClick,
   colorDot 
 }: SidebarItemProps) => (
@@ -50,17 +41,14 @@ const SidebarItem = ({
         <p className="text-xs text-muted-foreground">{sublabel}</p>
       )}
     </div>
-    {hasSubmenu && (
-      <span className="text-muted-foreground">
-        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-      </span>
-    )}
   </button>
 );
 
-const Sidebar = () => {
-  const [isLegalExpanded, setIsLegalExpanded] = useState(true);
+interface SidebarProps {
+  onLoginClick?: () => void;
+}
 
+const Sidebar = ({ onLoginClick }: SidebarProps) => {
   const legalCategories = [
     { label: 'General', icon: <Sparkles size={18} /> },
     { label: 'BNS', colorDot: 'bg-red-500' },
@@ -79,29 +67,18 @@ const Sidebar = () => {
 
       {/* Navigation */}
       <nav className="flex-1 p-3 overflow-y-auto">
-        <p className="text-xs font-medium text-muted-foreground px-3 mb-2">EXPLORE</p>
+        <p className="text-xs font-medium text-muted-foreground px-3 mb-2">CATEGORIES</p>
         
-        <SidebarItem
-          icon={<MessageSquare size={18} />}
-          label="AI Legal Q&A"
-          sublabel="Ask anything"
-          hasSubmenu
-          isExpanded={isLegalExpanded}
-          onClick={() => setIsLegalExpanded(!isLegalExpanded)}
-        />
-
-        {isLegalExpanded && (
-          <div className="ml-3 pl-3 border-l border-sidebar-border space-y-0.5">
-            {legalCategories.map((item) => (
-              <SidebarItem
-                key={item.label}
-                icon={item.icon}
-                label={item.label}
-                colorDot={item.colorDot}
-              />
-            ))}
-          </div>
-        )}
+        <div className="space-y-0.5">
+          {legalCategories.map((item) => (
+            <SidebarItem
+              key={item.label}
+              icon={item.icon}
+              label={item.label}
+              colorDot={item.colorDot}
+            />
+          ))}
+        </div>
 
         <div className="mt-4 space-y-0.5">
           <SidebarItem
@@ -127,6 +104,7 @@ const Sidebar = () => {
             icon={<LogIn size={18} />}
             label="Login / Sign Up"
             sublabel="Access more features"
+            onClick={onLoginClick}
           />
         </div>
       </nav>
@@ -136,7 +114,10 @@ const Sidebar = () => {
         <p className="text-xs text-muted-foreground mb-3">
           Sign in to access Dashboard, Case Management, Calendar and more.
         </p>
-        <Button className="w-full bg-foreground text-background hover:bg-foreground/90">
+        <Button 
+          onClick={onLoginClick}
+          className="w-full bg-foreground text-background hover:bg-foreground/90"
+        >
           Get Started Free
         </Button>
       </div>

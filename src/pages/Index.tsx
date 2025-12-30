@@ -1,8 +1,12 @@
+import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Sidebar from '@/components/Sidebar';
 import MainContent from '@/components/MainContent';
+import LoginModal from '@/components/LoginModal';
 
 const Index = () => {
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+
   return (
     <>
       <Helmet>
@@ -11,9 +15,14 @@ const Index = () => {
       </Helmet>
       
       <div className="flex h-screen bg-background">
-        <Sidebar />
-        <MainContent />
+        <Sidebar onLoginClick={() => setIsLoginOpen(true)} />
+        <MainContent onLoginClick={() => setIsLoginOpen(true)} />
       </div>
+
+      <LoginModal 
+        isOpen={isLoginOpen} 
+        onClose={() => setIsLoginOpen(false)} 
+      />
     </>
   );
 };
