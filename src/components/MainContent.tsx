@@ -79,6 +79,7 @@ const MainContent = ({ isMobile = false }: MainContentProps) => {
                   onSend={handleSendMessage}
                   isLoading={isLoading}
                   isSpeaking={isSpeaking}
+                  onVoiceTranscript={handleVoiceTranscript}
                 />
               </div>
             </div>
@@ -98,6 +99,7 @@ const MainContent = ({ isMobile = false }: MainContentProps) => {
                   onSend={handleSendMessage}
                   isLoading={isLoading}
                   isSpeaking={isSpeaking}
+                  onVoiceTranscript={handleVoiceTranscript}
                 />
               </div>
             </div>
