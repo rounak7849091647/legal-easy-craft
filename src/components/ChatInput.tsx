@@ -1,22 +1,18 @@
 import { useState, useEffect } from 'react';
-import { Paperclip, Send, Mic, Volume2, Square } from 'lucide-react';
+import { Paperclip, Send, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 
 interface ChatInputProps {
   onSend: (message: string) => void;
   isLoading?: boolean;
-  canSpeak?: boolean;
   isSpeaking?: boolean;
-  onToggleSpeak?: () => void;
 }
 
 const ChatInput = ({
   onSend,
   isLoading = false,
-  canSpeak = false,
   isSpeaking = false,
-  onToggleSpeak,
 }: ChatInputProps) => {
   const [message, setMessage] = useState('');
   const { isListening, transcript, startListening, stopListening, resetTranscript, isSupported } = useSpeechRecognition();
@@ -67,22 +63,18 @@ const ChatInput = ({
   return (
     <div className="w-full max-w-lg mx-auto px-2 sm:px-0">
       <form onSubmit={handleSubmit} className="relative">
-        {canSpeak && onToggleSpeak && (
-          <div className="absolute left-2 top-1/2 -translate-y-1/2 z-10">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={onToggleSpeak}
-              className={`h-8 w-8 rounded-full ${
-                isSpeaking
-                  ? 'text-white bg-white/20 hover:bg-white/25'
-                  : 'text-white/70 hover:text-white hover:bg-white/10'
-              }`}
-              aria-label={isSpeaking ? 'Stop speaking' : 'Play voice reply'}
-            >
-              {isSpeaking ? <Square size={16} /> : <Volume2 size={16} />}
-            </Button>
+        {/* Speaking indicator - shows waveform when CARE is speaking */}
+        {isSpeaking && (
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex items-center gap-1">
+            <div className="flex items-center gap-0.5">
+              {[...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className="w-0.5 bg-primary rounded-full waveform-bar"
+                  style={{ animationDelay: `${i * 0.1}s` }}
+                />
+              ))}
+            </div>
           </div>
         )}
 
@@ -92,7 +84,7 @@ const ChatInput = ({
           onChange={(e) => setMessage(e.target.value)}
           placeholder={placeholder}
           disabled={isLoading}
-          className={`w-full ${canSpeak ? 'pl-12 sm:pl-14' : 'px-4 sm:px-5'} py-3 sm:py-3.5 pr-28 sm:pr-32 rounded-full bg-white/10 border border-white/30 text-foreground placeholder:text-white/50 focus:outline-none focus:border-white/60 focus:ring-2 focus:ring-white/20 transition-all disabled:opacity-50 text-sm sm:text-base`}
+          className={`w-full ${isSpeaking ? 'pl-10' : 'px-4 sm:px-5'} py-3 sm:py-3.5 pr-28 sm:pr-32 rounded-full bg-white/10 border border-white/30 text-foreground placeholder:text-white/50 focus:outline-none focus:border-white/60 focus:ring-2 focus:ring-white/20 transition-all disabled:opacity-50 text-sm sm:text-base`}
         />
 
         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 sm:gap-1">
