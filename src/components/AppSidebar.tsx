@@ -29,7 +29,7 @@ const AppSidebar = () => {
   const isCollapsed = state === 'collapsed';
 
   const mainItems = [
-    { title: 'AI Assistant', icon: Home, href: '/', sublabel: 'Ask legal questions' },
+    { title: 'AI Assistant', icon: Home, href: '/' },
   ];
 
   const serviceItems = [
@@ -70,12 +70,7 @@ const AppSidebar = () => {
                     <Link to={item.href} className="flex items-center gap-3">
                       <item.icon size={18} className="text-muted-foreground" />
                       {!isCollapsed && (
-                        <div className="flex flex-col">
-                          <span className="text-sm">{item.title}</span>
-                          {item.sublabel && (
-                            <span className="text-xs text-muted-foreground">{item.sublabel}</span>
-                          )}
-                        </div>
+                        <span className="text-sm">{item.title}</span>
                       )}
                     </Link>
                   </SidebarMenuButton>
