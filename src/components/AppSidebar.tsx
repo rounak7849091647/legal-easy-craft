@@ -1,12 +1,19 @@
+import { useState, useEffect } from 'react';
 import { 
   FileText, 
   Users, 
   Calculator, 
   Home,
   Settings,
-  LogIn
+  LogIn,
+  LogOut,
+  LayoutDashboard,
+  User
 } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { User as SupabaseUser } from '@supabase/supabase-js';
+import { toast } from 'sonner';
 import {
   Sidebar,
   SidebarContent,
@@ -21,12 +28,41 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 const AppSidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const currentPath = location.pathname;
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
+  
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+        setIsLoading(false);
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast.success('Signed out successfully');
+    navigate('/');
+  };
 
   const mainItems = [
     { title: 'AI Assistant', icon: Home, href: '/' },
@@ -37,6 +73,13 @@ const AppSidebar = () => {
     { title: 'Lawyers', icon: Users, href: '/lawyers' },
     { title: 'Tax Services', icon: Calculator, href: '/tax-services' },
   ];
+
+  // Dashboard items - only shown when logged in
+  const dashboardItems = [
+    { title: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
+  ];
+
+  const userInitials = user?.email?.slice(0, 2).toUpperCase() || 'U';
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -80,6 +123,35 @@ const AppSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        {/* User Dashboard - Only visible when logged in */}
+        {user && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-xs text-muted-foreground px-2">
+              {!isCollapsed && 'MY ACCOUNT'}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {dashboardItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton 
+                      asChild 
+                      isActive={currentPath === item.href || currentPath.startsWith('/dashboard')}
+                      className="hover:bg-sidebar-accent"
+                    >
+                      <Link to={item.href} className="flex items-center gap-3">
+                        <item.icon size={18} className="text-primary" />
+                        {!isCollapsed && (
+                          <span className="text-sm font-medium">{item.title}</span>
+                        )}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
         {/* Services */}
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs text-muted-foreground px-2">
@@ -110,16 +182,48 @@ const AppSidebar = () => {
 
       <SidebarFooter className="border-t border-sidebar-border p-3">
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild className="hover:bg-sidebar-accent">
-              <Link to="/auth" className="flex items-center gap-3">
-                <LogIn size={18} className="text-muted-foreground" />
-                {!isCollapsed && (
-                  <span className="text-sm">Login / Sign Up</span>
-                )}
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {/* User info when logged in */}
+          {user && !isCollapsed && (
+            <div className="flex items-center gap-3 px-2 py-2 mb-2 rounded-lg bg-sidebar-accent/50">
+              <Avatar className="h-8 w-8">
+                <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                  {userInitials}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-foreground truncate">
+                  {user.email}
+                </p>
+                <p className="text-[10px] text-muted-foreground">Logged in</p>
+              </div>
+            </div>
+          )}
+          
+          {user ? (
+            // Logged in: Show sign out
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                onClick={handleSignOut}
+                className="hover:bg-destructive/10 hover:text-destructive"
+              >
+                <LogOut size={18} className="text-muted-foreground" />
+                {!isCollapsed && <span className="text-sm">Sign Out</span>}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ) : (
+            // Not logged in: Show login
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild className="hover:bg-sidebar-accent">
+                <Link to="/auth" className="flex items-center gap-3">
+                  <LogIn size={18} className="text-muted-foreground" />
+                  {!isCollapsed && (
+                    <span className="text-sm">Login / Sign Up</span>
+                  )}
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
+          
           <SidebarMenuItem>
             <SidebarMenuButton className="hover:bg-sidebar-accent">
               <Settings size={18} className="text-muted-foreground" />
