@@ -116,7 +116,7 @@ const Sidebar = ({ onLoginClick }: SidebarProps) => {
         </p>
         <Button 
           onClick={onLoginClick}
-          className="w-full bg-foreground text-background hover:bg-foreground/90"
+          className="w-full bg-white text-black hover:bg-white/90"
         >
           Get Started Free
         </Button>

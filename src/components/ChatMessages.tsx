@@ -37,8 +37,8 @@ const ChatMessages = ({ messages, isLoading }: ChatMessagesProps) => {
               className={cn(
                 "max-w-[85%] rounded-2xl px-4 py-3 text-sm",
                 message.role === 'user'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted/80 text-foreground'
+                  ? 'bg-white text-black'
+                  : 'bg-white/10 text-foreground border border-white/20'
               )}
             >
               {message.role === 'assistant' ? (
@@ -68,11 +68,11 @@ const ChatMessages = ({ messages, isLoading }: ChatMessagesProps) => {
         
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-muted/80 rounded-2xl px-4 py-3">
+            <div className="bg-white/10 border border-white/20 rounded-2xl px-4 py-3">
               <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           </div>

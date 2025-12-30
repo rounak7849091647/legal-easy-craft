@@ -52,17 +52,17 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText }: AiOrbProps)
         disabled={isProcessing}
         className="relative group cursor-pointer disabled:cursor-wait"
       >
-        {/* Outer glow ring */}
+      {/* Outer glow ring */}
         <div className={`absolute inset-0 rounded-full transition-all duration-500 ${
           displayState !== 'idle' 
             ? 'scale-150 opacity-100' 
             : 'scale-100 opacity-60'
         } ${
           displayState === 'speaking' 
-            ? 'bg-green-500/30 blur-xl' 
+            ? 'bg-white/30 blur-xl' 
             : displayState === 'thinking'
-            ? 'bg-yellow-500/30 blur-xl'
-            : 'bg-primary/20 blur-xl'
+            ? 'bg-white/20 blur-xl'
+            : 'bg-white/20 blur-xl'
         }`} />
         
         {/* Main orb */}
@@ -70,18 +70,18 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText }: AiOrbProps)
           displayState !== 'idle' ? 'scale-110' : 'scale-100'
         } ${
           displayState === 'speaking' 
-            ? 'bg-gradient-to-br from-green-500/30 to-green-500/10 border-green-500/30' 
+            ? 'bg-gradient-to-br from-white/30 to-white/10 border-white/50' 
             : displayState === 'thinking'
-            ? 'bg-gradient-to-br from-yellow-500/30 to-yellow-500/10 border-yellow-500/30'
-            : 'bg-gradient-to-br from-primary/30 to-primary/10 border-primary/30'
+            ? 'bg-gradient-to-br from-white/20 to-white/5 border-white/30'
+            : 'bg-gradient-to-br from-white/20 to-white/5 border-white/30'
         }`}>
           {/* Inner glow */}
           <div className={`absolute inset-4 rounded-full bg-gradient-to-br to-transparent ${
             displayState === 'speaking' 
-              ? 'from-green-500/20' 
+              ? 'from-white/30' 
               : displayState === 'thinking'
-              ? 'from-yellow-500/20'
-              : 'from-primary/20'
+              ? 'from-white/20'
+              : 'from-white/20'
           }`} />
           
           {/* Waveform animation */}
@@ -89,14 +89,8 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText }: AiOrbProps)
             {[...Array(5)].map((_, i) => (
               <div
                 key={i}
-                className={`w-1 rounded-full transition-all ${
+                className={`w-1 rounded-full transition-all bg-white/80 ${
                   displayState !== 'idle' ? 'waveform-bar' : 'h-1'
-                } ${
-                  displayState === 'speaking' 
-                    ? 'bg-green-500/80' 
-                    : displayState === 'thinking'
-                    ? 'bg-yellow-500/80'
-                    : 'bg-primary/80'
                 }`}
                 style={{ 
                   height: displayState !== 'idle' ? undefined : '4px',
