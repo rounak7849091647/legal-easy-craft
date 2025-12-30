@@ -3,7 +3,8 @@ import {
   Users, 
   Calculator, 
   Home,
-  Settings
+  Settings,
+  LogIn
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -83,36 +84,6 @@ const AppSidebar = () => {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-xs text-muted-foreground px-2">
-            {!isCollapsed && 'MAIN'}
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {mainItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild 
-                    isActive={currentPath === item.href && item.title === 'AI Assistant'}
-                    className="hover:bg-sidebar-accent"
-                  >
-                    <Link to={item.href} className="flex items-center gap-3">
-                      <item.icon size={18} className="text-muted-foreground" />
-                      {!isCollapsed && (
-                        <div className="flex flex-col">
-                          <span className="text-sm">{item.title}</span>
-                          {item.sublabel && (
-                            <span className="text-xs text-muted-foreground">{item.sublabel}</span>
-                          )}
-                        </div>
-                      )}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
 
         {/* Services */}
         <SidebarGroup>
@@ -149,6 +120,19 @@ const AppSidebar = () => {
 
       <SidebarFooter className="border-t border-sidebar-border p-3">
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild className="hover:bg-sidebar-accent">
+              <Link to="/auth" className="flex items-center gap-3">
+                <LogIn size={18} className="text-muted-foreground" />
+                {!isCollapsed && (
+                  <div className="flex flex-col">
+                    <span className="text-sm">Login / Sign Up</span>
+                    <span className="text-xs text-muted-foreground">Access more features</span>
+                  </div>
+                )}
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton className="hover:bg-sidebar-accent">
               <Settings size={18} className="text-muted-foreground" />
