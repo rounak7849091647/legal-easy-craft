@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 
 interface ChatInputProps {
   onSend: (message: string, documentContent?: string) => void;
+  onDocumentUpload?: (documentContent: string, documentName: string) => void;
   isLoading?: boolean;
   isSpeaking?: boolean;
   onVoiceTranscript?: (transcript: string, language: string) => void;
@@ -20,6 +21,7 @@ interface UploadedDocument {
 
 const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
   onSend,
+  onDocumentUpload,
   isLoading = false,
   isSpeaking = false,
   onVoiceTranscript,
@@ -187,7 +189,12 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
         content: truncatedContent
       });
       
-      toast.success(`Document "${file.name}" uploaded. Ask any question about it!`);
+      // Automatically trigger document summarization
+      if (onDocumentUpload) {
+        onDocumentUpload(truncatedContent, file.name);
+      } else {
+        toast.success(`Document "${file.name}" uploaded. Ask any question about it!`);
+      }
     } catch (error) {
       console.error('File upload error:', error);
       toast.error('Failed to read file. Please try again.');

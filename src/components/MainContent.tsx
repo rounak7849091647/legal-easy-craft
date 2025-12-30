@@ -12,7 +12,7 @@ interface MainContentProps {
 }
 
 const MainContent = ({ isMobile = false }: MainContentProps) => {
-  const { messages, isLoading, sendMessage, lastLanguage, lastVoiceResponse } = useLegalChat();
+  const { messages, isLoading, sendMessage, summarizeDocument, lastLanguage, lastVoiceResponse } = useLegalChat();
   const { isSpeaking, speak, stop } = useTextToSpeech();
   const [lastResponseLanguage, setLastResponseLanguage] = useState<string>('en-IN');
   const [continuousVoiceMode, setContinuousVoiceMode] = useState(false);
@@ -37,7 +37,6 @@ const MainContent = ({ isMobile = false }: MainContentProps) => {
 
   const handleVoiceTranscript = useCallback(async (transcript: string, language: string) => {
     if (transcript.trim()) {
-      // Stop any ongoing speech when user starts speaking
       if (isSpeaking) {
         stop();
       }
@@ -51,6 +50,13 @@ const MainContent = ({ isMobile = false }: MainContentProps) => {
     }
     await sendMessage(message, 'en-IN', documentContent);
   }, [sendMessage, isSpeaking, stop]);
+
+  const handleDocumentUpload = useCallback(async (documentContent: string, documentName: string) => {
+    if (isSpeaking) {
+      stop();
+    }
+    await summarizeDocument(documentContent, documentName, 'en-IN');
+  }, [summarizeDocument, isSpeaking, stop]);
 
   const handleContinuousModeChange = useCallback((active: boolean) => {
     setContinuousVoiceMode(active);
@@ -84,6 +90,7 @@ const MainContent = ({ isMobile = false }: MainContentProps) => {
             <div className="max-w-3xl mx-auto w-full px-4">
               <ChatInput
                 onSend={handleSendMessage}
+                onDocumentUpload={handleDocumentUpload}
                 isLoading={isLoading}
                 isSpeaking={isSpeaking}
                 onVoiceTranscript={handleVoiceTranscript}
@@ -106,6 +113,7 @@ const MainContent = ({ isMobile = false }: MainContentProps) => {
             <div className="w-full max-w-3xl">
               <ChatInput
                 onSend={handleSendMessage}
+                onDocumentUpload={handleDocumentUpload}
                 isLoading={isLoading}
                 isSpeaking={isSpeaking}
                 onVoiceTranscript={handleVoiceTranscript}

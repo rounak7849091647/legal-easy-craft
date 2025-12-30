@@ -4,10 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 export interface Message {
   id: string;
   role: 'user' | 'assistant';
-  content: string; // Display text (always English for assistant)
-  voiceContent?: string; // Voice text (in user's language for TTS)
+  content: string;
+  voiceContent?: string;
   timestamp: Date;
   language?: string;
+  isDocumentSummary?: boolean;
 }
 
 interface LegalChatHook {
@@ -18,6 +19,7 @@ interface LegalChatHook {
   lastVoiceResponse: string;
   documentContext: string | null;
   sendMessage: (message: string, detectedLanguage?: string, documentContent?: string) => Promise<void>;
+  summarizeDocument: (documentContent: string, documentName: string, detectedLanguage?: string) => Promise<void>;
   clearMessages: () => void;
   setDocumentContext: (content: string | null) => void;
 }
@@ -31,17 +33,80 @@ export const useLegalChat = (): LegalChatHook => {
   const documentContextRef = useRef<string | null>(null);
   const [sessionId] = useState(() => `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
 
-  // Keep ref in sync for callbacks
   const updateDocumentContext = useCallback((content: string | null) => {
     setDocumentContext(content);
     documentContextRef.current = content;
   }, []);
 
+  // Summarize document when uploaded
+  const summarizeDocument = useCallback(async (documentContent: string, documentName: string, detectedLanguage: string = 'en-IN') => {
+    if (!documentContent || isLoading) return;
+
+    // Store document context
+    documentContextRef.current = documentContent;
+    setDocumentContext(documentContent);
+
+    // Add a system message indicating document upload
+    const uploadMessage: Message = {
+      id: `upload-${Date.now()}`,
+      role: 'user',
+      content: `📄 Uploaded document: **${documentName}**`,
+      timestamp: new Date(),
+      language: detectedLanguage
+    };
+
+    setMessages(prev => [...prev, uploadMessage]);
+    setIsLoading(true);
+    setLastLanguage(detectedLanguage);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('legal-chat', {
+        body: { 
+          sessionId,
+          detectedLanguage,
+          documentContent,
+          action: 'summarize'
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      const summaryContent = data.response || 'Could not generate summary. You can still ask questions about the document.';
+
+      const summaryMessage: Message = {
+        id: `summary-${Date.now()}`,
+        role: 'assistant',
+        content: `📋 **Document Summary**\n\n${summaryContent}\n\n---\n*Ask me any questions about this document!*`,
+        voiceContent: summaryContent,
+        timestamp: new Date(),
+        language: data.language || detectedLanguage,
+        isDocumentSummary: true
+      };
+
+      setMessages(prev => [...prev, summaryMessage]);
+      setLastLanguage(data.language || detectedLanguage);
+      setLastVoiceResponse(summaryContent);
+    } catch (error) {
+      console.error('Summarization error:', error);
+      const errorMessage: Message = {
+        id: `error-${Date.now()}`,
+        role: 'assistant',
+        content: 'I could not summarize the document, but you can still ask questions about it.',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isLoading, sessionId]);
+
   const sendMessage = useCallback(async (message: string, detectedLanguage: string = 'en-IN', documentContent?: string) => {
     if (!message.trim() || isLoading) return;
 
-    // If document content is passed, store it
-    if (documentContent) {
+    // If document content is passed without prior summarization, store it
+    if (documentContent && !documentContextRef.current) {
       documentContextRef.current = documentContent;
       setDocumentContext(documentContent);
     }
@@ -72,7 +137,6 @@ export const useLegalChat = (): LegalChatHook => {
         throw error;
       }
 
-      // Get both display (English) and voice (native language) responses
       const displayContent = data.response || 'I apologize, but I could not generate a response. Please try again.';
       const voiceContent = data.voiceResponse || displayContent;
 
@@ -116,6 +180,7 @@ export const useLegalChat = (): LegalChatHook => {
     lastVoiceResponse,
     documentContext,
     sendMessage,
+    summarizeDocument,
     clearMessages,
     setDocumentContext: updateDocumentContext
   };
