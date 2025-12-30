@@ -128,7 +128,7 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
         }`} />
         
         {/* Main orb */}
-        <div className={`relative w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 rounded-full backdrop-blur-sm border flex items-center justify-center orb-glow orb-pulse transition-all duration-300 ${
+        <div className={`relative w-28 h-28 sm:w-36 sm:h-36 rounded-full backdrop-blur-sm border flex items-center justify-center orb-glow orb-pulse transition-all duration-300 ${
           displayState !== 'idle' ? 'scale-110' : 'scale-100'
         } ${
           displayState === 'speaking' 
@@ -151,19 +151,19 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
           }`} />
           
           {/* Waveform animation */}
-          <div className="flex items-center justify-center gap-1.5 md:gap-2 z-10">
+          <div className="flex items-center justify-center gap-1 z-10">
             {[...Array(5)].map((_, i) => (
               <div
                 key={i}
-                className={`w-1 md:w-1.5 lg:w-2 rounded-full transition-all ${
+                className={`w-1 rounded-full transition-all ${
                   displayState === 'speaking' ? 'bg-primary' :
                   displayState === 'listening' ? 'bg-green-400' :
                   'bg-white/80'
                 } ${
-                  displayState !== 'idle' ? 'waveform-bar' : 'h-1 md:h-1.5'
+                  displayState !== 'idle' ? 'waveform-bar' : 'h-1'
                 }`}
                 style={{ 
-                  height: displayState !== 'idle' ? undefined : '6px',
+                  height: displayState !== 'idle' ? undefined : '4px',
                   animationDelay: `${i * 0.1}s` 
                 }}
               />
@@ -176,11 +176,11 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
       </button>
 
       {/* Text labels */}
-      <div className="text-center mt-2 md:mt-4">
-        <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold text-foreground tracking-wider">
+      <div className="text-center">
+        <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-foreground tracking-wider">
           CARE
         </h2>
-        <p className="text-muted-foreground text-sm sm:text-base md:text-lg mt-2">
+        <p className="text-muted-foreground text-xs sm:text-sm mt-1">
           {displayState === 'thinking' && 'Thinking...'}
           {displayState === 'speaking' && 'Speaking...'}
           {displayState === 'listening' && `Listening... (${languageNames[detectedLanguage] || 'English'})`}
@@ -190,15 +190,15 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
 
       {/* Live transcript */}
       {isListening && transcript && (
-        <div className="text-center max-w-sm sm:max-w-md md:max-w-lg px-4 animate-fade-in">
-          <p className="text-foreground/80 text-sm md:text-base italic">"{transcript}"</p>
-          <p className="text-muted-foreground/60 text-xs md:text-sm mt-1">
+        <div className="text-center max-w-xs sm:max-w-md px-4 animate-fade-in">
+          <p className="text-foreground/80 text-xs sm:text-sm italic">"{transcript}"</p>
+          <p className="text-muted-foreground/60 text-xs mt-1">
             Auto-sending in 2 seconds...
           </p>
         </div>
       )}
 
-      <p className="text-muted-foreground/70 text-sm md:text-base hidden sm:block">
+      <p className="text-muted-foreground/70 text-xs sm:text-sm hidden sm:block">
         {isSpeaking ? 'Tap to stop' : 'Speak in Hindi, Tamil, Telugu, or any Indian language'}
       </p>
     </div>
