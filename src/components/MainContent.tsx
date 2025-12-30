@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import AiOrb from './AiOrb';
 import ChatInput from './ChatInput';
 import ChatMessages from './ChatMessages';
-import { Button } from '@/components/ui/button';
+
 import { useLegalChat } from '@/hooks/useLegalChat';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import supremeCourtBg from '@/assets/supreme-court-bg.jpg';
@@ -55,24 +55,13 @@ const MainContent = ({ onLoginClick, isMobile = false }: MainContentProps) => {
   const hasMessages = messages.length > 0;
 
   return (
-    <main className={`flex-1 relative overflow-hidden flex flex-col ${isMobile ? 'pt-14' : ''}`}>
+    <main className="flex-1 relative overflow-hidden flex flex-col">
       {/* Background image with overlay */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${supremeCourtBg})` }}
       >
         <div className="absolute inset-0 bg-background/70 backdrop-blur-[2px]" />
-      </div>
-
-      {/* Login button - hidden on mobile (shown in header) */}
-      <div className="absolute top-4 right-4 z-20 hidden lg:block">
-        <Button 
-          variant="outline" 
-          onClick={onLoginClick}
-          className="bg-white/10 border-white/30 text-white hover:bg-white/20"
-        >
-          Login
-        </Button>
       </div>
 
       {/* Content */}
