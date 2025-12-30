@@ -24,6 +24,16 @@ interface LegalChatHook {
   setDocumentContext: (content: string | null) => void;
 }
 
+// Format messages for AI context - only include role and content
+const formatMessagesForAI = (messages: Message[]): { role: string; content: string }[] => {
+  return messages
+    .filter(msg => msg.role === 'user' || msg.role === 'assistant')
+    .map(msg => ({
+      role: msg.role,
+      content: msg.voiceContent || msg.content
+    }));
+};
+
 export const useLegalChat = (): LegalChatHook => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -119,17 +129,24 @@ export const useLegalChat = (): LegalChatHook => {
       language: detectedLanguage
     };
 
+    // Get current messages before adding new one for history
+    const currentMessages = [...messages];
+    
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
     setLastLanguage(detectedLanguage);
 
     try {
+      // Include conversation history for context
+      const conversationHistory = formatMessagesForAI(currentMessages);
+      
       const { data, error } = await supabase.functions.invoke('legal-chat', {
         body: { 
           message: message.trim(),
           sessionId,
           detectedLanguage,
-          documentContent: documentContextRef.current || undefined
+          documentContent: documentContextRef.current || undefined,
+          conversationHistory // Send conversation history
         }
       });
 
@@ -164,7 +181,7 @@ export const useLegalChat = (): LegalChatHook => {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, sessionId]);
+  }, [isLoading, sessionId, messages]);
 
   const clearMessages = useCallback(() => {
     setMessages([]);

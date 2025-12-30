@@ -5,13 +5,18 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+interface ConversationMessage {
+  role: string;
+  content: string;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { message, sessionId, detectedLanguage, documentContent, action } = await req.json();
+    const { message, sessionId, detectedLanguage, documentContent, action, conversationHistory } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
@@ -20,6 +25,7 @@ serve(async (req) => {
 
     const isHindi = detectedLanguage === 'hi-IN';
     const hasDocument = documentContent && documentContent.length > 0;
+    const hasHistory = conversationHistory && Array.isArray(conversationHistory) && conversationHistory.length > 0;
 
     // Handle document summarization request
     if (action === 'summarize' && hasDocument) {
@@ -106,26 +112,47 @@ Keep it concise but thorough.`;
     if (hasDocument) {
       // Document Q&A mode
       systemPrompt = isHindi 
-        ? `You are CARE, an expert Indian legal document analyzer. A document has been provided. Answer questions about it in Hindi (Devanagari script). Be precise and cite specific parts of the document when relevant.
+        ? `You are CARE, an expert Indian legal assistant with memory of our conversation. A document has been provided. Answer questions about it in Hindi (Devanagari script). Be precise and cite specific parts of the document when relevant. Remember our previous conversation and refer to it when appropriate.
 
 DOCUMENT CONTENT:
 ${documentContent.slice(0, 6000)}
 
-Answer the user's question based on this document.`
-        : `You are CARE, an expert Indian legal document analyzer. A document has been provided. Answer questions about it in simple English. Be precise and cite specific parts of the document when relevant.
+Answer the user's question based on this document and our conversation history.`
+        : `You are CARE, an expert Indian legal assistant with memory of our conversation. A document has been provided. Answer questions about it in simple English. Be precise and cite specific parts of the document when relevant. Remember our previous conversation and refer to it when appropriate.
 
 DOCUMENT CONTENT:
 ${documentContent.slice(0, 6000)}
 
-Answer the user's question based on this document.`;
+Answer the user's question based on this document and our conversation history.`;
     } else {
-      // Normal legal chat mode
+      // Normal legal chat mode with memory
       systemPrompt = isHindi 
-        ? `You are CARE, a friendly Indian legal assistant. Respond in Hindi (Devanagari script). Be warm, concise (2-3 sentences). Provide helpful legal guidance on Indian laws.`
-        : `You are CARE, a friendly Indian legal assistant. Respond in simple English. Be warm, concise (2-3 sentences). Provide helpful legal guidance on Indian laws.`;
+        ? `You are CARE, a friendly Indian legal assistant with perfect memory of our conversation. Respond in Hindi (Devanagari script). Be warm and helpful. Remember everything we discussed and refer to previous questions/answers when relevant. Provide helpful legal guidance on Indian laws. If the user refers to something from earlier in our conversation, acknowledge and build upon it.`
+        : `You are CARE, a friendly Indian legal assistant with perfect memory of our conversation. Respond in simple English. Be warm and helpful. Remember everything we discussed and refer to previous questions/answers when relevant. Provide helpful legal guidance on Indian laws. If the user refers to something from earlier in our conversation, acknowledge and build upon it.`;
     }
 
-    console.log(`Chat - Language: ${detectedLanguage}, hasDocument: ${hasDocument}, message: ${message.substring(0, 50)}...`);
+    // Build messages array with conversation history
+    const messages: ConversationMessage[] = [
+      { role: "system", content: systemPrompt }
+    ];
+
+    // Add conversation history (limit to last 10 exchanges to manage token usage)
+    if (hasHistory) {
+      const recentHistory = conversationHistory.slice(-20); // Last 20 messages (10 exchanges)
+      console.log(`Including ${recentHistory.length} messages from conversation history`);
+      
+      for (const msg of recentHistory) {
+        messages.push({
+          role: msg.role === 'assistant' ? 'assistant' : 'user',
+          content: msg.content
+        });
+      }
+    }
+
+    // Add current user message
+    messages.push({ role: "user", content: message });
+
+    console.log(`Chat - Language: ${detectedLanguage}, hasDocument: ${hasDocument}, hasHistory: ${hasHistory}, totalMessages: ${messages.length}`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -135,11 +162,8 @@ Answer the user's question based on this document.`;
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: message }
-        ],
-        max_tokens: hasDocument ? 1000 : 500,
+        messages,
+        max_tokens: hasDocument ? 1000 : 600,
         temperature: 0.7,
       }),
     });
