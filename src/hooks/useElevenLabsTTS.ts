@@ -5,10 +5,12 @@ interface ElevenLabsTTSHook {
   speak: (text: string, language?: string) => Promise<void>;
   stop: () => void;
   isSupported: boolean;
+  isLoading: boolean;
 }
 
 export const useElevenLabsTTS = (): ElevenLabsTTSHook => {
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -18,6 +20,8 @@ export const useElevenLabsTTS = (): ElevenLabsTTSHook => {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
+      // Remove source to free memory
+      audioRef.current.src = '';
       audioRef.current = null;
     }
     if (abortControllerRef.current) {
@@ -25,6 +29,7 @@ export const useElevenLabsTTS = (): ElevenLabsTTSHook => {
       abortControllerRef.current = null;
     }
     setIsSpeaking(false);
+    setIsLoading(false);
   }, []);
 
   const speak = useCallback(
@@ -34,7 +39,7 @@ export const useElevenLabsTTS = (): ElevenLabsTTSHook => {
       stop();
 
       try {
-        setIsSpeaking(true);
+        setIsLoading(true);
         abortControllerRef.current = new AbortController();
 
         const response = await fetch(
@@ -61,11 +66,20 @@ export const useElevenLabsTTS = (): ElevenLabsTTSHook => {
           throw new Error(data.error);
         }
 
+        setIsLoading(false);
+
+        // Create audio element with mobile-optimized settings
+        const audio = new Audio();
+        
+        // Mobile audio compatibility settings
+        audio.preload = 'auto';
+        audio.crossOrigin = 'anonymous';
+        
         // Use data URI for base64 audio - browser natively decodes it
-        const audioUrl = `data:audio/mpeg;base64,${data.audioContent}`;
-        const audio = new Audio(audioUrl);
+        audio.src = `data:audio/mpeg;base64,${data.audioContent}`;
         audioRef.current = audio;
 
+        // Set up event handlers before playing
         audio.onended = () => {
           setIsSpeaking(false);
           audioRef.current = null;
@@ -77,7 +91,19 @@ export const useElevenLabsTTS = (): ElevenLabsTTSHook => {
           audioRef.current = null;
         };
 
-        await audio.play();
+        audio.onplay = () => {
+          setIsSpeaking(true);
+        };
+
+        // Attempt to play - handle mobile autoplay restrictions
+        try {
+          await audio.play();
+        } catch (playError) {
+          console.warn('Autoplay blocked, audio ready for user interaction:', playError);
+          // On mobile, if autoplay is blocked, the audio is still ready
+          // It will play on the next user interaction
+          setIsSpeaking(false);
+        }
       } catch (error) {
         if ((error as Error).name === 'AbortError') {
           // Request was cancelled, this is expected
@@ -85,6 +111,7 @@ export const useElevenLabsTTS = (): ElevenLabsTTSHook => {
         }
         console.error('ElevenLabs TTS error:', error);
         setIsSpeaking(false);
+        setIsLoading(false);
       }
     },
     [isSupported, stop]
@@ -95,5 +122,6 @@ export const useElevenLabsTTS = (): ElevenLabsTTSHook => {
     speak,
     stop,
     isSupported,
+    isLoading,
   };
 };

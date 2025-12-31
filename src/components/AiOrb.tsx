@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
+import { useElevenLabsTTS } from '@/hooks/useElevenLabsTTS';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 
 interface AiOrbProps {
@@ -11,9 +12,28 @@ interface AiOrbProps {
 
 const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLanguage = 'en-IN' }: AiOrbProps) => {
   const [isActive, setIsActive] = useState(false);
-  const [continuousMode, setContinuousMode] = useState(true); // Auto-listen after speaking
-  const { isListening, transcript, detectedLanguage, startListening, stopListening, resetTranscript, isSupported: speechSupported } = useSpeechRecognition();
-  const { isSpeaking, speak, stop: stopSpeaking, isSupported: ttsSupported } = useTextToSpeech();
+  const [continuousMode, setContinuousMode] = useState(true);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  
+  const { 
+    isListening, 
+    transcript, 
+    detectedLanguage, 
+    startListening, 
+    stopListening, 
+    resetTranscript, 
+    isSupported: speechSupported,
+    error: speechError 
+  } = useSpeechRecognition();
+  
+  // Try ElevenLabs first, fallback to browser TTS
+  const elevenLabsTTS = useElevenLabsTTS();
+  const browserTTS = useTextToSpeech();
+  
+  // Use ElevenLabs if available, otherwise browser TTS
+  const tts = elevenLabsTTS.isSupported ? elevenLabsTTS : browserTTS;
+  const { isSpeaking, speak, stop: stopSpeaking, isSupported: ttsSupported } = tts;
+  const isLoading = 'isLoading' in tts ? (tts.isLoading as boolean) : false;
   
   // Auto-send timer ref
   const autoSendTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -35,12 +55,10 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
     if (isListening && transcript && transcript !== lastTranscriptRef.current) {
       lastTranscriptRef.current = transcript;
       
-      // Clear existing timer
       if (autoSendTimerRef.current) {
         clearTimeout(autoSendTimerRef.current);
       }
       
-      // Set new timer for 2 seconds
       autoSendTimerRef.current = setTimeout(() => {
         if (transcript.trim() && onTranscript) {
           stopListening();
@@ -53,30 +71,26 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
     }
   }, [transcript, isListening, onTranscript, stopListening, resetTranscript, detectedLanguage]);
 
-  // Auto-speak response when received (Jarvis-style)
+  // Auto-speak response when received (only after user interaction for mobile)
   useEffect(() => {
-    if (responseText && !isProcessing && ttsSupported && !hasSpokenRef.current) {
+    if (responseText && !isProcessing && ttsSupported && !hasSpokenRef.current && hasUserInteracted) {
       hasSpokenRef.current = true;
       speak(responseText, responseLanguage);
     }
     
-    // Reset the spoken flag when we start processing a new message
     if (isProcessing) {
       hasSpokenRef.current = false;
     }
-  }, [responseText, isProcessing, speak, ttsSupported, responseLanguage]);
+  }, [responseText, isProcessing, speak, ttsSupported, responseLanguage, hasUserInteracted]);
 
   // Continuous conversation: auto-start listening when speaking ends
   useEffect(() => {
-    // Track when speaking starts
     if (isSpeaking) {
       wasSpeakingRef.current = true;
     }
     
-    // When speaking ends and we were speaking, auto-start listening
     if (!isSpeaking && wasSpeakingRef.current && continuousMode && speechSupported && !isProcessing) {
       wasSpeakingRef.current = false;
-      // Small delay before starting to listen (gives audio time to fully stop)
       const timer = setTimeout(async () => {
         if (!isListening && !isProcessing) {
           try {
@@ -92,13 +106,15 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
   }, [isSpeaking, continuousMode, speechSupported, isProcessing, isListening, startListening]);
 
   const handleOrbClick = async () => {
+    // Mark that user has interacted (enables audio on mobile)
+    setHasUserInteracted(true);
+
     if (isSpeaking) {
       stopSpeaking();
       return;
     }
 
     if (isListening) {
-      // Manual stop - send immediately if there's a transcript
       if (autoSendTimerRef.current) {
         clearTimeout(autoSendTimerRef.current);
       }
@@ -115,9 +131,8 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
     }
   };
 
-  const displayState = isProcessing ? 'thinking' : isSpeaking ? 'speaking' : isListening ? 'listening' : 'idle';
+  const displayState = isLoading ? 'thinking' : isProcessing ? 'thinking' : isSpeaking ? 'speaking' : isListening ? 'listening' : 'idle';
 
-  // Language display names
   const languageNames: Record<string, string> = {
     'hi-IN': 'हिंदी',
     'ta-IN': 'தமிழ்',
@@ -136,10 +151,11 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
     <div className="flex flex-col items-center gap-4">
       <button
         onClick={handleOrbClick}
-        disabled={isProcessing}
-        className="relative group cursor-pointer disabled:cursor-wait"
+        disabled={isProcessing || isLoading}
+        className="relative group cursor-pointer disabled:cursor-wait touch-manipulation"
+        aria-label={displayState === 'idle' ? 'Tap to start speaking' : displayState === 'listening' ? 'Tap to stop' : 'Voice assistant'}
       >
-      {/* Outer glow ring */}
+        {/* Outer glow ring */}
         <div className={`absolute inset-0 rounded-full transition-all duration-500 ${
           displayState !== 'idle' 
             ? 'scale-150 opacity-100' 
@@ -208,11 +224,16 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
           CARE
         </h2>
         <p className="text-muted-foreground text-xs sm:text-sm mt-1">
-          {displayState === 'thinking' && 'Thinking...'}
+          {displayState === 'thinking' && (isLoading ? 'Generating audio...' : 'Thinking...')}
           {displayState === 'speaking' && 'Speaking...'}
           {displayState === 'listening' && `Listening... (${languageNames[detectedLanguage] || 'English'})`}
-          {displayState === 'idle' && (speechSupported ? 'Tap to speak in any language' : 'Voice not supported')}
+          {displayState === 'idle' && (speechSupported ? 'Tap to speak' : 'Voice not supported')}
         </p>
+        
+        {/* Error display */}
+        {speechError && (
+          <p className="text-destructive text-xs mt-1">{speechError}</p>
+        )}
       </div>
 
       {/* Live transcript */}
@@ -225,7 +246,7 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
         </div>
       )}
 
-      <p className="text-muted-foreground/70 text-xs sm:text-sm hidden sm:block">
+      <p className="text-muted-foreground/70 text-xs sm:text-sm">
         {isSpeaking ? 'Tap to stop' : 'Speak in Hindi, Tamil, Telugu, or any Indian language'}
       </p>
     </div>
