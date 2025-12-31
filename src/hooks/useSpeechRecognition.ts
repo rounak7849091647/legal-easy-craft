@@ -8,6 +8,7 @@ interface SpeechRecognitionHook {
   stopListening: () => void;
   resetTranscript: () => void;
   isSupported: boolean;
+  error: string | null;
 }
 
 // Type declarations for Web Speech API
@@ -43,7 +44,7 @@ interface SpeechRecognition extends EventTarget {
   abort(): void;
   onstart: ((this: SpeechRecognition, ev: Event) => void) | null;
   onend: ((this: SpeechRecognition, ev: Event) => void) | null;
-  onerror: ((this: SpeechRecognition, ev: Event) => void) | null;
+  onerror: ((this: SpeechRecognition, ev: Event & { error: string }) => void) | null;
   onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => void) | null;
 }
 
@@ -59,7 +60,6 @@ const detectIndianLanguage = (text: string): string => {
   // Count Devanagari characters for Hindi detection
   const devanagariCount = (text.match(/[\u0900-\u097F]/g) || []).length;
   const latinCount = (text.match(/[a-zA-Z]/g) || []).length;
-  const totalChars = devanagariCount + latinCount;
   
   // If mostly Devanagari, it's Hindi
   if (devanagariCount > 0 && devanagariCount >= latinCount * 0.3) {
@@ -91,99 +91,149 @@ export const useSpeechRecognition = (): SpeechRecognitionHook => {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [detectedLanguage, setDetectedLanguage] = useState('en-IN');
+  const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const isSupported = typeof window !== 'undefined' && 
     ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
-  // Initialize audio context for noise cancellation
-  const setupNoiseCancellation = async (): Promise<MediaStream | null> => {
+  // Cleanup media stream
+  const cleanupStream = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+  }, []);
+
+  // Request microphone permission - mobile compatible
+  const requestMicrophonePermission = async (): Promise<boolean> => {
     try {
+      // Use simpler audio constraints for better mobile compatibility
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: 16000,
+          // Don't specify sampleRate - let the device choose
         }
       });
-      return stream;
-    } catch (error) {
-      console.error('Failed to setup audio with noise cancellation:', error);
-      return null;
+      streamRef.current = stream;
+      return true;
+    } catch (err) {
+      console.error('Microphone permission denied:', err);
+      setError('Microphone access denied. Please allow microphone access.');
+      return false;
     }
   };
 
   useEffect(() => {
-    if (!isSupported) return;
-
-    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognitionRef.current = new SpeechRecognitionAPI();
-    
-    const recognition = recognitionRef.current;
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    // Use English as primary language
-    recognition.lang = 'en-US';
-
-    recognition.onstart = () => {
-      setIsListening(true);
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-
-    recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event);
-      setIsListening(false);
-    };
-
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let fullTranscript = '';
-
-      // Build complete transcript from all results (not just new ones)
-      for (let i = 0; i < event.results.length; i++) {
-        const result = event.results[i];
-        fullTranscript += result[0].transcript;
-      }
-
-      if (fullTranscript) {
-        // Detect language from the transcript
-        const detected = detectIndianLanguage(fullTranscript);
-        setDetectedLanguage(detected);
-      }
-
-      // Replace entire transcript instead of appending (prevents duplicates)
-      setTranscript(fullTranscript);
-    };
-
     return () => {
-      if (recognition) {
-        recognition.abort();
+      cleanupStream();
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
       }
     };
-  }, [isSupported]);
+  }, [cleanupStream]);
 
   const startListening = useCallback(async () => {
-    if (recognitionRef.current && !isListening) {
-      setTranscript('');
-      setDetectedLanguage('en-IN');
-      
-      // Setup noise cancellation before starting
-      await setupNoiseCancellation();
-      
-      recognitionRef.current.start();
+    if (!isSupported) {
+      setError('Speech recognition not supported in this browser');
+      return;
     }
-  }, [isListening]);
 
-  
+    setError(null);
+
+    // Request microphone permission first (required for mobile)
+    const hasPermission = await requestMicrophonePermission();
+    if (!hasPermission) return;
+
+    try {
+      const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognitionAPI();
+      
+      const recognition = recognitionRef.current;
+      
+      // Mobile-optimized settings
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        setIsListening(true);
+        setError(null);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+        cleanupStream();
+      };
+
+      recognition.onerror = (event: Event & { error: string }) => {
+        console.error('Speech recognition error:', event.error);
+        
+        // Handle specific errors
+        switch (event.error) {
+          case 'not-allowed':
+          case 'permission-denied':
+            setError('Microphone access denied');
+            break;
+          case 'no-speech':
+            // Not an error, just no speech detected
+            break;
+          case 'network':
+            setError('Network error. Check your connection.');
+            break;
+          case 'audio-capture':
+            setError('No microphone found or access denied');
+            break;
+          case 'aborted':
+            // User or system aborted, not an error
+            break;
+          default:
+            setError(`Speech error: ${event.error}`);
+        }
+        
+        setIsListening(false);
+        cleanupStream();
+      };
+
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
+        let fullTranscript = '';
+
+        // Build complete transcript from all results
+        for (let i = 0; i < event.results.length; i++) {
+          const result = event.results[i];
+          fullTranscript += result[0].transcript;
+        }
+
+        if (fullTranscript) {
+          const detected = detectIndianLanguage(fullTranscript);
+          setDetectedLanguage(detected);
+        }
+
+        setTranscript(fullTranscript);
+      };
+
+      recognition.start();
+    } catch (err) {
+      console.error('Failed to start speech recognition:', err);
+      setError('Failed to start voice input');
+      cleanupStream();
+    }
+  }, [isSupported, cleanupStream]);
 
   const stopListening = useCallback(() => {
-    if (recognitionRef.current && isListening) {
-      recognitionRef.current.stop();
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {
+        // Ignore errors when stopping
+      }
     }
-  }, [isListening]);
+    cleanupStream();
+    setIsListening(false);
+  }, [cleanupStream]);
 
   const resetTranscript = useCallback(() => {
     setTranscript('');
@@ -196,6 +246,7 @@ export const useSpeechRecognition = (): SpeechRecognitionHook => {
     startListening,
     stopListening,
     resetTranscript,
-    isSupported
+    isSupported,
+    error
   };
 };
