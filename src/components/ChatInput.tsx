@@ -1,7 +1,8 @@
-import { useState, useEffect, forwardRef, useRef } from 'react';
+import { useState, useEffect, forwardRef, useRef, useMemo } from 'react';
 import { Send, Mic, Square, Paperclip, X, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
+import { useWhisperRecognition } from '@/hooks/useWhisperRecognition';
 import { toast } from 'sonner';
 
 interface ChatInputProps {
@@ -19,6 +20,13 @@ interface UploadedDocument {
   content: string;
 }
 
+// Detect iOS Safari where Web Speech API doesn't work
+const isIOSDevice = () => {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent;
+  return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+};
+
 const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
   onSend,
   onDocumentUpload,
@@ -33,7 +41,48 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
   const [uploadedDoc, setUploadedDoc] = useState<UploadedDocument | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { isListening, transcript, detectedLanguage, startListening, stopListening, resetTranscript, isSupported } = useSpeechRecognition();
+  
+  // Use Whisper for iOS, Web Speech API for others
+  const isIOS = useMemo(() => isIOSDevice(), []);
+  
+  const webSpeech = useSpeechRecognition();
+  const whisper = useWhisperRecognition();
+  
+  // Choose the right recognition system
+  const isListening = isIOS ? whisper.isRecording : webSpeech.isListening;
+  const transcript = isIOS ? whisper.transcript : webSpeech.transcript;
+  const detectedLanguage = isIOS ? 'en-IN' : webSpeech.detectedLanguage;
+  const isSupported = isIOS ? whisper.isSupported : webSpeech.isSupported;
+  const isProcessingVoice = isIOS ? whisper.isProcessing : false;
+  const voiceError = isIOS ? whisper.error : webSpeech.error;
+  
+  // Unified control functions
+  const startListening = async () => {
+    if (isIOS) {
+      await whisper.startRecording();
+    } else {
+      await webSpeech.startListening();
+    }
+  };
+  
+  const stopListening = async () => {
+    if (isIOS) {
+      const text = await whisper.stopRecording();
+      return text;
+    } else {
+      webSpeech.stopListening();
+      return webSpeech.transcript;
+    }
+  };
+  
+  const resetTranscript = () => {
+    if (isIOS) {
+      whisper.resetTranscript();
+    } else {
+      webSpeech.resetTranscript();
+    }
+  };
+  
   const autoSendTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastTranscriptRef = useRef<string>('');
   const restartTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -47,8 +96,11 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
     };
   }, []);
 
-  // Update message with transcript and auto-send after pause
+  // Update message with transcript and auto-send after pause (non-iOS only)
   useEffect(() => {
+    // On iOS, we handle this differently - wait for stopRecording to return text
+    if (isIOS) return;
+    
     if (transcript && voiceMode) {
       setMessage(transcript);
       
@@ -60,7 +112,6 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
         
         autoSendTimerRef.current = setTimeout(() => {
           if (transcript.trim()) {
-            // Send the message
             if (onVoiceTranscript) {
               onVoiceTranscript(transcript.trim(), detectedLanguage);
             } else {
@@ -69,16 +120,17 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
             setMessage('');
             resetTranscript();
             lastTranscriptRef.current = '';
-            // Don't stop listening - keep voice mode active
           }
         }, 2500);
       }
     }
-  }, [transcript, detectedLanguage, onSend, onVoiceTranscript, resetTranscript, voiceMode, uploadedDoc]);
+  }, [transcript, detectedLanguage, onSend, onVoiceTranscript, voiceMode, uploadedDoc, isIOS, resetTranscript]);
 
-  // Restart listening when it stops (browser auto-stops after silence)
-  // Only if voiceMode is active and not currently speaking
+  // Restart listening when it stops (browser auto-stops after silence) - non-iOS only
   useEffect(() => {
+    // iOS uses push-to-talk, not continuous
+    if (isIOS) return;
+    
     if (voiceMode && !isListening && isSupported && !isSpeaking && !isLoading) {
       if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
       
@@ -96,10 +148,13 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
     return () => {
       if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
     };
-  }, [isListening, voiceMode, isSupported, startListening, isSpeaking, isLoading]);
+  }, [isListening, voiceMode, isSupported, isSpeaking, isLoading, isIOS, startListening]);
 
-  // Jarvis-style: Auto-resume listening after AI finishes speaking
+  // Jarvis-style: Auto-resume listening after AI finishes speaking (non-iOS only)
   useEffect(() => {
+    // iOS uses push-to-talk, not auto-resume
+    if (isIOS) return;
+    
     if (isSpeaking) {
       wasSpeakingRef.current = true;
       // Pause listening while AI is speaking
@@ -125,7 +180,7 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
       
       return () => clearTimeout(timer);
     }
-  }, [isSpeaking, voiceMode, isSupported, isLoading, isListening, startListening, stopListening]);
+  }, [isSpeaking, voiceMode, isSupported, isLoading, isListening, isIOS, startListening, stopListening]);
 
   // Notify parent about voice mode changes
   useEffect(() => {
@@ -227,39 +282,48 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
     if (autoSendTimerRef.current) clearTimeout(autoSendTimerRef.current);
     if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
     
-    if (voiceMode) {
-      // Turn off voice mode
+    if (voiceMode || isListening) {
+      // Turn off voice mode / stop recording
       setVoiceMode(false);
-      stopListening();
+      
+      // For iOS, stopListening returns the transcribed text
+      const finalText = await stopListening();
       
       // Send any pending transcript
-      if (transcript.trim()) {
+      const textToSend = finalText || transcript;
+      if (textToSend && textToSend.trim()) {
         if (onVoiceTranscript) {
-          onVoiceTranscript(transcript.trim(), detectedLanguage);
+          onVoiceTranscript(textToSend.trim(), detectedLanguage);
         } else {
-          onSend(transcript.trim(), uploadedDoc?.content);
+          onSend(textToSend.trim(), uploadedDoc?.content);
         }
       }
       setMessage('');
       resetTranscript();
       lastTranscriptRef.current = '';
     } else {
-      // Turn on voice mode
+      // Turn on voice mode / start recording
       setVoiceMode(true);
       resetTranscript();
       setMessage('');
       lastTranscriptRef.current = '';
       try {
         await startListening();
+        if (isIOS) {
+          toast.info('Recording... Tap again to send', { duration: 2000 });
+        }
       } catch (error) {
         console.error('Failed to start listening:', error);
         setVoiceMode(false);
+        if (voiceError) {
+          toast.error(voiceError);
+        }
       }
     }
   };
 
   const placeholder = voiceMode
-    ? (isSpeaking ? 'AI speaking...' : isListening ? 'Listening...' : isLoading ? 'Processing...' : 'Ready to listen')
+    ? (isProcessingVoice ? 'Transcribing...' : isSpeaking ? 'AI speaking...' : isListening ? (isIOS ? 'Recording...' : 'Listening...') : isLoading ? 'Processing...' : 'Ready to listen')
     : uploadedDoc 
     ? 'Ask about the document...'
     : isLoading
@@ -385,12 +449,20 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
       
       {voiceMode && (
         <p className={`text-center text-xs mt-2 ${
+          isProcessingVoice ? 'text-yellow-400 animate-pulse' :
           isSpeaking ? 'text-primary' : isListening ? 'text-green-400 animate-pulse' : 'text-muted-foreground'
         }`}>
-          {isSpeaking ? 'AI speaking... will resume listening after' : 
-           isListening && transcript ? 'Auto-sending after pause...' :
-           isListening ? 'Listening...' : 
+          {isProcessingVoice ? 'Transcribing audio...' :
+           isSpeaking ? (isIOS ? 'AI speaking...' : 'AI speaking... will resume listening after') : 
+           isListening && transcript ? (isIOS ? 'Tap square to send' : 'Auto-sending after pause...') :
+           isListening ? (isIOS ? 'Recording... tap to send' : 'Listening...') : 
            isLoading ? 'Processing...' : 'Ready'}
+        </p>
+      )}
+      
+      {voiceError && (
+        <p className="text-center text-xs mt-1 text-red-400">
+          {voiceError}
         </p>
       )}
       
@@ -398,7 +470,7 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
         {uploadedDoc 
           ? '📄 Document attached • Ask questions about it'
           : voiceMode 
-          ? '🎙️ Jarvis Mode ON • Continuous conversation • Tap square to stop' 
+          ? (isIOS ? '🎙️ Push-to-talk • Tap mic to record, tap again to send' : '🎙️ Jarvis Mode ON • Continuous conversation • Tap square to stop')
           : '📎 Attach documents • 🎙️ Tap mic for voice mode'}
       </p>
     </div>
