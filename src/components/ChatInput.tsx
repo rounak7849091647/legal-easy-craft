@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { useWhisperRecognition } from '@/hooks/useWhisperRecognition';
 import { toast } from 'sonner';
+import { isIOSDevice } from '@/lib/device/isIOSDevice';
 
 interface ChatInputProps {
   onSend: (message: string, documentContent?: string) => void;
@@ -21,11 +22,6 @@ interface UploadedDocument {
 }
 
 // Detect iOS Safari where Web Speech API doesn't work
-const isIOSDevice = () => {
-  if (typeof window === 'undefined') return false;
-  const ua = navigator.userAgent;
-  return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-};
 
 const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
   onSend,
@@ -315,9 +311,8 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
       } catch (error) {
         console.error('Failed to start listening:', error);
         setVoiceMode(false);
-        if (voiceError) {
-          toast.error(voiceError);
-        }
+        const msg = error instanceof Error ? error.message : (voiceError || 'Failed to start voice input');
+        toast.error(msg);
       }
     }
   };

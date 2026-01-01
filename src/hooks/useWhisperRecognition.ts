@@ -29,8 +29,15 @@ export const useWhisperRecognition = (): WhisperRecognitionHook => {
 
   const startRecording = useCallback(async () => {
     if (!isSupported) {
-      setError('Audio recording not supported on this device');
-      return;
+      const msg = 'Audio recording not supported on this device';
+      setError(msg);
+      throw new Error(msg);
+    }
+
+    if (typeof window !== 'undefined' && !window.isSecureContext) {
+      const msg = 'Microphone requires HTTPS. Open the site over https:// (not http://).';
+      setError(msg);
+      throw new Error(msg);
     }
 
     setError(null);
@@ -84,17 +91,20 @@ export const useWhisperRecognition = (): WhisperRecognitionHook => {
       
     } catch (err) {
       console.error('Failed to start recording:', err);
+
+      let msg = 'Could not access microphone';
       if (err instanceof Error) {
         if (err.name === 'NotAllowedError') {
-          setError('Microphone access denied. Please allow microphone access in your browser settings.');
+          msg = 'Microphone access denied. Please allow microphone access in your browser settings.';
         } else if (err.name === 'NotFoundError') {
-          setError('No microphone found on this device.');
+          msg = 'No microphone found on this device.';
         } else {
-          setError(`Could not access microphone: ${err.message}`);
+          msg = `Could not access microphone: ${err.message}`;
         }
-      } else {
-        setError('Could not access microphone');
       }
+
+      setError(msg);
+      throw new Error(msg);
     }
   }, [isSupported]);
 

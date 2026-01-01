@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
+import { useWhisperRecognition } from '@/hooks/useWhisperRecognition';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
+import { isIOSDevice } from '@/lib/device/isIOSDevice';
 
 interface AiOrbProps {
   onTranscript?: (transcript: string, language: string) => void;
@@ -13,18 +15,39 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
   const [isActive, setIsActive] = useState(false);
   const [continuousMode, setContinuousMode] = useState(true);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
-  
-  const { 
-    isListening, 
-    transcript, 
-    detectedLanguage, 
-    startListening, 
-    stopListening, 
-    resetTranscript, 
-    isSupported: speechSupported,
-    error: speechError 
+
+  const isIOS = useMemo(() => isIOSDevice(), []);
+
+  const {
+    isListening: webIsListening,
+    transcript: webTranscript,
+    detectedLanguage: webDetectedLanguage,
+    startListening: startWebListening,
+    stopListening: stopWebListening,
+    resetTranscript: resetWebTranscript,
+    isSupported: webSpeechSupported,
+    error: webSpeechError,
   } = useSpeechRecognition();
-  
+
+  const {
+    isRecording,
+    transcript: whisperTranscript,
+    error: whisperError,
+    startRecording,
+    stopRecording,
+    resetTranscript: resetWhisperTranscript,
+    isSupported: whisperSupported,
+    isProcessing: isProcessingVoice,
+  } = useWhisperRecognition();
+
+  const isListening = isIOS ? isRecording : webIsListening;
+  const transcript = isIOS ? whisperTranscript : webTranscript;
+  const detectedLanguage = isIOS ? 'en-IN' : webDetectedLanguage;
+  const speechSupported = isIOS ? whisperSupported : webSpeechSupported;
+  const speechError = isIOS ? whisperError : webSpeechError;
+
+  const resetTranscript = () => (isIOS ? resetWhisperTranscript() : resetWebTranscript());
+
   const { isSpeaking, speak, stop: stopSpeaking, isSupported: ttsSupported, isLoading } = useTextToSpeech();
   
   // Auto-send timer ref
@@ -44,6 +67,8 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
 
   // Auto-send after 2 seconds of pause while listening
   useEffect(() => {
+    if (isIOS) return;
+
     if (isListening && transcript && transcript !== lastTranscriptRef.current) {
       lastTranscriptRef.current = transcript;
       
@@ -53,7 +78,7 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
       
       autoSendTimerRef.current = setTimeout(() => {
         if (transcript.trim() && onTranscript) {
-          stopListening();
+          stopWebListening();
           setIsActive(false);
           onTranscript(transcript.trim(), detectedLanguage);
           resetTranscript();
@@ -61,7 +86,7 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
         }
       }, 2000);
     }
-  }, [transcript, isListening, onTranscript, stopListening, resetTranscript, detectedLanguage]);
+  }, [isIOS, transcript, isListening, onTranscript, stopWebListening, resetTranscript, detectedLanguage]);
 
   // Auto-speak response when received (only after user interaction for mobile)
   useEffect(() => {
@@ -77,6 +102,8 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
 
   // Continuous conversation: auto-start listening when speaking ends
   useEffect(() => {
+    if (isIOS) return;
+
     if (isSpeaking) {
       wasSpeakingRef.current = true;
     }
@@ -86,7 +113,7 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
       const timer = setTimeout(async () => {
         if (!isListening && !isProcessing) {
           try {
-            await startListening();
+            await startWebListening();
             setIsActive(true);
           } catch (e) {
             console.error('Failed to auto-start listening:', e);
@@ -95,7 +122,7 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [isSpeaking, continuousMode, speechSupported, isProcessing, isListening, startListening, isLoading]);
+  }, [isIOS, isSpeaking, continuousMode, speechSupported, isProcessing, isListening, startWebListening, isLoading]);
 
   const handleOrbClick = async () => {
     // Mark that user has interacted (enables audio on mobile)
@@ -103,6 +130,36 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
 
     if (isSpeaking || isLoading) {
       stopSpeaking();
+      return;
+    }
+
+    if (isIOS) {
+      if (isRecording) {
+        if (autoSendTimerRef.current) {
+          clearTimeout(autoSendTimerRef.current);
+        }
+
+        try {
+          const text = await stopRecording();
+          setIsActive(false);
+          if (text.trim() && onTranscript) {
+            onTranscript(text.trim(), 'en-IN');
+          }
+          resetTranscript();
+          lastTranscriptRef.current = '';
+        } catch (e) {
+          console.error('Failed to stop recording:', e);
+          setIsActive(false);
+        }
+      } else if (speechSupported) {
+        try {
+          await startRecording();
+          setIsActive(true);
+        } catch (e) {
+          console.error('Failed to start recording:', e);
+          setIsActive(false);
+        }
+      }
       return;
     }
 
@@ -115,15 +172,20 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
         resetTranscript();
         lastTranscriptRef.current = '';
       }
-      stopListening();
+      stopWebListening();
       setIsActive(false);
     } else if (speechSupported) {
-      await startListening();
-      setIsActive(true);
+      try {
+        await startWebListening();
+        setIsActive(true);
+      } catch (e) {
+        console.error('Failed to start listening:', e);
+        setIsActive(false);
+      }
     }
   };
 
-  const displayState = isLoading ? 'thinking' : isProcessing ? 'thinking' : isSpeaking ? 'speaking' : isListening ? 'listening' : 'idle';
+  const displayState = (isLoading || isProcessing || isProcessingVoice) ? 'thinking' : isSpeaking ? 'speaking' : isListening ? 'listening' : 'idle';
 
   const languageNames: Record<string, string> = {
     'hi-IN': 'हिंदी',
