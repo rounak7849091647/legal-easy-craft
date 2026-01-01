@@ -107,7 +107,19 @@ export const useSpeechRecognition = (): SpeechRecognitionHook => {
   }, []);
 
   // Request microphone permission - mobile compatible
-  const requestMicrophonePermission = async (): Promise<boolean> => {
+  const requestMicrophonePermission = async (): Promise<void> => {
+    if (typeof window !== 'undefined' && !window.isSecureContext) {
+      const msg = 'Microphone requires HTTPS. Open the site over https:// (not http://).';
+      setError(msg);
+      throw new Error(msg);
+    }
+
+    if (!navigator?.mediaDevices?.getUserMedia) {
+      const msg = 'Microphone not supported in this browser.';
+      setError(msg);
+      throw new Error(msg);
+    }
+
     try {
       // Use simpler audio constraints for better mobile compatibility
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -115,15 +127,14 @@ export const useSpeechRecognition = (): SpeechRecognitionHook => {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          // Don't specify sampleRate - let the device choose
         }
       });
       streamRef.current = stream;
-      return true;
     } catch (err) {
       console.error('Microphone permission denied:', err);
-      setError('Microphone access denied. Please allow microphone access.');
-      return false;
+      const msg = 'Microphone access denied. Please allow microphone access in your browser settings.';
+      setError(msg);
+      throw new Error(msg);
     }
   };
 
@@ -138,17 +149,17 @@ export const useSpeechRecognition = (): SpeechRecognitionHook => {
 
   const startListening = useCallback(async () => {
     if (!isSupported) {
-      setError('Speech recognition not supported in this browser');
-      return;
+      const msg = 'Speech recognition not supported in this browser.';
+      setError(msg);
+      throw new Error(msg);
     }
 
     setError(null);
 
-    // Request microphone permission first (required for mobile)
-    const hasPermission = await requestMicrophonePermission();
-    if (!hasPermission) return;
-
     try {
+      // Request microphone permission first (required for mobile)
+      await requestMicrophonePermission();
+
       const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognitionRef.current = new SpeechRecognitionAPI();
       
@@ -218,8 +229,10 @@ export const useSpeechRecognition = (): SpeechRecognitionHook => {
       recognition.start();
     } catch (err) {
       console.error('Failed to start speech recognition:', err);
-      setError('Failed to start voice input');
+      const msg = err instanceof Error ? err.message : 'Failed to start voice input';
+      setError(msg);
       cleanupStream();
+      throw new Error(msg);
     }
   }, [isSupported, cleanupStream]);
 
