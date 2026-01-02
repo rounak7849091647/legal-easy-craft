@@ -23,30 +23,34 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const isHindi = detectedLanguage === 'hi-IN';
     const hasDocument = documentContent && documentContent.length > 0;
     const hasHistory = conversationHistory && Array.isArray(conversationHistory) && conversationHistory.length > 0;
+
+    // Language-specific prompts
+    const getLanguageInstructions = (lang: string): string => {
+      switch (lang) {
+        case 'hi-IN':
+          return 'Respond in Hindi (Devanagari script). Use formal Hindi suitable for legal contexts.';
+        case 'hinglish':
+          return 'Respond in Hinglish (a natural mix of Hindi and English, using Roman script). Example: "Aapka case strong hai, but aapko evidence collect karna hoga." Be conversational and friendly.';
+        case 'ta-IN':
+          return 'Respond in Tamil (தமிழ்). Use formal Tamil suitable for legal contexts.';
+        case 'te-IN':
+          return 'Respond in Telugu (తెలుగు). Use formal Telugu suitable for legal contexts.';
+        default:
+          return 'Respond in simple, clear English.';
+      }
+    };
+
+    const languageInstructions = getLanguageInstructions(detectedLanguage);
 
     // Handle document summarization request
     if (action === 'summarize' && hasDocument) {
       console.log(`Summarizing document (${documentContent.length} chars), language: ${detectedLanguage}`);
       
-      const summaryPrompt = isHindi 
-        ? `You are CARE, an expert Indian legal document analyzer. Analyze this document and provide a comprehensive summary in Hindi (Devanagari script).
+      const summaryPrompt = `You are CARE, an expert Indian legal document analyzer. Analyze this document and provide a comprehensive summary.
 
-DOCUMENT:
-${documentContent.slice(0, 6000)}
-
-Provide a structured summary including:
-1. **दस्तावेज़ का प्रकार** (Document Type): What kind of legal document is this?
-2. **पक्ष** (Parties): Who are the parties involved?
-3. **मुख्य शर्तें** (Key Terms): Important clauses, obligations, and rights
-4. **महत्वपूर्ण तिथियां** (Important Dates): Any deadlines or time periods
-5. **संभावित जोखिम** (Potential Risks): Any concerning clauses or missing protections
-6. **सिफारिशें** (Recommendations): What to verify or negotiate
-
-Keep it concise but thorough.`
-        : `You are CARE, an expert Indian legal document analyzer. Analyze this document and provide a comprehensive summary.
+${languageInstructions}
 
 DOCUMENT:
 ${documentContent.slice(0, 6000)}
@@ -111,14 +115,9 @@ Keep it concise but thorough.`;
     
     if (hasDocument) {
       // Document Q&A mode
-      systemPrompt = isHindi 
-        ? `You are CARE, an expert Indian legal assistant with memory of our conversation. A document has been provided. Answer questions about it in Hindi (Devanagari script). Be precise and cite specific parts of the document when relevant. Remember our previous conversation and refer to it when appropriate.
+      systemPrompt = `You are CARE, an expert Indian legal assistant with memory of our conversation. A document has been provided. Be precise and cite specific parts of the document when relevant. Remember our previous conversation and refer to it when appropriate.
 
-DOCUMENT CONTENT:
-${documentContent.slice(0, 6000)}
-
-Answer the user's question based on this document and our conversation history.`
-        : `You are CARE, an expert Indian legal assistant with memory of our conversation. A document has been provided. Answer questions about it in simple English. Be precise and cite specific parts of the document when relevant. Remember our previous conversation and refer to it when appropriate.
+${languageInstructions}
 
 DOCUMENT CONTENT:
 ${documentContent.slice(0, 6000)}
@@ -126,9 +125,9 @@ ${documentContent.slice(0, 6000)}
 Answer the user's question based on this document and our conversation history.`;
     } else {
       // Normal legal chat mode with memory
-      systemPrompt = isHindi 
-        ? `You are CARE, a friendly Indian legal assistant with perfect memory of our conversation. Respond in Hindi (Devanagari script). Be warm and helpful. Remember everything we discussed and refer to previous questions/answers when relevant. Provide helpful legal guidance on Indian laws. If the user refers to something from earlier in our conversation, acknowledge and build upon it.`
-        : `You are CARE, a friendly Indian legal assistant with perfect memory of our conversation. Respond in simple English. Be warm and helpful. Remember everything we discussed and refer to previous questions/answers when relevant. Provide helpful legal guidance on Indian laws. If the user refers to something from earlier in our conversation, acknowledge and build upon it.`;
+      systemPrompt = `You are CARE, a friendly Indian legal assistant with perfect memory of our conversation. Be warm and helpful. Remember everything we discussed and refer to previous questions/answers when relevant. Provide helpful legal guidance on Indian laws. If the user refers to something from earlier in our conversation, acknowledge and build upon it.
+
+${languageInstructions}`;
     }
 
     // Build messages array with conversation history

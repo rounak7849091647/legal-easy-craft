@@ -5,6 +5,7 @@ import ChatMessages from './ChatMessages';
 
 import { useLegalChat } from '@/hooks/useLegalChat';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
+import { useLanguage } from '@/contexts/LanguageContext';
 import supremeCourtBg from '@/assets/supreme-court-bg.jpg';
 
 interface MainContentProps {
@@ -14,6 +15,7 @@ interface MainContentProps {
 const MainContent = ({ isMobile = false }: MainContentProps) => {
   const { messages, isLoading, sendMessage, summarizeDocument, lastLanguage, lastVoiceResponse } = useLegalChat();
   const { isSpeaking, speak, stop } = useTextToSpeech();
+  const { currentLanguage } = useLanguage();
   const [lastResponseLanguage, setLastResponseLanguage] = useState<string>('en-IN');
   const [continuousVoiceMode, setContinuousVoiceMode] = useState(false);
   const lastSpokenIdRef = useRef<string | null>(null);
@@ -48,15 +50,15 @@ const MainContent = ({ isMobile = false }: MainContentProps) => {
     if (isSpeaking) {
       stop();
     }
-    await sendMessage(message, 'en-IN', documentContent);
-  }, [sendMessage, isSpeaking, stop]);
+    await sendMessage(message, currentLanguage.code, documentContent);
+  }, [sendMessage, isSpeaking, stop, currentLanguage.code]);
 
   const handleDocumentUpload = useCallback(async (documentContent: string, documentName: string) => {
     if (isSpeaking) {
       stop();
     }
-    await summarizeDocument(documentContent, documentName, 'en-IN');
-  }, [summarizeDocument, isSpeaking, stop]);
+    await summarizeDocument(documentContent, documentName, currentLanguage.code);
+  }, [summarizeDocument, isSpeaking, stop, currentLanguage.code]);
 
   const handleContinuousModeChange = useCallback((active: boolean) => {
     setContinuousVoiceMode(active);

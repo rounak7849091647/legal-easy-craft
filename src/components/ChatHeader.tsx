@@ -2,6 +2,7 @@ import { Menu, LogIn } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import LanguageSelector from './LanguageSelector';
 
 const ChatHeader = () => {
   return (
@@ -17,17 +18,20 @@ const ChatHeader = () => {
         </div>
       </div>
 
-      <Button 
-        asChild
-        variant="outline" 
-        size="sm"
-        className="gap-2"
-      >
-        <Link to="/auth">
-          <LogIn size={16} />
-          <span className="hidden sm:inline">Login</span>
-        </Link>
-      </Button>
+      <div className="flex items-center gap-2">
+        <LanguageSelector />
+        <Button 
+          asChild
+          variant="outline" 
+          size="sm"
+          className="gap-2"
+        >
+          <Link to="/auth">
+            <LogIn size={16} />
+            <span className="hidden sm:inline">Login</span>
+          </Link>
+        </Button>
+      </div>
     </header>
   );
 };
