@@ -6,7 +6,7 @@ import LanguageSelector from './LanguageSelector';
 
 const ChatHeader = () => {
   return (
-    <header className="sticky top-0 z-40 flex items-center justify-between h-14 px-4 bg-background/80 backdrop-blur-sm border-b border-border/50">
+    <header className="sticky top-0 z-40 flex items-center justify-between h-14 px-4 bg-background/80 backdrop-blur-sm">
       <div className="flex items-center gap-3">
         <SidebarTrigger className="text-muted-foreground hover:text-foreground">
           <Menu size={20} />
