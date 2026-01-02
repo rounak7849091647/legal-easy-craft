@@ -22,20 +22,20 @@ export const useWhisperRecognition = (): WhisperRecognitionHook => {
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // MediaRecorder is supported on all modern browsers including iOS Safari
   const isSupported = typeof window !== 'undefined' && 
     typeof navigator !== 'undefined' && 
     !!navigator.mediaDevices?.getUserMedia;
 
+  // Start recording - MUST be called directly from user gesture (click/tap)
   const startRecording = useCallback(async () => {
     if (!isSupported) {
-      const msg = 'Audio recording not supported on this device';
+      const msg = 'Audio recording not supported';
       setError(msg);
       throw new Error(msg);
     }
 
     if (typeof window !== 'undefined' && !window.isSecureContext) {
-      const msg = 'Microphone requires HTTPS. Open the site over https:// (not http://).';
+      const msg = 'Requires HTTPS';
       setError(msg);
       throw new Error(msg);
     }
@@ -44,31 +44,28 @@ export const useWhisperRecognition = (): WhisperRecognitionHook => {
     audioChunksRef.current = [];
 
     try {
-      // Request microphone with minimal constraints for better mobile compatibility
-      // Using simpler constraints reduces permission prompts on some devices
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true // Simple constraint works better on mobile
-      });
-      
+      // CRITICAL: getUserMedia MUST be called within user gesture
+      // Using minimal constraints for best mobile compatibility
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
 
-      // Find supported mime type (iOS Safari prefers mp4/aac)
-      let mimeType = 'audio/webm;codecs=opus';
-      if (!MediaRecorder.isTypeSupported(mimeType)) {
-        mimeType = 'audio/mp4';
-        if (!MediaRecorder.isTypeSupported(mimeType)) {
-          mimeType = 'audio/wav';
-          if (!MediaRecorder.isTypeSupported(mimeType)) {
-            // Fallback to default
-            mimeType = '';
-          }
-        }
-      }
+      // Detect best supported format
+      const mimeTypes = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/mp4',
+        'audio/wav',
+        ''
+      ];
+      
+      const mimeType = mimeTypes.find(type => 
+        type === '' || MediaRecorder.isTypeSupported(type)
+      ) || '';
 
-      console.log('Using audio mimeType:', mimeType || 'default');
-
-      const options = mimeType ? { mimeType } : undefined;
-      const mediaRecorder = new MediaRecorder(stream, options);
+      const mediaRecorder = new MediaRecorder(
+        stream, 
+        mimeType ? { mimeType } : undefined
+      );
       mediaRecorderRef.current = mediaRecorder;
 
       mediaRecorder.ondataavailable = (event) => {
@@ -77,26 +74,22 @@ export const useWhisperRecognition = (): WhisperRecognitionHook => {
         }
       };
 
-      mediaRecorder.onerror = (event) => {
-        console.error('MediaRecorder error:', event);
-        setError('Recording error occurred');
+      mediaRecorder.onerror = () => {
+        setError('Recording error');
         setIsRecording(false);
       };
 
-      mediaRecorder.start(1000); // Collect data every second
+      // Start immediately - timeslice helps mobile browsers
+      mediaRecorder.start(500);
       setIsRecording(true);
       
     } catch (err) {
-      console.error('Failed to start recording:', err);
-
-      let msg = 'Could not access microphone';
+      console.error('Recording start failed:', err);
+      
+      let msg = 'Microphone access denied';
       if (err instanceof Error) {
-        if (err.name === 'NotAllowedError') {
-          msg = 'Microphone access denied. Please allow microphone access in your browser settings.';
-        } else if (err.name === 'NotFoundError') {
-          msg = 'No microphone found on this device.';
-        } else {
-          msg = `Could not access microphone: ${err.message}`;
+        if (err.name === 'NotFoundError') {
+          msg = 'No microphone found';
         }
       }
 
@@ -115,14 +108,13 @@ export const useWhisperRecognition = (): WhisperRecognitionHook => {
       const mediaRecorder = mediaRecorderRef.current;
       
       mediaRecorder.onstop = async () => {
-        // Stop all tracks
+        // Clean up stream immediately
         if (streamRef.current) {
           streamRef.current.getTracks().forEach(track => track.stop());
           streamRef.current = null;
         }
 
         if (audioChunksRef.current.length === 0) {
-          console.log('No audio data recorded');
           resolve('');
           return;
         }
@@ -130,13 +122,10 @@ export const useWhisperRecognition = (): WhisperRecognitionHook => {
         setIsProcessing(true);
 
         try {
-          // Combine audio chunks
           const mimeType = mediaRecorder.mimeType || 'audio/webm';
           const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
           
-          // Check if we have enough audio (at least 0.5 seconds worth)
           if (audioBlob.size < 1000) {
-            console.log('Audio too short');
             setIsProcessing(false);
             resolve('');
             return;
@@ -153,33 +142,19 @@ export const useWhisperRecognition = (): WhisperRecognitionHook => {
           }
           const base64Audio = btoa(binary);
 
-          console.log('Sending audio for transcription, size:', audioBlob.size);
-
-          // Send to edge function for transcription
           const { data, error: fnError } = await supabase.functions.invoke('voice-to-text', {
-            body: { 
-              audio: base64Audio,
-              mimeType: mimeType
-            }
+            body: { audio: base64Audio, mimeType }
           });
 
-          if (fnError) {
-            console.error('Transcription error:', fnError);
-            setError('Could not transcribe audio. Please try again.');
-            resolve('');
-          } else if (data?.text) {
-            setTranscript(data.text);
-            resolve(data.text);
-          } else if (data?.fallback) {
-            setError(data.error || 'Transcription not available');
+          if (fnError || !data?.text) {
+            setError(data?.error || 'Transcription failed');
             resolve('');
           } else {
-            console.log('No transcription returned');
-            resolve('');
+            setTranscript(data.text);
+            resolve(data.text);
           }
         } catch (err) {
-          console.error('Failed to process audio:', err);
-          setError('Failed to process audio');
+          setError('Processing failed');
           resolve('');
         } finally {
           setIsProcessing(false);
