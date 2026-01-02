@@ -6,8 +6,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Indian female voice - Priya (Hindi/Indian English compatible)
-const VOICE_ID = "cgSgspJ2msm6clMCkdW9"; // Jessica - clear female voice that works well with Indian languages
+// Voice IDs optimized for different languages
+const VOICE_MAP: Record<string, string> = {
+  'en-IN': 'EXAVITQu4vr4xnSDxMaL', // Sarah - clear American English, great pronunciation
+  'hi-IN': 'nPczCjzI2devNBz1zQrb', // Brian - deep male voice, works well with Hindi
+  'hinglish': 'EXAVITQu4vr4xnSDxMaL', // Sarah - clear for mixed language
+  'ta-IN': 'onwK4e9ZLuTAKqWW03F9', // Daniel - British voice, handles Tamil
+  'te-IN': 'onwK4e9ZLuTAKqWW03F9', // Daniel - British voice, handles Telugu
+};
+
+const DEFAULT_VOICE = 'EXAVITQu4vr4xnSDxMaL'; // Sarah - default
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -26,11 +34,14 @@ serve(async (req) => {
       throw new Error("Text is required");
     }
 
-    // Use multilingual model for Indian language support
-    const modelId = "eleven_multilingual_v2";
+    // Select voice based on language
+    const voiceId = VOICE_MAP[language] || DEFAULT_VOICE;
+    
+    console.log(`TTS - Language: ${language}, Voice: ${voiceId}, Text length: ${text.length}`);
 
+    // Use multilingual v2 model for all languages - best quality
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
       {
         method: "POST",
         headers: {
@@ -38,15 +49,14 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          text: text.substring(0, 5000), // Limit to 5000 chars
-          model_id: modelId,
+          text: text.substring(0, 5000),
+          model_id: "eleven_multilingual_v2",
           output_format: "mp3_44100_128",
           voice_settings: {
-            stability: 0.6,
-            similarity_boost: 0.75,
-            style: 0.4,
+            stability: 0.5,
+            similarity_boost: 0.8,
+            style: 0.3,
             use_speaker_boost: true,
-            speed: 0.95,
           },
         }),
       }
