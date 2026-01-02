@@ -78,18 +78,24 @@ export const useTextToSpeech = (): TextToSpeechHook => {
   const findBestVoice = useCallback((language: string): SpeechSynthesisVoice | null => {
     if (voices.length === 0) return null;
 
-    const langCode = language.split('-')[0];
+    // Handle Hinglish - use Hindi voice
+    const effectiveLang = language === 'hinglish' ? 'hi-IN' : language;
+    const langCode = effectiveLang.split('-')[0];
     
-    // Preferred voice names for Indian languages
-    const preferredVoiceNames = [
-      'female', 'woman', 'google', 'microsoft', 
-      'veena', 'lekha', 'priya', 'heera', 'samantha', 'karen', 'moira'
-    ];
+    // Language-specific preferred voice names
+    const languageVoicePreferences: Record<string, string[]> = {
+      'en': ['google us', 'microsoft', 'samantha', 'karen', 'moira', 'female', 'woman'],
+      'hi': ['google india', 'hindi', 'lekha', 'veena', 'microsoft', 'female'],
+      'ta': ['google india', 'tamil', 'microsoft', 'female'],
+      'te': ['google india', 'telugu', 'microsoft', 'female'],
+    };
+
+    const preferredNames = languageVoicePreferences[langCode] || languageVoicePreferences['en'];
 
     // First try: exact language match with preferred voice
     let voice = voices.find(v => {
-      const isLangMatch = v.lang === language || v.lang.startsWith(langCode);
-      const isPreferred = preferredVoiceNames.some(name => 
+      const isLangMatch = v.lang === effectiveLang || v.lang.startsWith(langCode);
+      const isPreferred = preferredNames.some(name => 
         v.name.toLowerCase().includes(name)
       );
       return isLangMatch && isPreferred;
@@ -97,14 +103,19 @@ export const useTextToSpeech = (): TextToSpeechHook => {
 
     // Second try: any voice matching the language
     if (!voice) {
-      voice = voices.find(v => v.lang === language || v.lang.startsWith(langCode));
+      voice = voices.find(v => v.lang === effectiveLang || v.lang.startsWith(langCode));
     }
 
-    // Third try: English fallback with preferred voice
+    // Third try: Hindi fallback for Hinglish if no Hindi voice found
+    if (!voice && language === 'hinglish') {
+      voice = voices.find(v => v.lang.startsWith('en') && v.lang.includes('IN'));
+    }
+
+    // Fourth try: English fallback with preferred voice
     if (!voice) {
       voice = voices.find(v => {
         const isEnglish = v.lang.startsWith('en');
-        const isPreferred = preferredVoiceNames.some(name => 
+        const isPreferred = preferredNames.some(name => 
           v.name.toLowerCase().includes(name)
         );
         return isEnglish && isPreferred;
