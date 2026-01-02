@@ -19,8 +19,7 @@ const ChatHeader = () => {
       </div>
 
       <div className="flex items-center gap-2">
-        <LanguageSelector />
-        <Button 
+        <Button
           asChild
           variant="outline" 
           size="sm"
