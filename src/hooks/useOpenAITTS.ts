@@ -19,13 +19,21 @@ const speakWithBrowser = (text: string, language: string): Promise<void> => {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     
-    // Map language codes
+    // Map language codes for all supported Indian languages
     const langMap: Record<string, string> = {
       'en-IN': 'en-IN',
       'hi-IN': 'hi-IN',
       'hinglish': 'en-IN',
       'ta-IN': 'ta-IN',
       'te-IN': 'te-IN',
+      'bn-IN': 'bn-IN',
+      'mr-IN': 'mr-IN',
+      'gu-IN': 'gu-IN',
+      'kn-IN': 'kn-IN',
+      'ml-IN': 'ml-IN',
+      'pa-IN': 'pa-IN',
+      'or-IN': 'or-IN',
+      'as-IN': 'as-IN',
     };
     utterance.lang = langMap[language] || 'en-IN';
     utterance.rate = 1.0;
