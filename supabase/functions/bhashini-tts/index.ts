@@ -5,38 +5,21 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Bhashini language names mapping
-const LANGUAGE_NAMES: Record<string, string> = {
-  'en-IN': 'English',
-  'hi-IN': 'Hindi',
-  'hinglish': 'Hindi',
-  'ta-IN': 'Tamil',
-  'te-IN': 'Telugu',
-  'bn-IN': 'Bengali',
-  'mr-IN': 'Marathi',
-  'gu-IN': 'Gujarati',
-  'kn-IN': 'Kannada',
-  'ml-IN': 'Malayalam',
-  'pa-IN': 'Punjabi',
-  'or-IN': 'Odia',
-  'as-IN': 'Assamese',
-};
-
-// Voice options for Bhashini
-const VOICE_MAP: Record<string, string> = {
-  'en-IN': 'Female1',
-  'hi-IN': 'Female1',
-  'hinglish': 'Female1',
-  'ta-IN': 'Female1',
-  'te-IN': 'Female1',
-  'bn-IN': 'Female1',
-  'mr-IN': 'Female1',
-  'gu-IN': 'Female1',
-  'kn-IN': 'Female1',
-  'ml-IN': 'Female1',
-  'pa-IN': 'Female1',
-  'or-IN': 'Female1',
-  'as-IN': 'Female1',
+// Map our language codes to ISO 639-1 codes for Bhashini
+const LANGUAGE_CODES: Record<string, string> = {
+  'en-IN': 'en',
+  'hi-IN': 'hi',
+  'hinglish': 'hi',
+  'ta-IN': 'ta',
+  'te-IN': 'te',
+  'bn-IN': 'bn',
+  'mr-IN': 'mr',
+  'gu-IN': 'gu',
+  'kn-IN': 'kn',
+  'ml-IN': 'ml',
+  'pa-IN': 'pa',
+  'or-IN': 'or',
+  'as-IN': 'as',
 };
 
 serve(async (req) => {
@@ -51,43 +34,72 @@ serve(async (req) => {
       throw new Error("Text is required");
     }
 
-    const languageName = LANGUAGE_NAMES[language] || 'English';
-    const voiceName = VOICE_MAP[language] || 'Female1';
+    const langCode = LANGUAGE_CODES[language] || 'en';
+    const gender = 'female';
     
-    console.log(`Bhashini TTS - Language: ${languageName}, Voice: ${voiceName}, Text length: ${text.length}`);
+    console.log(`Bhashini TTS - Language: ${langCode}, Text length: ${text.length}`);
 
-    // Call Bhashini TTS API (free, no API key required)
+    // Use AI4Bharat's free TTS endpoint (part of Bhashini ecosystem)
+    // This endpoint doesn't require API key for basic usage
     const response = await fetch("https://tts.bhashini.ai/v1/synthesize", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Accept": "audio/mpeg",
       },
       body: JSON.stringify({
-        text: text.substring(0, 5000), // Limit text length
-        language: languageName,
-        voiceName: voiceName,
+        input: text.substring(0, 5000),
+        lang: langCode,
+        gender: gender,
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Bhashini TTS API error:", response.status, errorText);
+      
+      // Return fallback signal - client will use browser TTS
       return new Response(
-        JSON.stringify({ error: "Bhashini TTS error", fallback: true }),
+        JSON.stringify({ error: "Bhashini TTS unavailable", fallback: true }),
         { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Return audio directly
-    const audioBuffer = await response.arrayBuffer();
-
-    return new Response(audioBuffer, {
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "audio/mpeg",
-      },
-    });
+    // Check content type to determine response format
+    const contentType = response.headers.get("content-type") || "";
+    
+    if (contentType.includes("audio")) {
+      // Direct audio response
+      const audioBuffer = await response.arrayBuffer();
+      return new Response(audioBuffer, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": contentType,
+        },
+      });
+    } else {
+      // JSON response with base64 audio
+      const data = await response.json();
+      if (data.audio) {
+        // Decode base64 audio
+        const binaryString = atob(data.audio);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        return new Response(bytes, {
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "audio/wav",
+          },
+        });
+      }
+      
+      // Fallback if no audio in response
+      return new Response(
+        JSON.stringify({ error: "No audio in response", fallback: true }),
+        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
   } catch (error) {
     console.error("TTS error:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";

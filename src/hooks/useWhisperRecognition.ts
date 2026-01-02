@@ -44,13 +44,10 @@ export const useWhisperRecognition = (): WhisperRecognitionHook => {
     audioChunksRef.current = [];
 
     try {
-      // Request microphone with iOS-compatible settings
+      // Request microphone with minimal constraints for better mobile compatibility
+      // Using simpler constraints reduces permission prompts on some devices
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        }
+        audio: true // Simple constraint works better on mobile
       });
       
       streamRef.current = stream;
