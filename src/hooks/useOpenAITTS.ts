@@ -80,8 +80,9 @@ export const useOpenAITTS = (): OpenAITTSHook => {
     try {
       abortControllerRef.current = new AbortController();
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/text-to-speech`,
+      // Try Bhashini TTS first (free, optimized for Indian languages)
+      let response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bhashini-tts`,
         {
           method: 'POST',
           headers: {
@@ -94,9 +95,27 @@ export const useOpenAITTS = (): OpenAITTSHook => {
         }
       );
 
+      // If Bhashini fails, try OpenAI TTS as fallback
       if (!response.ok) {
-        // Rate limit or other error - fallback to browser TTS
-        console.log('OpenAI TTS unavailable, using browser fallback');
+        console.log('Bhashini TTS unavailable, trying OpenAI TTS...');
+        response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/text-to-speech`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({ text, language }),
+            signal: abortControllerRef.current.signal,
+          }
+        );
+      }
+
+      if (!response.ok) {
+        // Both APIs failed - fallback to browser TTS
+        console.log('Cloud TTS unavailable, using browser fallback');
         setIsLoading(false);
         setIsSpeaking(true);
         await speakWithBrowser(text, language);
