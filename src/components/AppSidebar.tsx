@@ -83,7 +83,7 @@ const AppSidebar = () => {
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
-      <SidebarHeader className="border-b border-sidebar-border p-3">
+      <SidebarHeader className="p-3">
         <div className="flex items-center justify-between">
           {!isCollapsed && (
             <Link to="/" className="flex flex-col">
@@ -180,7 +180,7 @@ const AppSidebar = () => {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-3">
+      <SidebarFooter className="p-3">
         <SidebarMenu>
           {/* User info when logged in */}
           {user && !isCollapsed && (
