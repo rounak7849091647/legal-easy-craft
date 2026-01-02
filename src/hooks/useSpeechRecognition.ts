@@ -157,8 +157,12 @@ export const useSpeechRecognition = (): SpeechRecognitionHook => {
     setError(null);
 
     try {
-      // Request microphone permission first (required for mobile)
-      await requestMicrophonePermission();
+      // On desktop, Web Speech API handles mic access internally
+      // Only request explicit permission on mobile where it may be needed
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        await requestMicrophonePermission();
+      }
 
       const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognitionRef.current = new SpeechRecognitionAPI();
@@ -168,7 +172,7 @@ export const useSpeechRecognition = (): SpeechRecognitionHook => {
       // Mobile-optimized settings
       recognition.continuous = true;
       recognition.interimResults = true;
-      recognition.lang = 'en-US';
+      recognition.lang = 'en-IN'; // Use Indian English for better recognition
 
       recognition.onstart = () => {
         setIsListening(true);
