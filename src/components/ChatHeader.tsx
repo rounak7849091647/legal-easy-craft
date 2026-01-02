@@ -1,8 +1,12 @@
-import { Menu, LogIn } from 'lucide-react';
+import { Menu, LogIn, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import LanguageSelector from './LanguageSelector';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 const ChatHeader = () => {
   return (
@@ -19,7 +23,25 @@ const ChatHeader = () => {
       </div>
 
       <div className="flex items-center gap-2">
-        <Button
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
+              <Info size={16} />
+              <span className="hidden sm:inline">Disclaimer</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-80 text-sm">
+            <div className="space-y-2">
+              <h4 className="font-semibold text-foreground">Disclaimer</h4>
+              <p className="text-muted-foreground leading-relaxed">
+                CARE AI provides general legal information for educational purposes only. 
+                It is not a substitute for professional legal advice. Always consult a 
+                qualified lawyer for specific legal matters.
+              </p>
+            </div>
+          </PopoverContent>
+        </Popover>
+        <Button 
           asChild
           variant="outline" 
           size="sm"
