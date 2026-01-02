@@ -5,16 +5,25 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// OpenAI TTS voices - all high quality
+// OpenAI TTS voices optimized for Indian languages
+// Using 'alloy' as default - it has good multilingual support
 const VOICE_MAP: Record<string, string> = {
-  'en-IN': 'nova',      // Clear female voice, great for English
+  'en-IN': 'nova',      // Clear female voice for Indian English
   'hi-IN': 'onyx',      // Deep male voice, works well with Hindi
   'hinglish': 'nova',   // Clear for mixed language
-  'ta-IN': 'shimmer',   // Expressive female voice
-  'te-IN': 'shimmer',   // Expressive female voice
+  'ta-IN': 'shimmer',   // Expressive female voice for Tamil
+  'te-IN': 'shimmer',   // Expressive female voice for Telugu
+  'bn-IN': 'alloy',     // Balanced voice for Bengali
+  'mr-IN': 'alloy',     // Balanced voice for Marathi
+  'gu-IN': 'alloy',     // Balanced voice for Gujarati
+  'kn-IN': 'shimmer',   // Expressive for Kannada
+  'ml-IN': 'shimmer',   // Expressive for Malayalam
+  'pa-IN': 'onyx',      // Deep voice for Punjabi
+  'or-IN': 'alloy',     // Balanced for Odia
+  'as-IN': 'alloy',     // Balanced for Assamese
 };
 
-const DEFAULT_VOICE = 'nova';
+const DEFAULT_VOICE = 'alloy';
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {

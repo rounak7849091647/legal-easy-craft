@@ -6,13 +6,22 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Voice IDs optimized for different languages
+// Voice IDs optimized for Indian languages using ElevenLabs multilingual v2
+// These voices work well with the multilingual model for Indian languages
 const VOICE_MAP: Record<string, string> = {
-  'en-IN': 'EXAVITQu4vr4xnSDxMaL', // Sarah - clear American English, great pronunciation
-  'hi-IN': 'nPczCjzI2devNBz1zQrb', // Brian - deep male voice, works well with Hindi
+  'en-IN': 'EXAVITQu4vr4xnSDxMaL', // Sarah - clear English, great for Indian English
+  'hi-IN': 'nPczCjzI2devNBz1zQrb', // Brian - deep male voice, excellent for Hindi
   'hinglish': 'EXAVITQu4vr4xnSDxMaL', // Sarah - clear for mixed language
-  'ta-IN': 'onwK4e9ZLuTAKqWW03F9', // Daniel - British voice, handles Tamil
-  'te-IN': 'onwK4e9ZLuTAKqWW03F9', // Daniel - British voice, handles Telugu
+  'ta-IN': 'onwK4e9ZLuTAKqWW03F9', // Daniel - handles Tamil well
+  'te-IN': 'onwK4e9ZLuTAKqWW03F9', // Daniel - handles Telugu well
+  'bn-IN': 'nPczCjzI2devNBz1zQrb', // Brian - works well with Bengali
+  'mr-IN': 'nPczCjzI2devNBz1zQrb', // Brian - good for Marathi
+  'gu-IN': 'onwK4e9ZLuTAKqWW03F9', // Daniel - handles Gujarati
+  'kn-IN': 'onwK4e9ZLuTAKqWW03F9', // Daniel - handles Kannada
+  'ml-IN': 'onwK4e9ZLuTAKqWW03F9', // Daniel - handles Malayalam
+  'pa-IN': 'nPczCjzI2devNBz1zQrb', // Brian - good for Punjabi
+  'or-IN': 'nPczCjzI2devNBz1zQrb', // Brian - handles Odia
+  'as-IN': 'nPczCjzI2devNBz1zQrb', // Brian - handles Assamese
 };
 
 const DEFAULT_VOICE = 'EXAVITQu4vr4xnSDxMaL'; // Sarah - default
