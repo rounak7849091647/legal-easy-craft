@@ -8,13 +8,43 @@ interface OpenAITTSHook {
   isLoading: boolean;
 }
 
+// Browser TTS fallback
+const speakWithBrowser = (text: string, language: string): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if (!('speechSynthesis' in window)) {
+      reject(new Error('Browser TTS not supported'));
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Map language codes
+    const langMap: Record<string, string> = {
+      'en-IN': 'en-IN',
+      'hi-IN': 'hi-IN',
+      'hinglish': 'en-IN',
+      'ta-IN': 'ta-IN',
+      'te-IN': 'te-IN',
+    };
+    utterance.lang = langMap[language] || 'en-IN';
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+
+    utterance.onend = () => resolve();
+    utterance.onerror = (e) => reject(e);
+
+    window.speechSynthesis.speak(utterance);
+  });
+};
+
 export const useOpenAITTS = (): OpenAITTSHook => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const isSupported = typeof window !== 'undefined' && 'Audio' in window;
+  const isSupported = typeof window !== 'undefined' && ('Audio' in window || 'speechSynthesis' in window);
 
   const stop = useCallback(() => {
     if (audioRef.current) {
@@ -25,6 +55,9 @@ export const useOpenAITTS = (): OpenAITTSHook => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
+    }
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
     }
     setIsSpeaking(false);
     setIsLoading(false);
@@ -54,11 +87,15 @@ export const useOpenAITTS = (): OpenAITTSHook => {
       );
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `TTS request failed: ${response.status}`);
+        // Rate limit or other error - fallback to browser TTS
+        console.log('OpenAI TTS unavailable, using browser fallback');
+        setIsLoading(false);
+        setIsSpeaking(true);
+        await speakWithBrowser(text, language);
+        setIsSpeaking(false);
+        return;
       }
 
-      // Get audio as blob directly
       const audioBlob = await response.blob();
       const audioUrl = URL.createObjectURL(audioBlob);
 
@@ -72,10 +109,11 @@ export const useOpenAITTS = (): OpenAITTSHook => {
       };
 
       audio.onerror = () => {
-        console.error('Audio playback error');
-        setIsSpeaking(false);
+        console.error('Audio playback error, using browser fallback');
         URL.revokeObjectURL(audioUrl);
         audioRef.current = null;
+        setIsSpeaking(true);
+        speakWithBrowser(text, language).finally(() => setIsSpeaking(false));
       };
 
       setIsLoading(false);
@@ -85,11 +123,19 @@ export const useOpenAITTS = (): OpenAITTSHook => {
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         console.log('TTS request aborted');
+        setIsLoading(false);
+        setIsSpeaking(false);
       } else {
-        console.error('OpenAI TTS error:', error);
+        console.log('OpenAI TTS error, using browser fallback:', error);
+        setIsLoading(false);
+        setIsSpeaking(true);
+        try {
+          await speakWithBrowser(text, language);
+        } catch (e) {
+          console.error('Browser TTS also failed:', e);
+        }
+        setIsSpeaking(false);
       }
-      setIsLoading(false);
-      setIsSpeaking(false);
     }
   }, [stop]);
 
