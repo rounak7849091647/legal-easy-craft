@@ -304,59 +304,68 @@ export const useOpenAITTS = (): OpenAITTSHook => {
         return;
       }
 
-      // For English (en-IN), use standard approach
-      let response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/text-to-speech`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({ text, language }),
-          signal: abortControllerRef.current.signal,
-        }
-      );
+      // For English (en-IN), use ElevenLabs (OpenAI quota exceeded)
+      console.log(`Using ElevenLabs for English: ${language}`);
+      
+      try {
+        const elevenLabsResponse = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({ text, language }),
+            signal: abortControllerRef.current.signal,
+          }
+        );
 
-      if (!response.ok) {
-        console.log('OpenAI TTS unavailable, using browser fallback');
-        setIsLoading(false);
-        setIsSpeaking(true);
-        await speakWithBrowserTTS(text, language);
-        setIsSpeaking(false);
-        return;
+        if (elevenLabsResponse.ok) {
+          const data = await elevenLabsResponse.json();
+          if (data.audioContent) {
+            const audioUrl = `data:audio/mpeg;base64,${data.audioContent}`;
+            const audio = new Audio(audioUrl);
+            audioRef.current = audio;
+
+            audio.onended = () => {
+              setIsSpeaking(false);
+              audioRef.current = null;
+            };
+
+            audio.onerror = async () => {
+              console.log('ElevenLabs audio error, falling back to browser TTS');
+              audioRef.current = null;
+              try {
+                await speakWithBrowserTTS(text, language);
+              } catch (e) {
+                console.error('Browser TTS also failed:', e);
+              }
+              setIsSpeaking(false);
+            };
+
+            setIsLoading(false);
+            setIsSpeaking(true);
+            await audio.play();
+            return;
+          }
+        }
+      } catch (e) {
+        console.log('ElevenLabs unavailable for English:', e);
       }
 
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
-
-      const audio = new Audio(audioUrl);
-      audioRef.current = audio;
-
-      audio.onended = () => {
-        setIsSpeaking(false);
-        URL.revokeObjectURL(audioUrl);
-        audioRef.current = null;
-      };
-
-      audio.onerror = async () => {
-        console.error('Audio playback error, using browser fallback');
-        URL.revokeObjectURL(audioUrl);
-        audioRef.current = null;
-        setIsSpeaking(true);
-        try {
-          await speakWithBrowserTTS(text, language);
-        } catch (e) {
-          console.error('Browser TTS also failed:', e);
-        }
-        setIsSpeaking(false);
-      };
-
+      // ElevenLabs failed - use browser TTS
+      console.log('Using browser TTS fallback for English');
       setIsLoading(false);
       setIsSpeaking(true);
-      
-      await audio.play();
+      try {
+        await speakWithBrowserTTS(text, language);
+      } catch (e) {
+        console.error('Browser TTS also failed:', e);
+      }
+      setIsSpeaking(false);
+
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         console.log('TTS request aborted');
