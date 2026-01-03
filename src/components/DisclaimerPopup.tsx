@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { X, Shield, AlertTriangle, Scale, Users, Link, Ban, FileText, MapPin, Mail } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Shield, AlertTriangle, Scale, Users, Link, Ban, FileText, MapPin, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -11,19 +11,34 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 const DisclaimerPopup = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isButtonVisible, setIsButtonVisible] = useState(false);
+
+  useEffect(() => {
+    // Show button after a short delay with animation
+    const timer = setTimeout(() => setIsButtonVisible(true), 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <>
-      {/* Floating Disclaimer Button */}
-      <Button
-        onClick={() => setIsOpen(true)}
-        variant="outline"
-        size="sm"
-        className="fixed bottom-4 right-4 z-50 bg-card/95 backdrop-blur-sm border-border shadow-lg hover:shadow-xl transition-all duration-300 gap-2"
+      {/* Floating Disclaimer Button - Animated Popup */}
+      <div
+        className={`fixed bottom-4 right-4 z-50 transition-all duration-500 ${
+          isButtonVisible 
+            ? 'opacity-100 translate-y-0' 
+            : 'opacity-0 translate-y-4 pointer-events-none'
+        }`}
       >
-        <Shield size={14} className="text-primary" />
-        <span className="text-xs font-medium">Disclaimer</span>
-      </Button>
+        <Button
+          onClick={() => setIsOpen(true)}
+          variant="outline"
+          size="sm"
+          className="bg-card/95 backdrop-blur-sm border-border shadow-lg hover:shadow-xl transition-all duration-300 gap-2 animate-pulse hover:animate-none"
+        >
+          <Shield size={14} className="text-primary" />
+          <span className="text-xs font-medium">Disclaimer</span>
+        </Button>
+      </div>
 
       {/* Full Disclaimer Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
