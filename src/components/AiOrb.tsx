@@ -219,12 +219,12 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
             : 'scale-100 opacity-60'
         } ${
           displayState === 'speaking' 
-            ? isLightMode ? 'bg-slate-500/50 blur-xl' : 'bg-primary/40 blur-xl' 
+            ? isLightMode ? 'bg-gray-400/40 blur-xl' : 'bg-primary/40 blur-xl' 
             : displayState === 'thinking'
-            ? isLightMode ? 'bg-slate-400/50 blur-xl' : 'bg-accent/30 blur-xl'
+            ? isLightMode ? 'bg-gray-300/40 blur-xl' : 'bg-accent/30 blur-xl'
             : displayState === 'listening'
-            ? isLightMode ? 'bg-slate-500/40 blur-xl' : 'bg-green-400/30 blur-xl'
-            : isLightMode ? 'bg-slate-500/40 blur-xl' : 'bg-white/20 blur-xl'
+            ? 'bg-green-400/30 blur-xl'
+            : isLightMode ? 'bg-gray-400/30 blur-xl' : 'bg-white/20 blur-xl'
         }`} />
         
         {/* Main orb */}
@@ -233,29 +233,27 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
         } ${
           displayState === 'speaking' 
             ? isLightMode 
-              ? 'bg-gradient-to-br from-slate-600/60 to-slate-500/40 border-slate-600/70 shadow-lg shadow-slate-400/30' 
+              ? 'bg-gradient-to-br from-gray-500/50 to-gray-400/30 border-gray-500/60' 
               : 'bg-gradient-to-br from-primary/40 to-primary/20 border-primary/60' 
             : displayState === 'thinking'
             ? isLightMode
-              ? 'bg-gradient-to-br from-slate-500/50 to-slate-400/30 border-slate-500/60 shadow-lg shadow-slate-400/20'
+              ? 'bg-gradient-to-br from-gray-400/40 to-gray-300/20 border-gray-400/50'
               : 'bg-gradient-to-br from-accent/30 to-accent/10 border-accent/40'
             : displayState === 'listening'
-            ? isLightMode
-              ? 'bg-gradient-to-br from-slate-500/50 to-slate-400/30 border-slate-500/60 shadow-lg shadow-slate-400/30'
-              : 'bg-gradient-to-br from-green-400/30 to-green-400/10 border-green-400/50'
+            ? 'bg-gradient-to-br from-green-400/30 to-green-400/10 border-green-400/50'
             : isLightMode 
-              ? 'bg-gradient-to-br from-slate-500/50 to-slate-400/30 border-slate-500/60 shadow-lg shadow-slate-400/20'
+              ? 'bg-gradient-to-br from-gray-400/40 to-gray-300/20 border-gray-400/50'
               : 'bg-gradient-to-br from-white/20 to-white/5 border-white/30'
         }`}>
           {/* Inner glow */}
           <div className={`absolute inset-4 rounded-full bg-gradient-to-br to-transparent ${
             displayState === 'speaking' 
-              ? isLightMode ? 'from-slate-600/50' : 'from-primary/30' 
+              ? isLightMode ? 'from-gray-500/40' : 'from-primary/30' 
               : displayState === 'thinking'
-              ? isLightMode ? 'from-slate-500/40' : 'from-accent/20'
+              ? isLightMode ? 'from-gray-400/30' : 'from-accent/20'
               : displayState === 'listening'
-              ? isLightMode ? 'from-slate-500/40' : 'from-green-400/20'
-              : isLightMode ? 'from-slate-500/40' : 'from-white/20'
+              ? 'from-green-400/20'
+              : isLightMode ? 'from-gray-400/30' : 'from-white/20'
           }`} />
           
           {/* Waveform animation */}
@@ -265,10 +263,10 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
                 key={i}
                 className={`w-1 rounded-full transition-all ${
                   displayState === 'speaking' 
-                    ? isLightMode ? 'bg-slate-700' : 'bg-primary' 
+                    ? isLightMode ? 'bg-gray-600' : 'bg-primary' 
                     : displayState === 'listening' 
-                    ? isLightMode ? 'bg-slate-700' : 'bg-green-400' 
-                    : isLightMode ? 'bg-slate-600' : 'bg-white/80'
+                    ? 'bg-green-400' 
+                    : isLightMode ? 'bg-gray-500' : 'bg-white/80'
                 } ${
                   displayState !== 'idle' ? 'waveform-bar' : 'h-1'
                 }`}
@@ -284,7 +282,7 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
         {/* Hover ring */}
         <div className={`absolute inset-0 rounded-full border-2 transition-all duration-300 scale-110 ${
           isLightMode 
-            ? 'border-slate-500/0 group-hover:border-slate-600/50' 
+            ? 'border-gray-400/0 group-hover:border-gray-500/40' 
             : 'border-primary/0 group-hover:border-primary/30'
         }`} />
       </button>
