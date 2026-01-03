@@ -14,7 +14,7 @@ import PageLayout from '@/components/PageLayout';
 const quickServices = [
   { icon: FileText, title: 'File Your Return', description: 'ITR filing with step-by-step guidance', path: '/tax-services/file-return' },
   { icon: Upload, title: 'Upload Form 16', description: 'Auto-populate from Form 16', path: '/tax-services/upload-form16' },
-  { icon: Users, title: 'CA Assisted Filing', description: 'Expert CA support', path: '/tax-services/ca-filing' },
+  { icon: Users, title: 'Expert Assisted Filing', description: 'Expert tax support', path: '/tax-services/ca-filing' },
   { icon: TrendingUp, title: 'Tax Planning', description: 'Optimize your savings', path: '/tax-services/tax-planning' },
   { icon: RefreshCw, title: 'Refund Status', description: 'Track your refund', path: '/tax-services/refund-status' },
   { icon: Receipt, title: 'TDS Solution', description: 'TDS filing & certificates', path: '/tax-services/tds-solution' },
