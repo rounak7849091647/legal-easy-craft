@@ -10,13 +10,28 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const DisclaimerPopup = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true); // Show on load
   const [isButtonVisible, setIsButtonVisible] = useState(false);
 
   useEffect(() => {
     // Show button after a short delay with animation
     const timer = setTimeout(() => setIsButtonVisible(true), 500);
-    return () => clearTimeout(timer);
+    
+    // Close disclaimer when clicking anywhere
+    const handleClickAnywhere = () => {
+      setIsOpen(false);
+    };
+    
+    // Add listener after a small delay to prevent immediate close
+    const listenerTimer = setTimeout(() => {
+      document.addEventListener('click', handleClickAnywhere, { once: true });
+    }, 100);
+    
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(listenerTimer);
+      document.removeEventListener('click', handleClickAnywhere);
+    };
   }, []);
 
   return (
