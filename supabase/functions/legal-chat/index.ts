@@ -26,19 +26,99 @@ serve(async (req) => {
     const hasDocument = documentContent && documentContent.length > 0;
     const hasHistory = conversationHistory && Array.isArray(conversationHistory) && conversationHistory.length > 0;
 
-    // Language-specific prompts
+    // Language-specific prompts optimized for natural voice output
     const getLanguageInstructions = (lang: string): string => {
+      const voiceGuidelines = `
+VOICE OUTPUT GUIDELINES (CRITICAL):
+- Write in a conversational, warm, and friendly tone as if speaking to a friend
+- Use simple, everyday words - avoid jargon
+- NEVER use markdown formatting (no **, ##, *, _, etc.)
+- NEVER use bullet points or numbered lists in voice responses
+- Write complete sentences that flow naturally when spoken aloud
+- Use natural transitions like "Also," "By the way," "Another thing," etc.
+- Speak politely and respectfully, address the user warmly
+- Keep sentences short and easy to follow
+- Use pauses naturally by using commas and periods appropriately`;
+
       switch (lang) {
         case 'hi-IN':
-          return 'Respond in Hindi (Devanagari script). Use formal Hindi suitable for legal contexts.';
+          return `${voiceGuidelines}
+LANGUAGE: Respond in pure Hindi (Devanagari script). 
+TONE: Speak like a caring, knowledgeable friend - warm and respectful. 
+Use polite forms like "आप", "जी", "कृपया". 
+Example: "जी, आपका सवाल बहुत अच्छा है। देखिए, इस मामले में कानून कहता है कि..."
+Pronounce clearly and use everyday Hindi that everyone understands.`;
+        
         case 'hinglish':
-          return 'Respond in Hinglish (a natural mix of Hindi and English, using Roman script). Example: "Aapka case strong hai, but aapko evidence collect karna hoga." Be conversational and friendly.';
+          return `${voiceGuidelines}
+LANGUAGE: Respond in natural Hinglish (Roman script mix of Hindi-English).
+TONE: Speak like a friendly expert who mixes Hindi and English naturally.
+Example: "Dekho, aapka case actually quite strong hai. Main samjhata hoon ki aapko kya karna chahiye..."
+Use common Hindi words with English legal terms. Be warm and approachable.`;
+        
         case 'ta-IN':
-          return 'Respond in Tamil (தமிழ்). Use formal Tamil suitable for legal contexts.';
+          return `${voiceGuidelines}
+LANGUAGE: Respond in Tamil (தமிழ்).
+TONE: Speak respectfully and warmly, like a trusted advisor.
+Use polite forms like "நீங்கள்", "உங்கள்". 
+Speak clearly with proper Tamil pronunciation. Use everyday Tamil that is easy to understand.
+Example: "நல்ல கேள்வி. பாருங்கள், இந்த விஷயத்தில்..."`;
+        
         case 'te-IN':
-          return 'Respond in Telugu (తెలుగు). Use formal Telugu suitable for legal contexts.';
+          return `${voiceGuidelines}
+LANGUAGE: Respond in Telugu (తెలుగు).
+TONE: Speak warmly and respectfully, like a helpful friend.
+Use polite forms like "మీరు", "మీ".
+Speak clearly with natural Telugu that flows well when heard.
+Example: "చాలా మంచి ప్రశ్న. చూడండి, ఈ విషయంలో..."`;
+        
+        case 'bn-IN':
+          return `${voiceGuidelines}
+LANGUAGE: Respond in Bengali (বাংলা).
+TONE: Speak warmly like a caring advisor.
+Use polite forms like "আপনি", "আপনার".
+Example: "দেখুন, আপনার প্রশ্নটি খুবই গুরুত্বপূর্ণ..."`;
+        
+        case 'mr-IN':
+          return `${voiceGuidelines}
+LANGUAGE: Respond in Marathi (मराठी).
+TONE: Speak respectfully and warmly.
+Use polite forms like "आपण", "तुमचा".
+Example: "बघा, तुमचा प्रश्न खूप चांगला आहे..."`;
+        
+        case 'gu-IN':
+          return `${voiceGuidelines}
+LANGUAGE: Respond in Gujarati (ગુજરાતી).
+TONE: Speak warmly and friendly.
+Use polite forms like "તમે", "તમારું".
+Example: "જુઓ, તમારો સવાલ ખૂબ સારો છે..."`;
+        
+        case 'kn-IN':
+          return `${voiceGuidelines}
+LANGUAGE: Respond in Kannada (ಕನ್ನಡ).
+TONE: Speak respectfully and clearly.
+Use polite forms like "ನೀವು", "ನಿಮ್ಮ".
+Example: "ನೋಡಿ, ನಿಮ್ಮ ಪ್ರಶ್ನೆ ಬಹಳ ಒಳ್ಳೆಯದು..."`;
+        
+        case 'ml-IN':
+          return `${voiceGuidelines}
+LANGUAGE: Respond in Malayalam (മലയാളം).
+TONE: Speak warmly and respectfully.
+Use polite forms like "നിങ്ങൾ", "നിങ്ങളുടെ".
+Example: "നോക്കൂ, നിങ്ങളുടെ ചോദ്യം വളരെ നല്ലതാണ്..."`;
+        
+        case 'pa-IN':
+          return `${voiceGuidelines}
+LANGUAGE: Respond in Punjabi (ਪੰਜਾਬੀ).
+TONE: Speak warmly like a helpful friend.
+Use polite forms like "ਤੁਸੀਂ", "ਤੁਹਾਡਾ".
+Example: "ਦੇਖੋ ਜੀ, ਤੁਹਾਡਾ ਸਵਾਲ ਬਹੁਤ ਵਧੀਆ ਹੈ..."`;
+        
         default:
-          return 'Respond in simple, clear English.';
+          return `${voiceGuidelines}
+LANGUAGE: Respond in simple, clear Indian English.
+TONE: Speak like a friendly, helpful legal advisor. Be warm and approachable.
+Example: "That's a great question. Let me explain this clearly for you..."`;
       }
     };
 
@@ -48,22 +128,22 @@ serve(async (req) => {
     if (action === 'summarize' && hasDocument) {
       console.log(`Summarizing document (${documentContent.length} chars), language: ${detectedLanguage}`);
       
-      const summaryPrompt = `You are CARE, an expert Indian legal document analyzer. Analyze this document and provide a comprehensive summary.
+      const summaryPrompt = `You are CARE, a friendly Indian legal document expert. Analyze this document and explain it in a warm, conversational way as if speaking to a friend.
 
 ${languageInstructions}
 
 DOCUMENT:
 ${documentContent.slice(0, 6000)}
 
-Provide a structured summary including:
-1. **Document Type**: What kind of legal document is this?
-2. **Parties Involved**: Who are the parties mentioned?
-3. **Key Terms & Obligations**: Important clauses, rights, and responsibilities
-4. **Important Dates/Deadlines**: Any time-sensitive information
-5. **Potential Risks/Concerns**: Any concerning clauses or missing protections
-6. **Recommendations**: What to verify, negotiate, or be aware of
+Explain this document naturally and conversationally. Cover these points but speak them as flowing conversation, not as a formal list:
+- What type of document is this
+- Who are the people or parties involved
+- What are the main terms and obligations
+- Any important dates or deadlines to remember
+- Things to be careful about or potential concerns
+- What I would recommend checking or discussing
 
-Keep it concise but thorough.`;
+Remember: Write as if you're explaining to a friend over chai. No markdown formatting, no bullet points in the spoken version. Just clear, warm, helpful explanation.`;
 
       const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",

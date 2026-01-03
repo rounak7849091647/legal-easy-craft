@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { prepareTextForVoice } from '@/lib/textToVoice';
 
 interface OpenAITTSHook {
   isSpeaking: boolean;
@@ -48,7 +49,7 @@ const findBestVoice = (language: string, voices: SpeechSynthesisVoice[]): Speech
   return voices.find(v => v.default) || voices[0] || null;
 };
 
-// Enhanced browser TTS with better Indian language support
+// Enhanced browser TTS with better Indian language support and pronunciation
 const speakWithBrowser = (text: string, language: string): Promise<void> => {
   return new Promise((resolve, reject) => {
     if (!('speechSynthesis' in window)) {
@@ -88,9 +89,11 @@ const speakWithBrowser = (text: string, language: string): Promise<void> => {
         utterance.lang = langMap[language] || 'en-IN';
       }
       
-      // Optimized speech parameters for clarity
-      utterance.rate = 0.95; // Slightly slower for better pronunciation
-      utterance.pitch = 1.0;
+      // Optimized speech parameters for clear, natural pronunciation
+      // Slower rate (0.88) for Indian languages to improve clarity and pronunciation
+      const isIndianRegional = ['hi-IN', 'ta-IN', 'te-IN', 'bn-IN', 'mr-IN', 'gu-IN', 'kn-IN', 'ml-IN', 'pa-IN', 'or-IN', 'as-IN'].includes(language);
+      utterance.rate = isIndianRegional ? 0.88 : 0.92; // Slower for regional languages
+      utterance.pitch = 1.0; // Natural pitch
       utterance.volume = 1.0;
 
       utterance.onend = () => resolve();
@@ -148,11 +151,19 @@ export const useOpenAITTS = (): OpenAITTSHook => {
     setIsLoading(false);
   }, []);
 
-  const speak = useCallback(async (text: string, language: string = 'en-IN') => {
-    if (!text || !text.trim()) return;
+  const speak = useCallback(async (rawText: string, language: string = 'en-IN') => {
+    if (!rawText || !rawText.trim()) return;
 
     stop();
     setIsLoading(true);
+
+    // Clean and prepare text for natural voice output
+    const text = prepareTextForVoice(rawText, language);
+    
+    if (!text.trim()) {
+      setIsLoading(false);
+      return;
+    }
 
     try {
       // For regional Indian languages, use browser TTS first (better pronunciation, no API needed)
