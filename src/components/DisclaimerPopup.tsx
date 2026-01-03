@@ -12,6 +12,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 const DisclaimerPopup = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isButtonVisible, setIsButtonVisible] = useState(false);
+  const [isBlinking, setIsBlinking] = useState(true);
+  const [blinkCount, setBlinkCount] = useState(0);
+  const [isHidden, setIsHidden] = useState(false);
 
   useEffect(() => {
     // Show button after a short delay with animation
@@ -19,21 +22,45 @@ const DisclaimerPopup = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    if (!isButtonVisible || isHidden) return;
+    
+    // Blink 20 times (each blink is on/off cycle = 2 transitions, so 40 total)
+    const blinkInterval = setInterval(() => {
+      setBlinkCount(prev => {
+        const newCount = prev + 1;
+        if (newCount >= 40) {
+          clearInterval(blinkInterval);
+          setIsBlinking(false);
+          setIsHidden(true);
+        }
+        return newCount;
+      });
+    }, 250); // 250ms per transition = 500ms per full blink cycle
+
+    return () => clearInterval(blinkInterval);
+  }, [isButtonVisible, isHidden]);
+
+  // Don't render button if hidden after blinking
+  if (isHidden) {
+    return null;
+  }
+
   return (
     <>
-      {/* Floating Disclaimer Button - Animated Popup */}
+      {/* Floating Disclaimer Button - Animated Popup with Blinking */}
       <div
         className={`fixed bottom-4 right-4 z-50 transition-all duration-500 ${
           isButtonVisible 
-            ? 'opacity-100 translate-y-0' 
+            ? 'translate-y-0' 
             : 'opacity-0 translate-y-4 pointer-events-none'
-        }`}
+        } ${isBlinking && blinkCount % 2 === 0 ? 'opacity-100' : isBlinking ? 'opacity-0' : 'opacity-100'}`}
       >
         <Button
           onClick={() => setIsOpen(true)}
           variant="outline"
           size="sm"
-          className="bg-card/95 backdrop-blur-sm border-border shadow-lg hover:shadow-xl transition-all duration-300 gap-2 animate-pulse hover:animate-none"
+          className="bg-card/95 backdrop-blur-sm border-border shadow-lg hover:shadow-xl transition-all duration-300 gap-2"
         >
           <Shield size={14} className="text-primary" />
           <span className="text-xs font-medium">Disclaimer</span>
