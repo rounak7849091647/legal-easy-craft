@@ -3,6 +3,7 @@ import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { useWhisperRecognition } from '@/hooks/useWhisperRecognition';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { isIOSDevice } from '@/lib/device/isIOSDevice';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface AiOrbProps {
   onTranscript?: (transcript: string, language: string) => void;
@@ -15,6 +16,8 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
   const [isActive, setIsActive] = useState(false);
   const [continuousMode, setContinuousMode] = useState(true);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const { theme } = useTheme();
+  const isLightMode = theme === 'light';
 
   const isIOS = useMemo(() => isIOSDevice(), []);
 
@@ -216,12 +219,12 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
             : 'scale-100 opacity-60'
         } ${
           displayState === 'speaking' 
-            ? 'bg-primary/40 blur-xl' 
+            ? isLightMode ? 'bg-gray-400/40 blur-xl' : 'bg-primary/40 blur-xl' 
             : displayState === 'thinking'
-            ? 'bg-accent/30 blur-xl'
+            ? isLightMode ? 'bg-gray-300/40 blur-xl' : 'bg-accent/30 blur-xl'
             : displayState === 'listening'
             ? 'bg-green-400/30 blur-xl'
-            : 'bg-white/20 blur-xl'
+            : isLightMode ? 'bg-gray-400/30 blur-xl' : 'bg-white/20 blur-xl'
         }`} />
         
         {/* Main orb */}
@@ -229,22 +232,28 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
           displayState !== 'idle' ? 'scale-110' : 'scale-100'
         } ${
           displayState === 'speaking' 
-            ? 'bg-gradient-to-br from-primary/40 to-primary/20 border-primary/60' 
+            ? isLightMode 
+              ? 'bg-gradient-to-br from-gray-500/50 to-gray-400/30 border-gray-500/60' 
+              : 'bg-gradient-to-br from-primary/40 to-primary/20 border-primary/60' 
             : displayState === 'thinking'
-            ? 'bg-gradient-to-br from-accent/30 to-accent/10 border-accent/40'
+            ? isLightMode
+              ? 'bg-gradient-to-br from-gray-400/40 to-gray-300/20 border-gray-400/50'
+              : 'bg-gradient-to-br from-accent/30 to-accent/10 border-accent/40'
             : displayState === 'listening'
             ? 'bg-gradient-to-br from-green-400/30 to-green-400/10 border-green-400/50'
-            : 'bg-gradient-to-br from-white/20 to-white/5 border-white/30'
+            : isLightMode 
+              ? 'bg-gradient-to-br from-gray-400/40 to-gray-300/20 border-gray-400/50'
+              : 'bg-gradient-to-br from-white/20 to-white/5 border-white/30'
         }`}>
           {/* Inner glow */}
           <div className={`absolute inset-4 rounded-full bg-gradient-to-br to-transparent ${
             displayState === 'speaking' 
-              ? 'from-primary/30' 
+              ? isLightMode ? 'from-gray-500/40' : 'from-primary/30' 
               : displayState === 'thinking'
-              ? 'from-accent/20'
+              ? isLightMode ? 'from-gray-400/30' : 'from-accent/20'
               : displayState === 'listening'
               ? 'from-green-400/20'
-              : 'from-white/20'
+              : isLightMode ? 'from-gray-400/30' : 'from-white/20'
           }`} />
           
           {/* Waveform animation */}
@@ -253,9 +262,11 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
               <div
                 key={i}
                 className={`w-1 rounded-full transition-all ${
-                  displayState === 'speaking' ? 'bg-primary' :
-                  displayState === 'listening' ? 'bg-green-400' :
-                  'bg-white/80'
+                  displayState === 'speaking' 
+                    ? isLightMode ? 'bg-gray-600' : 'bg-primary' 
+                    : displayState === 'listening' 
+                    ? 'bg-green-400' 
+                    : isLightMode ? 'bg-gray-500' : 'bg-white/80'
                 } ${
                   displayState !== 'idle' ? 'waveform-bar' : 'h-1'
                 }`}
@@ -269,7 +280,11 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
         </div>
 
         {/* Hover ring */}
-        <div className="absolute inset-0 rounded-full border-2 border-primary/0 group-hover:border-primary/30 transition-all duration-300 scale-110" />
+        <div className={`absolute inset-0 rounded-full border-2 transition-all duration-300 scale-110 ${
+          isLightMode 
+            ? 'border-gray-400/0 group-hover:border-gray-500/40' 
+            : 'border-primary/0 group-hover:border-primary/30'
+        }`} />
       </button>
 
       {/* Text labels */}

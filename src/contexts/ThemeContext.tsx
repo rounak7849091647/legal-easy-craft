@@ -8,16 +8,20 @@ interface ThemeContextType {
   isAnimating: boolean;
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const defaultContext: ThemeContextType = {
+  theme: 'dark',
+  toggleTheme: () => {},
+  isAnimating: false,
+};
+
+const ThemeContext = createContext<ThemeContextType>(defaultContext);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => {
-    // Check localStorage first
+    if (typeof window === 'undefined') return 'dark';
     const stored = localStorage.getItem('legalcare-theme');
     if (stored === 'light' || stored === 'dark') return stored;
-    
-    // Fall back to system preference
-    if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: light)').matches) {
+    if (window.matchMedia('(prefers-color-scheme: light)').matches) {
       return 'light';
     }
     return 'dark';
@@ -40,7 +44,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [theme]);
 
   const toggleTheme = () => {
-    // Check for reduced motion preference
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     
     if (!prefersReducedMotion) {
@@ -59,9 +62,5 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 };
 
 export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
+  return useContext(ThemeContext);
 };
