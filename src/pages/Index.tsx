@@ -3,6 +3,7 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
 import MainContent from '@/components/MainContent';
 import ChatHeader from '@/components/ChatHeader';
+import DisclaimerPopup from '@/components/DisclaimerPopup';
 
 const Index = () => {
   return (
@@ -23,6 +24,8 @@ const Index = () => {
           </SidebarInset>
         </div>
       </SidebarProvider>
+      
+      <DisclaimerPopup />
     </>
   );
 };
