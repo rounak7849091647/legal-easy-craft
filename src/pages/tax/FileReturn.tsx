@@ -36,8 +36,8 @@ const FileReturn = () => {
 
         {/* Header */}
         <div className="flex items-start gap-4 mb-8">
-          <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-            <FileText size={28} className="text-white" />
+          <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+            <FileText size={28} className="text-foreground" />
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">File Your Return</h1>
@@ -55,7 +55,7 @@ const FileReturn = () => {
         </div>
 
         {/* Steps */}
-        <Card className="bg-white/5 border-white/10 mb-6">
+        <Card className="bg-card border-border mb-6">
           <CardHeader>
             <CardTitle className="text-foreground flex items-center gap-2">
               <Clock size={20} />
@@ -66,7 +66,7 @@ const FileReturn = () => {
             <div className="space-y-4">
               {steps.map((step, index) => (
                 <div key={index} className="flex items-start gap-4">
-                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0 text-sm font-medium text-foreground">
+                  <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center shrink-0 text-sm font-medium text-foreground">
                     {index + 1}
                   </div>
                   <div>
@@ -80,14 +80,14 @@ const FileReturn = () => {
         </Card>
 
         {/* ITR Forms */}
-        <Card className="bg-white/5 border-white/10 mb-6">
+        <Card className="bg-card border-border mb-6">
           <CardHeader>
             <CardTitle className="text-foreground">Choose Your ITR Form</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {itrForms.map((form, index) => (
-                <div key={index} className="bg-white/5 border border-white/10 rounded-lg p-4">
+                <div key={index} className="bg-secondary border border-border rounded-lg p-4">
                   <h3 className="font-medium text-foreground">{form.name}</h3>
                   <p className="text-xs text-muted-foreground mt-1">{form.eligibility}</p>
                 </div>
@@ -98,12 +98,12 @@ const FileReturn = () => {
 
         {/* CTA */}
         <div className="flex flex-col sm:flex-row gap-3">
-          <Button className="flex-1 bg-white text-black hover:bg-white/90 h-12">
+          <Button className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 h-12">
             <FileText size={18} className="mr-2" />
             Start Filing Now
             <ArrowRight size={16} className="ml-2" />
           </Button>
-          <Button variant="outline" className="flex-1 bg-white/5 border-white/20 text-foreground hover:bg-white/10 h-12">
+          <Button variant="outline" className="flex-1 bg-secondary border-border text-foreground hover:bg-accent h-12">
             <CheckCircle size={18} className="mr-2" />
             Get CA Assistance
           </Button>

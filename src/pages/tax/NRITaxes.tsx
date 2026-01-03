@@ -29,8 +29,8 @@ const NRITaxes = () => {
         </Link>
 
         <div className="flex items-start gap-4 mb-8">
-          <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-            <Globe size={28} className="text-white" />
+          <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+            <Globe size={28} className="text-foreground" />
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">NRI Taxes</h1>
@@ -48,14 +48,14 @@ const NRITaxes = () => {
         </div>
 
         {/* Services */}
-        <Card className="bg-white/5 border-white/10 mb-6">
+        <Card className="bg-card border-border mb-6">
           <CardHeader>
             <CardTitle className="text-foreground">Our NRI Services</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {nriServices.map((service, index) => (
-                <div key={index} className="flex items-center gap-3 bg-white/5 rounded-lg p-3">
+                <div key={index} className="flex items-center gap-3 bg-secondary rounded-lg p-3">
                   <CheckCircle size={16} className="text-green-500 shrink-0" />
                   <span className="text-sm text-foreground">{service}</span>
                 </div>
@@ -65,7 +65,7 @@ const NRITaxes = () => {
         </Card>
 
         {/* DTAA */}
-        <Card className="bg-white/5 border-white/10 mb-6">
+        <Card className="bg-card border-border mb-6">
           <CardHeader>
             <CardTitle className="text-foreground">DTAA Countries</CardTitle>
           </CardHeader>
@@ -75,7 +75,7 @@ const NRITaxes = () => {
             </p>
             <div className="flex flex-wrap gap-2">
               {['USA', 'UK', 'UAE', 'Singapore', 'Canada', 'Australia', 'Germany', 'France'].map((country) => (
-                <span key={country} className="bg-white/10 px-3 py-1 rounded-full text-xs text-foreground">
+                <span key={country} className="bg-secondary px-3 py-1 rounded-full text-xs text-foreground">
                   {country}
                 </span>
               ))}
@@ -83,7 +83,7 @@ const NRITaxes = () => {
           </CardContent>
         </Card>
 
-        <Button className="w-full bg-white text-black hover:bg-white/90 h-12">
+        <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-12">
           Get NRI Tax Consultation
           <ArrowRight size={16} className="ml-2" />
         </Button>

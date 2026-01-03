@@ -26,8 +26,8 @@ const TDSSolution = () => {
         </Link>
 
         <div className="flex items-start gap-4 mb-8">
-          <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-            <Receipt size={28} className="text-white" />
+          <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+            <Receipt size={28} className="text-foreground" />
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">TDS Solution</h1>
@@ -38,10 +38,10 @@ const TDSSolution = () => {
         {/* Services */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           {services.map((service, index) => (
-            <Card key={index} className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors cursor-pointer">
+            <Card key={index} className="bg-card border-border hover:bg-accent transition-colors cursor-pointer">
               <CardContent className="p-6 text-center">
-                <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mx-auto mb-4">
-                  <service.icon size={24} className="text-white" />
+                <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center mx-auto mb-4">
+                  <service.icon size={24} className="text-foreground" />
                 </div>
                 <h3 className="font-medium text-foreground mb-2">{service.title}</h3>
                 <p className="text-sm text-muted-foreground">{service.description}</p>
@@ -51,7 +51,7 @@ const TDSSolution = () => {
         </div>
 
         {/* TDS Rates */}
-        <Card className="bg-white/5 border-white/10 mb-6">
+        <Card className="bg-card border-border mb-6">
           <CardHeader>
             <CardTitle className="text-foreground">Common TDS Rates</CardTitle>
           </CardHeader>
@@ -64,19 +64,19 @@ const TDSSolution = () => {
                 { section: '194I', desc: 'Rent', rate: '2-10%' },
                 { section: '194J', desc: 'Professional/Technical fees', rate: '10%' },
               ].map((item, index) => (
-                <div key={index} className="flex items-center justify-between bg-white/5 rounded-lg p-3">
+                <div key={index} className="flex items-center justify-between bg-secondary rounded-lg p-3">
                   <div>
                     <span className="font-medium text-foreground">Section {item.section}</span>
                     <p className="text-xs text-muted-foreground">{item.desc}</p>
                   </div>
-                  <span className="bg-white/10 px-3 py-1 rounded text-sm text-foreground">{item.rate}</span>
+                  <span className="bg-accent px-3 py-1 rounded text-sm text-foreground">{item.rate}</span>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
 
-        <Button className="w-full bg-white text-black hover:bg-white/90 h-12">
+        <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-12">
           Get Started with TDS
           <ArrowRight size={16} className="ml-2" />
         </Button>

@@ -22,8 +22,8 @@ const ConnectExpert = () => {
         </Link>
 
         <div className="flex items-start gap-4 mb-8">
-          <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-            <Phone size={28} className="text-white" />
+          <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+            <Phone size={28} className="text-foreground" />
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">Connect Expert</h1>
@@ -38,9 +38,9 @@ const ConnectExpert = () => {
             { icon: Phone, title: 'Voice Call', desc: 'Detailed discussion' },
             { icon: Video, title: 'Video Call', desc: 'Face-to-face' },
           ].map((option, index) => (
-            <Card key={index} className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors cursor-pointer rounded-t-3xl">
+            <Card key={index} className="bg-card border-border hover:bg-accent transition-colors cursor-pointer rounded-t-3xl">
               <CardContent className="p-4 sm:p-6 text-center">
-                <option.icon size={28} className="mx-auto text-white mb-3" />
+                <option.icon size={28} className="mx-auto text-foreground mb-3" />
                 <h3 className="font-medium text-foreground text-sm sm:text-base">{option.title}</h3>
                 <p className="text-xs text-muted-foreground mt-1">{option.desc}</p>
               </CardContent>
@@ -49,7 +49,7 @@ const ConnectExpert = () => {
         </div>
 
         {/* Book a Slot */}
-        <Card className="bg-white/5 border-white/10 mb-6">
+        <Card className="bg-card border-border mb-6">
           <CardHeader>
             <CardTitle className="text-foreground flex items-center gap-2">
               <Calendar size={20} />
@@ -62,7 +62,7 @@ const ConnectExpert = () => {
               {timeSlots.map((slot, index) => (
                 <button
                   key={index}
-                  className="bg-white/5 border border-white/20 rounded-lg p-3 text-sm text-foreground hover:bg-white/10 transition-colors"
+                  className="bg-secondary border border-border rounded-lg p-3 text-sm text-foreground hover:bg-accent transition-colors"
                 >
                   {slot}
                 </button>
@@ -72,7 +72,7 @@ const ConnectExpert = () => {
         </Card>
 
         {/* Stats */}
-        <Card className="bg-white/5 border-white/10 mb-6">
+        <Card className="bg-card border-border mb-6">
           <CardContent className="p-6">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
               {[
@@ -90,7 +90,7 @@ const ConnectExpert = () => {
           </CardContent>
         </Card>
 
-        <Button className="w-full bg-white text-black hover:bg-white/90 h-12">
+        <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-12">
           Connect Now
           <ArrowRight size={16} className="ml-2" />
         </Button>

@@ -48,8 +48,8 @@ const UploadForm16 = () => {
         </Link>
 
         <div className="flex items-start gap-4 mb-8">
-          <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-            <Upload size={28} className="text-white" />
+          <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+            <Upload size={28} className="text-foreground" />
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">Upload Form 16</h1>
@@ -58,14 +58,14 @@ const UploadForm16 = () => {
         </div>
 
         {/* Upload Area */}
-        <Card className="bg-white/5 border-white/10 mb-6">
+        <Card className="bg-card border-border mb-6">
           <CardContent className="p-6">
             <div
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
-                isDragging ? 'border-white/50 bg-white/10' : 'border-white/20 hover:border-white/30'
+                isDragging ? 'border-primary/50 bg-accent' : 'border-border hover:border-primary/30'
               }`}
             >
               <input
@@ -94,7 +94,7 @@ const UploadForm16 = () => {
         </Card>
 
         {/* Features */}
-        <Card className="bg-white/5 border-white/10 mb-6">
+        <Card className="bg-card border-border mb-6">
           <CardHeader>
             <CardTitle className="text-foreground">What We Extract</CardTitle>
           </CardHeader>
@@ -118,7 +118,7 @@ const UploadForm16 = () => {
         </Card>
 
         <Button 
-          className="w-full bg-white text-black hover:bg-white/90 h-12"
+          className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-12"
           disabled={!file}
         >
           Extract & Continue

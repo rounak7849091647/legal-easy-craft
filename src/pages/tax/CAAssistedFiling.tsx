@@ -36,8 +36,8 @@ const CAAssistedFiling = () => {
         </Link>
 
         <div className="flex items-start gap-4 mb-8">
-          <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-            <Users size={28} className="text-white" />
+          <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+            <Users size={28} className="text-foreground" />
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">CA Assisted Filing</h1>
@@ -46,7 +46,7 @@ const CAAssistedFiling = () => {
         </div>
 
         {/* Process */}
-        <Card className="bg-white/5 border-white/10 mb-6">
+        <Card className="bg-card border-border mb-6">
           <CardHeader>
             <CardTitle className="text-foreground flex items-center gap-2">
               <Clock size={20} />
@@ -56,8 +56,8 @@ const CAAssistedFiling = () => {
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {process.map((item) => (
-                <div key={item.step} className="bg-white/5 rounded-lg p-4 text-center">
-                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-3 text-lg font-bold text-foreground">
+                <div key={item.step} className="bg-secondary rounded-lg p-4 text-center">
+                  <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center mx-auto mb-3 text-lg font-bold text-foreground">
                     {item.step}
                   </div>
                   <h3 className="font-medium text-foreground text-sm">{item.title}</h3>
@@ -69,7 +69,7 @@ const CAAssistedFiling = () => {
         </Card>
 
         {/* Benefits */}
-        <Card className="bg-white/5 border-white/10 mb-6">
+        <Card className="bg-card border-border mb-6">
           <CardHeader>
             <CardTitle className="text-foreground flex items-center gap-2">
               <Star size={20} />
@@ -89,7 +89,7 @@ const CAAssistedFiling = () => {
         </Card>
 
         {/* Stats */}
-        <Card className="bg-white/5 border-white/10 mb-6">
+        <Card className="bg-card border-border mb-6">
           <CardContent className="p-6">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
               {[
@@ -98,7 +98,7 @@ const CAAssistedFiling = () => {
                 { value: '4.9★', label: 'Customer Rating' },
                 { value: '100%', label: 'Accuracy' }
               ].map((stat, index) => (
-                <div key={index} className="p-3 bg-white/5 rounded-lg">
+                <div key={index} className="p-3 bg-secondary rounded-lg">
                   <p className="text-xl font-bold text-foreground">{stat.value}</p>
                   <p className="text-xs text-muted-foreground">{stat.label}</p>
                 </div>
@@ -109,12 +109,12 @@ const CAAssistedFiling = () => {
 
         {/* CTA */}
         <div className="flex flex-col sm:flex-row gap-3">
-          <Button className="flex-1 bg-white text-black hover:bg-white/90 h-12">
+          <Button className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 h-12">
             <FileText size={18} className="mr-2" />
             Get Started
             <ArrowRight size={16} className="ml-2" />
           </Button>
-          <Button variant="outline" className="flex-1 bg-white/5 border-white/20 text-foreground hover:bg-white/10 h-12">
+          <Button variant="outline" className="flex-1 bg-secondary border-border text-foreground hover:bg-accent h-12">
             <Users size={18} className="mr-2" />
             Talk to a CA
           </Button>

@@ -102,10 +102,10 @@ const TaxServices = () => {
               <Link
                 key={index}
                 to={service.path}
-                className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 hover:bg-white/10 transition-all text-left block"
+                className="bg-card border border-border rounded-xl p-3 sm:p-4 hover:bg-accent transition-all text-left block"
               >
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/10 flex items-center justify-center mb-2 sm:mb-3">
-                  <service.icon size={18} className="text-white/70" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-secondary flex items-center justify-center mb-2 sm:mb-3">
+                  <service.icon size={18} className="text-muted-foreground" />
                 </div>
                 <h3 className="font-medium text-foreground text-xs sm:text-sm leading-tight">{service.title}</h3>
                 <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 line-clamp-2">{service.description}</p>
@@ -121,10 +121,10 @@ const TaxServices = () => {
               <Link
                 key={index}
                 to={service.path}
-                className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 hover:bg-white/10 transition-all text-left block"
+                className="bg-card border border-border rounded-xl p-3 sm:p-4 hover:bg-accent transition-all text-left block"
               >
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/10 flex items-center justify-center mb-2 sm:mb-3">
-                  <service.icon size={18} className="text-white/70" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-secondary flex items-center justify-center mb-2 sm:mb-3">
+                  <service.icon size={18} className="text-muted-foreground" />
                 </div>
                 <h3 className="font-medium text-foreground text-xs sm:text-sm leading-tight">{service.title}</h3>
                 <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 line-clamp-2">{service.description}</p>
@@ -136,7 +136,7 @@ const TaxServices = () => {
         {/* Calculator and Summary */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Tax Calculator */}
-          <Card className="bg-white/5 border-white/10">
+          <Card className="bg-card border-border">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center gap-2 text-foreground">
                 <Calculator size={20} />
@@ -152,7 +152,7 @@ const TaxServices = () => {
                     placeholder="Enter your annual income"
                     value={income}
                     onChange={(e) => setIncome(e.target.value)}
-                    className="pl-9 bg-white/5 border-white/20 text-foreground"
+                    className="pl-9 bg-secondary border-border text-foreground"
                   />
                 </div>
               </div>
@@ -164,8 +164,8 @@ const TaxServices = () => {
                     variant={regime === 'new' ? 'default' : 'outline'}
                     onClick={() => setRegime('new')}
                     className={regime === 'new' 
-                      ? 'bg-white text-black hover:bg-white/90' 
-                      : 'bg-white/5 border-white/20 text-foreground hover:bg-white/10'
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
+                      : 'bg-secondary border-border text-foreground hover:bg-accent'
                     }
                   >
                     <div className="text-left">
@@ -177,8 +177,8 @@ const TaxServices = () => {
                     variant={regime === 'old' ? 'default' : 'outline'}
                     onClick={() => setRegime('old')}
                     className={regime === 'old' 
-                      ? 'bg-white text-black hover:bg-white/90' 
-                      : 'bg-white/5 border-white/20 text-foreground hover:bg-white/10'
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
+                      : 'bg-secondary border-border text-foreground hover:bg-accent'
                     }
                   >
                     <div className="text-left">
@@ -191,7 +191,7 @@ const TaxServices = () => {
 
               <Button 
                 onClick={calculateTax}
-                className="w-full bg-white text-black hover:bg-white/90"
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
                 disabled={!income}
               >
                 Calculate Tax
@@ -199,7 +199,7 @@ const TaxServices = () => {
               </Button>
 
               {taxResult && (
-                <div className="bg-white/5 rounded-lg p-4 space-y-2">
+                <div className="bg-secondary rounded-lg p-4 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Income Tax</span>
                     <span className="text-foreground">{formatCurrency(taxResult.tax)}</span>
@@ -208,7 +208,7 @@ const TaxServices = () => {
                     <span className="text-muted-foreground">Health & Education Cess (4%)</span>
                     <span className="text-foreground">{formatCurrency(taxResult.cess)}</span>
                   </div>
-                  <div className="border-t border-white/10 pt-2 flex justify-between font-medium">
+                  <div className="border-t border-border pt-2 flex justify-between font-medium">
                     <span className="text-foreground">Total Tax Payable</span>
                     <span className="text-foreground">{formatCurrency(taxResult.total)}</span>
                   </div>
@@ -218,7 +218,7 @@ const TaxServices = () => {
           </Card>
 
           {/* Tax Summary / Slabs */}
-          <Card className="bg-white/5 border-white/10">
+          <Card className="bg-card border-border">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center gap-2 text-foreground">
                 <RefreshCw size={20} />
@@ -235,7 +235,7 @@ const TaxServices = () => {
                       <p className="text-sm text-muted-foreground">Total Tax ({regime === 'new' ? 'New' : 'Old'} Regime)</p>
                     </div>
                   </div>
-                  <div className="bg-white/5 rounded-lg p-4">
+                  <div className="bg-secondary rounded-lg p-4">
                     <p className="text-sm text-muted-foreground mb-2">Effective Tax Rate</p>
                     <p className="text-xl font-bold text-foreground">
                       {((taxResult.total / parseFloat(income.replace(/,/g, ''))) * 100).toFixed(2)}%

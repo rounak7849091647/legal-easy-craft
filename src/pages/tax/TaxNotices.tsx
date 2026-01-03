@@ -28,8 +28,8 @@ const TaxNotices = () => {
         </Link>
 
         <div className="flex items-start gap-4 mb-8">
-          <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-            <Bell size={28} className="text-white" />
+          <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+            <Bell size={28} className="text-foreground" />
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">Tax Notices</h1>
@@ -47,7 +47,7 @@ const TaxNotices = () => {
         </div>
 
         {/* Notice Types */}
-        <Card className="bg-white/5 border-white/10 mb-6">
+        <Card className="bg-card border-border mb-6">
           <CardHeader>
             <CardTitle className="text-foreground flex items-center gap-2">
               <FileText size={20} />
@@ -56,10 +56,10 @@ const TaxNotices = () => {
           </CardHeader>
           <CardContent className="space-y-3">
             {noticeTypes.map((notice, index) => (
-              <div key={index} className="bg-white/5 rounded-lg p-4">
+              <div key={index} className="bg-secondary rounded-lg p-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
                   <div className="flex items-center gap-3">
-                    <span className="font-mono text-sm bg-white/10 px-2 py-1 rounded text-foreground">
+                    <span className="font-mono text-sm bg-accent px-2 py-1 rounded text-foreground">
                       Sec {notice.code}
                     </span>
                     <span className="font-medium text-foreground">{notice.title}</span>
@@ -79,7 +79,7 @@ const TaxNotices = () => {
         </Card>
 
         {/* Our Help */}
-        <Card className="bg-white/5 border-white/10 mb-6">
+        <Card className="bg-card border-border mb-6">
           <CardHeader>
             <CardTitle className="text-foreground">How We Help</CardTitle>
           </CardHeader>
@@ -91,8 +91,8 @@ const TaxNotices = () => {
                 { icon: CheckCircle, title: 'Response Drafting', desc: 'Professional reply preparation' },
                 { icon: Bell, title: 'Follow-up', desc: 'Track resolution status' },
               ].map((item, index) => (
-                <div key={index} className="flex items-start gap-3 bg-white/5 rounded-lg p-4">
-                  <item.icon size={20} className="text-white shrink-0 mt-0.5" />
+                <div key={index} className="flex items-start gap-3 bg-secondary rounded-lg p-4">
+                  <item.icon size={20} className="text-foreground shrink-0 mt-0.5" />
                   <div>
                     <h3 className="font-medium text-foreground">{item.title}</h3>
                     <p className="text-xs text-muted-foreground">{item.desc}</p>
@@ -103,7 +103,7 @@ const TaxNotices = () => {
           </CardContent>
         </Card>
 
-        <Button className="w-full bg-white text-black hover:bg-white/90 h-12">
+        <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-12">
           Get Notice Help
           <ArrowRight size={16} className="ml-2" />
         </Button>
