@@ -8,7 +8,9 @@ import {
   LogIn,
   LogOut,
   LayoutDashboard,
-  User
+  User,
+  MessageSquare,
+  Globe
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -78,6 +80,8 @@ const AppSidebar = () => {
     { title: 'Documents', icon: FileText, href: '/documents' },
     { title: 'Lawyers', icon: Users, href: '/lawyers' },
     { title: 'Tax Services', icon: Calculator, href: '/tax-services' },
+    { title: 'Discussion', icon: MessageSquare, href: '/discussion' },
+    { title: 'Community', icon: Globe, href: '/community' },
   ];
 
   // Dashboard items - only shown when logged in

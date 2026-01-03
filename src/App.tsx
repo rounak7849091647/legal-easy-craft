@@ -24,6 +24,8 @@ import TaxAdvisory from "./pages/tax/TaxAdvisory";
 import CapitalGains from "./pages/tax/CapitalGains";
 import TaxNotices from "./pages/tax/TaxNotices";
 import ConnectExpert from "./pages/tax/ConnectExpert";
+import Discussion from "./pages/Discussion";
+import Community from "./pages/Community";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +55,8 @@ const App = () => (
             <Route path="/tax-services/capital-gains" element={<CapitalGains />} />
             <Route path="/tax-services/tax-notices" element={<TaxNotices />} />
             <Route path="/tax-services/connect-expert" element={<ConnectExpert />} />
+            <Route path="/discussion" element={<Discussion />} />
+            <Route path="/community" element={<Community />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
