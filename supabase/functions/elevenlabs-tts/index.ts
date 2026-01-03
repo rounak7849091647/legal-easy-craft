@@ -7,24 +7,25 @@ const corsHeaders = {
 };
 
 // Voice IDs optimized for Indian languages using ElevenLabs multilingual v2
-// These voices work well with the multilingual model for Indian languages
+// Using female voices for natural, warm Indian language pronunciation
+// These voices work excellently with multilingual model for Indian languages
 const VOICE_MAP: Record<string, string> = {
-  'en-IN': 'EXAVITQu4vr4xnSDxMaL', // Sarah - clear English, great for Indian English
-  'hi-IN': 'nPczCjzI2devNBz1zQrb', // Brian - deep male voice, excellent for Hindi
-  'hinglish': 'EXAVITQu4vr4xnSDxMaL', // Sarah - clear for mixed language
-  'ta-IN': 'onwK4e9ZLuTAKqWW03F9', // Daniel - handles Tamil well
-  'te-IN': 'onwK4e9ZLuTAKqWW03F9', // Daniel - handles Telugu well
-  'bn-IN': 'nPczCjzI2devNBz1zQrb', // Brian - works well with Bengali
-  'mr-IN': 'nPczCjzI2devNBz1zQrb', // Brian - good for Marathi
-  'gu-IN': 'onwK4e9ZLuTAKqWW03F9', // Daniel - handles Gujarati
-  'kn-IN': 'onwK4e9ZLuTAKqWW03F9', // Daniel - handles Kannada
-  'ml-IN': 'onwK4e9ZLuTAKqWW03F9', // Daniel - handles Malayalam
-  'pa-IN': 'nPczCjzI2devNBz1zQrb', // Brian - good for Punjabi
-  'or-IN': 'nPczCjzI2devNBz1zQrb', // Brian - handles Odia
-  'as-IN': 'nPczCjzI2devNBz1zQrb', // Brian - handles Assamese
+  'en-IN': 'EXAVITQu4vr4xnSDxMaL', // Sarah - clear, warm English voice
+  'hi-IN': 'XrExE9yKIg1WjnnlVkGX', // Matilda - warm female voice, excellent Hindi pronunciation
+  'hinglish': 'XrExE9yKIg1WjnnlVkGX', // Matilda - handles code-switching naturally
+  'ta-IN': 'pFZP5JQG7iQjIQuC4Bku', // Lily - soft female voice, great for Tamil
+  'te-IN': 'pFZP5JQG7iQjIQuC4Bku', // Lily - handles Telugu well
+  'bn-IN': 'XrExE9yKIg1WjnnlVkGX', // Matilda - works beautifully with Bengali
+  'mr-IN': 'XrExE9yKIg1WjnnlVkGX', // Matilda - good for Marathi
+  'gu-IN': 'pFZP5JQG7iQjIQuC4Bku', // Lily - handles Gujarati
+  'kn-IN': 'pFZP5JQG7iQjIQuC4Bku', // Lily - handles Kannada
+  'ml-IN': 'pFZP5JQG7iQjIQuC4Bku', // Lily - handles Malayalam
+  'pa-IN': 'XrExE9yKIg1WjnnlVkGX', // Matilda - good for Punjabi
+  'or-IN': 'XrExE9yKIg1WjnnlVkGX', // Matilda - handles Odia
+  'as-IN': 'XrExE9yKIg1WjnnlVkGX', // Matilda - handles Assamese
 };
 
-const DEFAULT_VOICE = 'EXAVITQu4vr4xnSDxMaL'; // Sarah - default
+const DEFAULT_VOICE = 'XrExE9yKIg1WjnnlVkGX'; // Matilda - warm female default
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -48,9 +49,9 @@ serve(async (req) => {
     
     console.log(`TTS - Language: ${language}, Voice: ${voiceId}, Text length: ${text.length}`);
 
-    // Use multilingual v2 model for all languages - best quality
+    // Use multilingual v2 model - best for Indian languages with natural pronunciation
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
       {
         method: "POST",
         headers: {
@@ -60,12 +61,12 @@ serve(async (req) => {
         body: JSON.stringify({
           text: text.substring(0, 5000),
           model_id: "eleven_multilingual_v2",
-          output_format: "mp3_44100_128",
           voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.8,
-            style: 0.3,
+            stability: 0.65, // Higher stability for clear Indian language pronunciation
+            similarity_boost: 0.75,
+            style: 0.2, // Lower style for more natural, less exaggerated speech
             use_speaker_boost: true,
+            speed: 0.95, // Slightly slower for better pronunciation
           },
         }),
       }
