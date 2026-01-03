@@ -517,7 +517,7 @@ const Documents = () => {
             placeholder="Search documents..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 bg-white/5 border-white/20 text-foreground text-sm h-10"
+            className="pl-9 bg-card border-border text-foreground text-sm h-10"
           />
         </div>
 
@@ -529,8 +529,8 @@ const Documents = () => {
               onClick={() => setSelectedCategory(cat.name)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium shrink-0 transition-all ${
                 selectedCategory === cat.name 
-                  ? 'bg-white text-black' 
-                  : 'bg-white/10 text-foreground hover:bg-white/20'
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-secondary text-secondary-foreground hover:bg-accent'
               }`}
             >
               <cat.icon size={12} />
@@ -549,11 +549,11 @@ const Documents = () => {
           {filteredDocuments.map((doc) => (
             <div 
               key={doc.id}
-              className="bg-white/5 border border-white/10 rounded-xl p-3 hover:bg-white/10 transition-all"
+              className="bg-card border border-border rounded-xl p-3 hover:bg-accent transition-all"
             >
               <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-                  <FileText size={16} className="text-white/70" />
+                <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+                  <FileText size={16} className="text-muted-foreground" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
@@ -565,7 +565,7 @@ const Documents = () => {
                   </div>
                   <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{doc.description}</p>
                   <div className="flex items-center gap-2 mt-1.5 text-[10px] text-muted-foreground">
-                    <span className="bg-white/10 px-1.5 py-0.5 rounded">{doc.category}</span>
+                    <span className="bg-secondary px-1.5 py-0.5 rounded">{doc.category}</span>
                     <span>{doc.downloads}</span>
                   </div>
                 </div>
@@ -575,7 +575,7 @@ const Documents = () => {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="flex-1 bg-white/5 border-white/20 text-foreground hover:bg-white/10 text-xs h-8"
+                  className="flex-1 bg-secondary border-border text-foreground hover:bg-accent text-xs h-8"
                   onClick={() => setSelectedDocument(doc)}
                 >
                   <Eye size={12} className="mr-1" />
@@ -583,7 +583,7 @@ const Documents = () => {
                 </Button>
                 <Button 
                   size="sm" 
-                  className="flex-1 bg-white text-black hover:bg-white/90 text-xs h-8"
+                  className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 text-xs h-8"
                   onClick={() => handleDownload(doc)}
                 >
                   <Download size={12} className="mr-1" />
@@ -601,7 +601,7 @@ const Documents = () => {
             <Button 
               variant="outline" 
               size="sm" 
-              className="mt-3 bg-white/5 border-white/20"
+              className="mt-3 bg-secondary border-border"
               onClick={() => {setSearchQuery(''); setSelectedCategory('All');}}
             >
               Clear filters
@@ -612,25 +612,25 @@ const Documents = () => {
 
       {/* Document Preview Dialog */}
       <Dialog open={!!selectedDocument} onOpenChange={() => setSelectedDocument(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] bg-background border-white/20 p-0 gap-0">
-          <DialogHeader className="p-3 sm:p-4 border-b border-white/10">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] bg-background border-border p-0 gap-0">
+          <DialogHeader className="p-3 sm:p-4 border-b border-border">
             <DialogTitle className="text-sm sm:text-base text-foreground pr-8 line-clamp-1">
               {selectedDocument?.name}
             </DialogTitle>
           </DialogHeader>
           
           <div className="overflow-auto flex-1 max-h-[60vh] p-3 sm:p-4">
-            <pre className="text-xs sm:text-sm text-foreground whitespace-pre-wrap font-mono leading-relaxed bg-white/5 rounded-lg p-3">
+            <pre className="text-xs sm:text-sm text-foreground whitespace-pre-wrap font-mono leading-relaxed bg-secondary rounded-lg p-3">
               {selectedDocument?.content}
             </pre>
           </div>
 
-          <div className="p-3 sm:p-4 border-t border-white/10 flex gap-2">
+          <div className="p-3 sm:p-4 border-t border-border flex gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => selectedDocument && handleCopy(selectedDocument)}
-              className="flex-1 bg-white/5 border-white/20 text-foreground hover:bg-white/10 text-xs h-9"
+              className="flex-1 bg-secondary border-border text-foreground hover:bg-accent text-xs h-9"
             >
               {copiedId === selectedDocument?.id ? (
                 <><Check size={14} className="mr-1.5" /> Copied</>
@@ -641,7 +641,7 @@ const Documents = () => {
             <Button
               size="sm"
               onClick={() => selectedDocument && handleDownload(selectedDocument)}
-              className="flex-1 bg-white text-black hover:bg-white/90 text-xs h-9"
+              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 text-xs h-9"
             >
               <Download size={14} className="mr-1.5" />
               Download
