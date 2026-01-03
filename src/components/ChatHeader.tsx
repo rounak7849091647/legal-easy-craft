@@ -2,6 +2,7 @@ import { Menu, LogIn } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import ThemeToggle from '@/components/ThemeToggle';
 
 const ChatHeader = () => {
   return (
@@ -18,6 +19,7 @@ const ChatHeader = () => {
       </div>
 
       <div className="flex items-center gap-2">
+        <ThemeToggle />
         <Button 
           asChild
           variant="outline" 
