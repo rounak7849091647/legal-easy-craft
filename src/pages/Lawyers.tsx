@@ -72,7 +72,7 @@ const Lawyers = () => {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
           <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
             <Users size={20} className="mx-auto text-muted-foreground mb-2" />
-            <p className="text-xl font-bold text-foreground">{lawyers.length}+</p>
+            <p className="text-xl font-bold text-foreground">10M+</p>
             <p className="text-xs text-muted-foreground">Verified Lawyers</p>
           </div>
           <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
@@ -86,8 +86,8 @@ const Lawyers = () => {
             <p className="text-xs text-muted-foreground">States & UTs</p>
           </div>
           <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
-            <Star size={20} className="mx-auto text-muted-foreground mb-2" />
-            <p className="text-xl font-bold text-foreground">4.6★</p>
+            <Star size={20} className="mx-auto text-yellow-500 fill-yellow-500 mb-2" />
+            <p className="text-xl font-bold text-foreground">4.8★</p>
             <p className="text-xs text-muted-foreground">Average Rating</p>
           </div>
         </div>

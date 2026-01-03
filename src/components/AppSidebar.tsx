@@ -64,8 +64,14 @@ const AppSidebar = () => {
     navigate('/');
   };
 
+  const handleAIAssistantClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    // Force page reload to reset chat state
+    window.location.href = '/';
+  };
+
   const mainItems = [
-    { title: 'AI Assistant', icon: Home, href: '/' },
+    { title: 'AI Assistant', icon: Home, href: '/', onClick: handleAIAssistantClick },
   ];
 
   const serviceItems = [
@@ -110,12 +116,16 @@ const AppSidebar = () => {
                     isActive={currentPath === item.href}
                     className="hover:bg-sidebar-accent"
                   >
-                    <Link to={item.href} className="flex items-center gap-3">
+                    <a 
+                      href={item.href} 
+                      onClick={item.onClick}
+                      className="flex items-center gap-3"
+                    >
                       <item.icon size={18} className="text-muted-foreground" />
                       {!isCollapsed && (
                         <span className="text-sm">{item.title}</span>
                       )}
-                    </Link>
+                    </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

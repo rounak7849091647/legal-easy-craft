@@ -12,7 +12,7 @@ const ConnectExpert = () => {
     <PageLayout>
       <Helmet>
         <title>Connect Expert - LegalCareAI</title>
-        <meta name="description" content="One-on-one consultation with tax experts. Book a call or video session with our CAs." />
+        <meta name="description" content="One-on-one consultation with tax experts. Book a call or video session with our professionals." />
       </Helmet>
 
       <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto">
@@ -38,7 +38,7 @@ const ConnectExpert = () => {
             { icon: Phone, title: 'Voice Call', desc: 'Detailed discussion' },
             { icon: Video, title: 'Video Call', desc: 'Face-to-face' },
           ].map((option, index) => (
-            <Card key={index} className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors cursor-pointer">
+            <Card key={index} className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors cursor-pointer rounded-t-3xl">
               <CardContent className="p-4 sm:p-6 text-center">
                 <option.icon size={28} className="mx-auto text-white mb-3" />
                 <h3 className="font-medium text-foreground text-sm sm:text-base">{option.title}</h3>
@@ -76,7 +76,7 @@ const ConnectExpert = () => {
           <CardContent className="p-6">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
               {[
-                { value: '50+', label: 'Expert CAs' },
+                { value: '50+', label: 'Tax Experts' },
                 { value: '10k+', label: 'Consultations' },
                 { value: '4.9★', label: 'Rating' },
                 { value: '< 5 min', label: 'Avg Wait' },
