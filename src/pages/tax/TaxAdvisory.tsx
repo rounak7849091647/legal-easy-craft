@@ -26,8 +26,8 @@ const TaxAdvisory = () => {
         </Link>
 
         <div className="flex items-start gap-4 mb-8">
-          <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-            <MessageSquare size={28} className="text-white" />
+          <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+            <MessageSquare size={28} className="text-foreground" />
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">Tax Advisory</h1>
@@ -42,9 +42,9 @@ const TaxAdvisory = () => {
             { icon: Phone, title: 'Call', desc: 'Voice consultation' },
             { icon: Video, title: 'Video', desc: 'Face-to-face session' },
           ].map((type, index) => (
-            <Card key={index} className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors cursor-pointer">
+            <Card key={index} className="bg-card border-border hover:bg-accent transition-colors cursor-pointer">
               <CardContent className="p-4 sm:p-6 text-center">
-                <type.icon size={28} className="mx-auto text-white mb-3" />
+                <type.icon size={28} className="mx-auto text-foreground mb-3" />
                 <h3 className="font-medium text-foreground text-sm sm:text-base">{type.title}</h3>
                 <p className="text-xs text-muted-foreground mt-1">{type.desc}</p>
               </CardContent>
@@ -53,15 +53,15 @@ const TaxAdvisory = () => {
         </div>
 
         {/* Available Experts */}
-        <Card className="bg-white/5 border-white/10 mb-6">
+        <Card className="bg-card border-border mb-6">
           <CardHeader>
             <CardTitle className="text-foreground">Available Experts</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {experts.map((expert, index) => (
-              <div key={index} className="flex flex-col sm:flex-row sm:items-center justify-between bg-white/5 rounded-lg p-3 sm:p-4 gap-3">
+              <div key={index} className="flex flex-col sm:flex-row sm:items-center justify-between bg-secondary rounded-lg p-3 sm:p-4 gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 flex items-center justify-center text-sm sm:text-lg font-medium text-foreground shrink-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-accent flex items-center justify-center text-sm sm:text-lg font-medium text-foreground shrink-0">
                     {expert.name.split(' ')[1][0]}
                   </div>
                   <div className="min-w-0">
@@ -74,7 +74,7 @@ const TaxAdvisory = () => {
                     </div>
                   </div>
                 </div>
-                <Button size="sm" className="bg-white text-black hover:bg-white/90 w-full sm:w-auto">
+                <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto">
                   Connect
                 </Button>
               </div>
@@ -83,14 +83,14 @@ const TaxAdvisory = () => {
         </Card>
 
         {/* FAQ Topics */}
-        <Card className="bg-white/5 border-white/10">
+        <Card className="bg-card border-border">
           <CardHeader>
             <CardTitle className="text-foreground">Common Topics</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
               {['ITR Filing', 'Tax Saving', 'Capital Gains', 'GST', 'TDS', 'NRI Taxation', 'Business Tax', 'Audit'].map((topic) => (
-                <span key={topic} className="bg-white/10 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-white/20 cursor-pointer transition-colors">
+                <span key={topic} className="bg-secondary px-3 py-2 rounded-lg text-sm text-foreground hover:bg-accent cursor-pointer transition-colors">
                   {topic}
                 </span>
               ))}

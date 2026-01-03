@@ -329,7 +329,7 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
     <div ref={ref} className="w-full max-w-lg mx-auto px-2 sm:px-0">
       {/* Uploaded document indicator */}
       {uploadedDoc && (
-        <div className="mb-2 flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2 text-sm">
+        <div className="mb-2 flex items-center gap-2 bg-secondary rounded-lg px-3 py-2 text-sm">
           <FileText size={16} className="text-primary shrink-0" />
           <span className="text-foreground truncate flex-1">{uploadedDoc.name}</span>
           <Button
@@ -381,15 +381,15 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
           onChange={(e) => setMessage(e.target.value)}
           placeholder={placeholder}
           disabled={isLoading || isSpeaking}
-          className={`w-full ${voiceMode ? 'pl-10' : 'pl-11 sm:pl-12'} py-3 sm:py-3.5 pr-24 sm:pr-28 rounded-full bg-white/10 border ${
+          className={`w-full ${voiceMode ? 'pl-10' : 'pl-11 sm:pl-12'} py-3 sm:py-3.5 pr-24 sm:pr-28 rounded-full bg-secondary border ${
             isSpeaking 
               ? 'border-primary/50' 
               : voiceMode 
               ? 'border-green-500/50' 
               : uploadedDoc
               ? 'border-primary/30'
-              : 'border-white/30'
-          } text-foreground placeholder:text-white/50 focus:outline-none focus:border-white/60 focus:ring-2 focus:ring-white/20 transition-all disabled:opacity-50 text-sm sm:text-base`}
+              : 'border-border'
+          } text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-all disabled:opacity-50 text-sm sm:text-base`}
         />
 
         {/* File upload button on left */}
@@ -400,7 +400,7 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
             size="icon"
             onClick={() => fileInputRef.current?.click()}
             disabled={isLoading || isUploading}
-            className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 text-white/60 hover:text-white hover:bg-white/10 rounded-full"
+            className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-accent rounded-full"
             aria-label="Upload document"
           >
             <Paperclip size={18} className={isUploading ? 'animate-spin' : ''} />
@@ -419,7 +419,7 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
                   ? isSpeaking 
                     ? 'bg-primary text-primary-foreground hover:bg-primary/90'
                     : 'bg-green-500 text-white hover:bg-green-600' 
-                  : 'text-white/60 hover:text-white hover:bg-white/10'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent'
               }`}
               aria-label={voiceMode ? 'Stop voice mode' : 'Start voice mode'}
             >
@@ -434,7 +434,7 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
             type="submit"
             size="icon"
             disabled={!message.trim() || isLoading}
-            className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-white text-black hover:bg-white/90 disabled:opacity-50"
+            className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             aria-label="Send message"
           >
             <Send size={16} />

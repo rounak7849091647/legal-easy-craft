@@ -37,8 +37,8 @@ const CapitalGains = () => {
         </Link>
 
         <div className="flex items-start gap-4 mb-8">
-          <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-            <BarChart3 size={28} className="text-white" />
+          <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+            <BarChart3 size={28} className="text-foreground" />
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">Capital Gains</h1>
@@ -47,7 +47,7 @@ const CapitalGains = () => {
         </div>
 
         {/* Calculator */}
-        <Card className="bg-white/5 border-white/10 mb-6">
+        <Card className="bg-card border-border mb-6">
           <CardHeader>
             <CardTitle className="text-foreground flex items-center gap-2">
               <Calculator size={20} />
@@ -64,7 +64,7 @@ const CapitalGains = () => {
                     placeholder="Enter buy price"
                     value={buyPrice}
                     onChange={(e) => setBuyPrice(e.target.value)}
-                    className="pl-9 bg-white/5 border-white/20 text-foreground"
+                    className="pl-9 bg-secondary border-border text-foreground"
                   />
                 </div>
               </div>
@@ -76,7 +76,7 @@ const CapitalGains = () => {
                     placeholder="Enter sell price"
                     value={sellPrice}
                     onChange={(e) => setSellPrice(e.target.value)}
-                    className="pl-9 bg-white/5 border-white/20 text-foreground"
+                    className="pl-9 bg-secondary border-border text-foreground"
                   />
                 </div>
               </div>
@@ -89,8 +89,8 @@ const CapitalGains = () => {
                   variant={holdingPeriod === 'short' ? 'default' : 'outline'}
                   onClick={() => setHoldingPeriod('short')}
                   className={holdingPeriod === 'short' 
-                    ? 'bg-white text-black hover:bg-white/90' 
-                    : 'bg-white/5 border-white/20 text-foreground hover:bg-white/10'
+                    ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
+                    : 'bg-secondary border-border text-foreground hover:bg-accent'
                   }
                 >
                   <TrendingDown size={16} className="mr-2" />
@@ -100,8 +100,8 @@ const CapitalGains = () => {
                   variant={holdingPeriod === 'long' ? 'default' : 'outline'}
                   onClick={() => setHoldingPeriod('long')}
                   className={holdingPeriod === 'long' 
-                    ? 'bg-white text-black hover:bg-white/90' 
-                    : 'bg-white/5 border-white/20 text-foreground hover:bg-white/10'
+                    ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
+                    : 'bg-secondary border-border text-foreground hover:bg-accent'
                   }
                 >
                   <TrendingUp size={16} className="mr-2" />
@@ -111,7 +111,7 @@ const CapitalGains = () => {
             </div>
 
             {(buyPrice && sellPrice) && (
-              <div className="bg-white/5 rounded-lg p-4 space-y-2">
+              <div className="bg-secondary rounded-lg p-4 space-y-2">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Capital Gain</span>
                   <span className={gain >= 0 ? 'text-green-500' : 'text-red-500'}>
@@ -128,18 +128,18 @@ const CapitalGains = () => {
         </Card>
 
         {/* Tax Rates Info */}
-        <Card className="bg-white/5 border-white/10 mb-6">
+        <Card className="bg-card border-border mb-6">
           <CardHeader>
             <CardTitle className="text-foreground">Tax Rates (Equity/Mutual Funds)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-white/5 rounded-lg p-4">
+              <div className="bg-secondary rounded-lg p-4">
                 <h3 className="font-medium text-foreground mb-2">STCG (Short Term)</h3>
                 <p className="text-2xl font-bold text-foreground">15%</p>
                 <p className="text-xs text-muted-foreground mt-1">Holding &lt; 12 months</p>
               </div>
-              <div className="bg-white/5 rounded-lg p-4">
+              <div className="bg-secondary rounded-lg p-4">
                 <h3 className="font-medium text-foreground mb-2">LTCG (Long Term)</h3>
                 <p className="text-2xl font-bold text-foreground">10%</p>
                 <p className="text-xs text-muted-foreground mt-1">Above ₹1 lakh exemption</p>
@@ -148,7 +148,7 @@ const CapitalGains = () => {
           </CardContent>
         </Card>
 
-        <Button className="w-full bg-white text-black hover:bg-white/90 h-12">
+        <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-12">
           File Capital Gains Return
           <ArrowRight size={16} className="ml-2" />
         </Button>

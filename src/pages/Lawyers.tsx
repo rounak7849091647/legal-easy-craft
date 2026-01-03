@@ -53,16 +53,16 @@ const Lawyers = () => {
       <div className="p-4 sm:p-6 lg:p-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center mx-auto mb-4">
-            <Users size={28} className="text-white" />
+          <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center mx-auto mb-4">
+            <Users size={28} className="text-foreground" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">Find a Lawyer</h1>
           <p className="text-muted-foreground mt-2">Connect with Bar Council verified legal experts across India</p>
           <div className="flex justify-center gap-3 mt-4">
-            <Badge variant="outline" className="bg-white/5 border-white/20 text-foreground">
+            <Badge variant="outline" className="bg-secondary border-border text-foreground">
               <CheckCircle size={12} className="mr-1" /> Verified
             </Badge>
-            <Badge variant="outline" className="bg-white/5 border-white/20 text-foreground">
+            <Badge variant="outline" className="bg-secondary border-border text-foreground">
               <BadgeCheck size={12} className="mr-1" /> Bar Council
             </Badge>
           </div>
@@ -70,22 +70,22 @@ const Lawyers = () => {
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+          <div className="bg-card border border-border rounded-xl p-4 text-center">
             <Users size={20} className="mx-auto text-muted-foreground mb-2" />
             <p className="text-xl font-bold text-foreground">10M+</p>
             <p className="text-xs text-muted-foreground">Verified Lawyers</p>
           </div>
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+          <div className="bg-card border border-border rounded-xl p-4 text-center">
             <CheckCircle size={20} className="mx-auto text-muted-foreground mb-2" />
             <p className="text-xl font-bold text-foreground">100%</p>
             <p className="text-xs text-muted-foreground">Bar Council Verified</p>
           </div>
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+          <div className="bg-card border border-border rounded-xl p-4 text-center">
             <Globe size={20} className="mx-auto text-muted-foreground mb-2" />
             <p className="text-xl font-bold text-foreground">{indianStates.length - 1}</p>
             <p className="text-xs text-muted-foreground">States & UTs</p>
           </div>
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+          <div className="bg-card border border-border rounded-xl p-4 text-center">
             <Star size={20} className="mx-auto text-yellow-500 fill-yellow-500 mb-2" />
             <p className="text-xl font-bold text-foreground">4.8★</p>
             <p className="text-xs text-muted-foreground">Average Rating</p>
@@ -93,15 +93,15 @@ const Lawyers = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6">
+        <div className="bg-card border border-border rounded-xl p-4 mb-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">State</label>
               <Select value={selectedState} onValueChange={handleStateChange}>
-                <SelectTrigger className="bg-white/5 border-white/20 text-foreground">
+                <SelectTrigger className="bg-secondary border-border text-foreground">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-background border-white/20 max-h-[300px]">
+                <SelectContent className="bg-background border-border max-h-[300px]">
                   {indianStates.map(state => (
                     <SelectItem key={state} value={state}>{state}</SelectItem>
                   ))}
@@ -111,10 +111,10 @@ const Lawyers = () => {
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">City</label>
               <Select value={selectedCity} onValueChange={setSelectedCity}>
-                <SelectTrigger className="bg-white/5 border-white/20 text-foreground">
+                <SelectTrigger className="bg-secondary border-border text-foreground">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-background border-white/20 max-h-[300px]">
+                <SelectContent className="bg-background border-border max-h-[300px]">
                   {availableCities.map(city => (
                     <SelectItem key={city} value={city}>{city}</SelectItem>
                   ))}
@@ -124,10 +124,10 @@ const Lawyers = () => {
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">Practice Area</label>
               <Select value={selectedPractice} onValueChange={setSelectedPractice}>
-                <SelectTrigger className="bg-white/5 border-white/20 text-foreground">
+                <SelectTrigger className="bg-secondary border-border text-foreground">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-background border-white/20 max-h-[300px]">
+                <SelectContent className="bg-background border-border max-h-[300px]">
                   {practiceAreas.map(area => (
                     <SelectItem key={area} value={area}>{area}</SelectItem>
                   ))}
@@ -140,7 +140,7 @@ const Lawyers = () => {
                 placeholder="Pincode" 
                 value={pincode}
                 onChange={(e) => setPincode(e.target.value)}
-                className="bg-white/5 border-white/20 text-foreground"
+                className="bg-secondary border-border text-foreground"
               />
             </div>
           </div>
@@ -150,7 +150,7 @@ const Lawyers = () => {
               placeholder="Search by lawyer name or practice area..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-white/5 border-white/20 text-foreground"
+              className="pl-10 bg-secondary border-border text-foreground"
             />
           </div>
         </div>
@@ -168,10 +168,10 @@ const Lawyers = () => {
           {filteredLawyers.map((lawyer) => (
             <div 
               key={lawyer.id}
-              className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all"
+              className="bg-card border border-border rounded-xl p-4 hover:bg-accent transition-all"
             >
               <div className="flex items-start gap-3 mb-3">
-                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-lg font-semibold text-foreground">
+                <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-lg font-semibold text-foreground">
                   {lawyer.name.charAt(5)}
                 </div>
                 <div className="flex-1">
@@ -187,7 +187,7 @@ const Lawyers = () => {
                 </div>
               </div>
 
-              <Badge variant="outline" className="bg-white/5 border-white/20 text-foreground text-xs mb-3">
+              <Badge variant="outline" className="bg-secondary border-border text-foreground text-xs mb-3">
                 {lawyer.experience} yrs
               </Badge>
 
@@ -206,13 +206,13 @@ const Lawyers = () => {
 
               <div className="flex flex-wrap gap-1">
                 {lawyer.practiceAreas.map(area => (
-                  <Badge key={area} variant="secondary" className="bg-white/10 text-foreground text-xs">
+                  <Badge key={area} variant="secondary" className="bg-secondary text-foreground text-xs">
                     {area}
                   </Badge>
                 ))}
               </div>
 
-              <Button className="w-full mt-4 bg-white text-black hover:bg-white/90">
+              <Button className="w-full mt-4 bg-primary text-primary-foreground hover:bg-primary/90">
                 Contact Lawyer
               </Button>
             </div>

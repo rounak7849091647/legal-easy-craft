@@ -29,8 +29,8 @@ const TaxPlanning = () => {
         </Link>
 
         <div className="flex items-start gap-4 mb-8">
-          <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-            <TrendingUp size={28} className="text-white" />
+          <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+            <TrendingUp size={28} className="text-foreground" />
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">Tax Planning</h1>
@@ -48,7 +48,7 @@ const TaxPlanning = () => {
                 <p className="text-2xl font-bold text-foreground">Up to ₹78,000</p>
               </div>
             </div>
-            <Button className="bg-white text-black hover:bg-white/90 shrink-0">
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 shrink-0">
               Get Personalized Plan
               <ArrowRight size={16} className="ml-2" />
             </Button>
@@ -56,7 +56,7 @@ const TaxPlanning = () => {
         </Card>
 
         {/* Deductions */}
-        <Card className="bg-white/5 border-white/10 mb-6">
+        <Card className="bg-card border-border mb-6">
           <CardHeader>
             <CardTitle className="text-foreground flex items-center gap-2">
               <Target size={20} />
@@ -66,10 +66,10 @@ const TaxPlanning = () => {
           <CardContent>
             <div className="space-y-3">
               {deductions.map((d, index) => (
-                <div key={index} className="bg-white/5 rounded-lg p-4">
+                <div key={index} className="bg-secondary rounded-lg p-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
                     <span className="font-medium text-foreground">Section {d.section}</span>
-                    <span className="text-sm bg-white/10 px-2 py-1 rounded text-foreground">{d.limit}</span>
+                    <span className="text-sm bg-accent px-2 py-1 rounded text-foreground">{d.limit}</span>
                   </div>
                   <p className="text-sm text-muted-foreground">{d.items}</p>
                 </div>
@@ -79,11 +79,11 @@ const TaxPlanning = () => {
         </Card>
 
         {/* CTA */}
-        <div className="bg-white/5 border border-white/10 rounded-xl p-6 text-center">
+        <div className="bg-card border border-border rounded-xl p-6 text-center">
           <IndianRupee size={40} className="mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">Need Personalized Advice?</h3>
           <p className="text-sm text-muted-foreground mb-4">Our tax experts can help you maximize your savings</p>
-          <Button className="bg-white text-black hover:bg-white/90">
+          <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
             Consult Tax Expert
           </Button>
         </div>

@@ -34,8 +34,8 @@ const RefundStatus = () => {
         </Link>
 
         <div className="flex items-start gap-4 mb-8">
-          <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-            <RefreshCw size={28} className="text-white" />
+          <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+            <RefreshCw size={28} className="text-foreground" />
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">Refund Status</h1>
@@ -44,7 +44,7 @@ const RefundStatus = () => {
         </div>
 
         {/* Search Form */}
-        <Card className="bg-white/5 border-white/10 mb-6">
+        <Card className="bg-card border-border mb-6">
           <CardHeader>
             <CardTitle className="text-foreground flex items-center gap-2">
               <Search size={20} />
@@ -60,7 +60,7 @@ const RefundStatus = () => {
                   value={pan}
                   onChange={(e) => setPan(e.target.value.toUpperCase())}
                   maxLength={10}
-                  className="bg-white/5 border-white/20 text-foreground uppercase"
+                  className="bg-secondary border-border text-foreground uppercase"
                 />
               </div>
               <div>
@@ -68,7 +68,7 @@ const RefundStatus = () => {
                 <select
                   value={assessmentYear}
                   onChange={(e) => setAssessmentYear(e.target.value)}
-                  className="w-full h-10 px-3 bg-white/5 border border-white/20 rounded-md text-foreground"
+                  className="w-full h-10 px-3 bg-secondary border border-border rounded-md text-foreground"
                 >
                   <option value="2024-25">2024-25</option>
                   <option value="2023-24">2023-24</option>
@@ -77,7 +77,7 @@ const RefundStatus = () => {
               </div>
             </div>
             <Button 
-              className="w-full bg-white text-black hover:bg-white/90 h-12"
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-12"
               onClick={() => setShowStatus(true)}
               disabled={pan.length !== 10}
             >
@@ -89,7 +89,7 @@ const RefundStatus = () => {
 
         {/* Status Timeline */}
         {showStatus && (
-          <Card className="bg-white/5 border-white/10">
+          <Card className="bg-card border-border">
             <CardHeader>
               <CardTitle className="text-foreground flex items-center gap-2">
                 <Clock size={20} />
@@ -102,18 +102,18 @@ const RefundStatus = () => {
                   <div key={index} className="flex gap-4 pb-6 last:pb-0">
                     <div className="flex flex-col items-center">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        step.completed ? 'bg-green-500' : step.current ? 'bg-yellow-500' : 'bg-white/10'
+                        step.completed ? 'bg-green-500' : step.current ? 'bg-yellow-500' : 'bg-secondary'
                       }`}>
                         {step.completed ? (
                           <CheckCircle size={16} className="text-white" />
                         ) : step.current ? (
                           <Clock size={16} className="text-white" />
                         ) : (
-                          <AlertCircle size={16} className="text-white/40" />
+                          <AlertCircle size={16} className="text-muted-foreground" />
                         )}
                       </div>
                       {index < statusSteps.length - 1 && (
-                        <div className={`w-0.5 flex-1 mt-2 ${step.completed ? 'bg-green-500' : 'bg-white/10'}`} />
+                        <div className={`w-0.5 flex-1 mt-2 ${step.completed ? 'bg-green-500' : 'bg-border'}`} />
                       )}
                     </div>
                     <div className="flex-1 pb-4">
