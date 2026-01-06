@@ -1,4 +1,4 @@
-import { useState, useEffect, forwardRef, useRef, useMemo } from 'react';
+import { useState, useEffect, forwardRef, useRef, useMemo, useCallback } from 'react';
 import { Send, Mic, Square, Paperclip, X, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
@@ -52,16 +52,16 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
   const isProcessingVoice = isIOS ? whisper.isProcessing : false;
   const voiceError = isIOS ? whisper.error : webSpeech.error;
   
-  // Unified control functions
-  const startListening = async () => {
+  // Unified control functions - wrapped in useCallback to maintain hook order
+  const startListening = useCallback(async () => {
     if (isIOS) {
       await whisper.startRecording();
     } else {
       await webSpeech.startListening();
     }
-  };
+  }, [isIOS, whisper.startRecording, webSpeech.startListening]);
   
-  const stopListening = async () => {
+  const stopListening = useCallback(async () => {
     if (isIOS) {
       const text = await whisper.stopRecording();
       return text;
@@ -69,15 +69,15 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
       webSpeech.stopListening();
       return webSpeech.transcript;
     }
-  };
+  }, [isIOS, whisper.stopRecording, webSpeech.stopListening, webSpeech.transcript]);
   
-  const resetTranscript = () => {
+  const resetTranscript = useCallback(() => {
     if (isIOS) {
       whisper.resetTranscript();
     } else {
       webSpeech.resetTranscript();
     }
-  };
+  }, [isIOS, whisper.resetTranscript, webSpeech.resetTranscript]);
   
   const autoSendTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastTranscriptRef = useRef<string>('');
