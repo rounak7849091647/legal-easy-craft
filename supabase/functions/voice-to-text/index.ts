@@ -96,18 +96,19 @@ serve(async (req) => {
       extension = 'ogg';
     }
     
-    // Prepare form data for OpenAI Whisper via Lovable AI Gateway
+    // Prepare form data for OpenAI Whisper
     const formData = new FormData();
     const blob = new Blob([binaryAudio as unknown as ArrayBuffer], { type: audioMimeType });
     formData.append('file', blob, `audio.${extension}`);
     formData.append('model', 'whisper-1');
-    // Don't specify language - let Whisper auto-detect for multilingual support
+    formData.append('response_format', 'verbose_json'); // Get language detection
+    // Don't set language - Whisper will auto-detect and transcribe in original language
 
     // Use OpenAI's Whisper API
     const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Authorization": `Bearer ${Deno.env.get("OPENAI_API_KEY")}`,
       },
       body: formData,
     });
@@ -133,10 +134,46 @@ serve(async (req) => {
     const result = await response.json();
     const transcribedText = result.text || "";
     
-    // Detect language from transcribed text
-    const detectedLanguage = detectLanguageFromText(transcribedText);
+    // Get language from Whisper's detection or detect from text
+    let detectedLanguage = 'en-IN';
+    const whisperLang = result.language;
     
-    console.log(`Transcription successful: "${transcribedText.slice(0, 50)}...", detected language: ${detectedLanguage}`);
+    // Map Whisper language codes to our language codes
+    const langMap: Record<string, string> = {
+      'hindi': 'hi-IN',
+      'hi': 'hi-IN',
+      'tamil': 'ta-IN',
+      'ta': 'ta-IN',
+      'telugu': 'te-IN',
+      'te': 'te-IN',
+      'bengali': 'bn-IN',
+      'bn': 'bn-IN',
+      'gujarati': 'gu-IN',
+      'gu': 'gu-IN',
+      'kannada': 'kn-IN',
+      'kn': 'kn-IN',
+      'malayalam': 'ml-IN',
+      'ml': 'ml-IN',
+      'punjabi': 'pa-IN',
+      'pa': 'pa-IN',
+      'marathi': 'mr-IN',
+      'mr': 'mr-IN',
+      'odia': 'or-IN',
+      'or': 'or-IN',
+      'assamese': 'as-IN',
+      'as': 'as-IN',
+      'english': 'en-IN',
+      'en': 'en-IN'
+    };
+    
+    if (whisperLang && langMap[whisperLang.toLowerCase()]) {
+      detectedLanguage = langMap[whisperLang.toLowerCase()];
+    } else {
+      // Fallback to text-based detection
+      detectedLanguage = detectLanguageFromText(transcribedText);
+    }
+    
+    console.log(`Transcription successful: "${transcribedText.slice(0, 50)}...", whisper lang: ${whisperLang}, detected: ${detectedLanguage}`);
 
     return new Response(
       JSON.stringify({ 
