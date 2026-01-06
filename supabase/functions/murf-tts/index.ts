@@ -77,14 +77,19 @@ serve(async (req) => {
     const voiceConfig = VOICE_MAP[language] || DEFAULT_VOICE;
     console.log(`Generating speech with Murf AI GEN2 - voice: ${voiceConfig.voiceId}, language: ${language}, multiNativeLocale: ${voiceConfig.multiNativeLocale || 'none'}`);
 
-    // Build request body for GEN2 model
+    // Build request body for GEN2 model with optimized settings
     const requestBody: Record<string, unknown> = {
       text: text,
       voiceId: voiceConfig.voiceId,
       format: 'MP3',
       encodeAsBase64: true,
       modelVersion: 'GEN2',
-      sampleRate: 44100,
+      sampleRate: 48000, // Higher sample rate for clearer audio
+      speed: 0.95, // Slightly slower for clearer pronunciation
+      pitch: 0, // Natural pitch
+      audioDuration: 0, // Auto duration
+      variation: 1, // Natural variation in speech
+      pronunciationDictionary: {}, // Can add custom pronunciations if needed
     };
 
     // Add style if specified
@@ -96,6 +101,9 @@ serve(async (req) => {
     if (voiceConfig.multiNativeLocale) {
       requestBody.multiNativeLocale = voiceConfig.multiNativeLocale;
     }
+
+    // Add emphasis for better pronunciation
+    requestBody.emphasis = {};
 
     // Call Murf API
     const response = await fetch('https://api.murf.ai/v1/speech/generate', {
