@@ -268,48 +268,11 @@ ${languageInstructions}`;
     const data = await response.json();
     const aiResponse = data.choices?.[0]?.message?.content || "I couldn't generate a response. Please try again.";
     
-    // Generate English display version if response is in Indian language
-    let displayResponse = aiResponse;
-    let voiceResponse = aiResponse;
-    
-    // Check if the response is in a non-English Indian language (has Indic script)
-    const isIndicScript = /[\u0900-\u0D7F]/.test(aiResponse);
-    
-    if (isIndicScript && detectedLanguage !== 'en-IN') {
-      // Translate to English for display
-      console.log("Translating response to English for display...");
-      
-      const translateResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash-lite",
-          messages: [
-            { 
-              role: "system", 
-              content: "You are a translator. Translate the following text to simple English. Keep the meaning intact. Only output the translation, nothing else." 
-            },
-            { role: "user", content: aiResponse }
-          ],
-          max_tokens: 800,
-          temperature: 0.3,
-        }),
-      });
-      
-      if (translateResponse.ok) {
-        const translateData = await translateResponse.json();
-        displayResponse = translateData.choices?.[0]?.message?.content || aiResponse;
-        console.log("Translation successful");
-      }
-    }
-    
+    // Both display and voice are in the user's detected language
     return new Response(
       JSON.stringify({ 
-        response: displayResponse, // English for display
-        voiceResponse: voiceResponse, // Original language for TTS
+        response: aiResponse, // Same language as user for display
+        voiceResponse: aiResponse, // Same language for TTS
         sessionId: sessionId || `session-${Date.now()}`,
         language: detectedLanguage || 'en-IN'
       }),
