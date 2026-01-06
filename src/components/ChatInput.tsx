@@ -461,13 +461,13 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
         </p>
       )}
       
-      <p className="text-center text-[10px] sm:text-xs text-muted-foreground/60 mt-2 sm:mt-3 px-2">
-        {uploadedDoc 
-          ? '📄 Document attached • Ask questions about it'
-          : voiceMode 
-          ? (isIOS ? '🎙️ Push-to-talk • Tap mic to record, tap again to send' : '🎙️ Jarvis Mode ON • Continuous conversation • Tap square to stop')
-          : '📎 Attach documents • 🎙️ Tap mic for voice mode'}
-      </p>
+      {!voiceMode && (
+        <p className="text-center text-[10px] sm:text-xs text-muted-foreground/60 mt-2 sm:mt-3 px-2">
+          {uploadedDoc 
+            ? '📄 Document attached • Ask questions about it'
+            : '📎 Attach documents • 🎙️ Tap mic for voice mode'}
+        </p>
+      )}
     </div>
   );
 });
