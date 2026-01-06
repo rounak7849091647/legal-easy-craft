@@ -268,11 +268,10 @@ ${languageInstructions}`;
     const data = await response.json();
     const aiResponse = data.choices?.[0]?.message?.content || "I couldn't generate a response. Please try again.";
     
-    // Both display and voice are in the user's detected language
     return new Response(
       JSON.stringify({ 
-        response: aiResponse, // Same language as user for display
-        voiceResponse: aiResponse, // Same language for TTS
+        response: aiResponse,
+        voiceResponse: aiResponse,
         sessionId: sessionId || `session-${Date.now()}`,
         language: detectedLanguage || 'en-IN'
       }),
