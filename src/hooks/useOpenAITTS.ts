@@ -187,11 +187,82 @@ export const useOpenAITTS = (): OpenAITTSHook => {
     abortControllerRef.current = new AbortController();
 
     try {
-      // STRATEGY: For Indian regional languages, ALWAYS try Bhashini first
-      // Bhashini has native Indian voices that sound natural and pronounce correctly
+      // STRATEGY: Use Murf AI as primary TTS for all languages
+      console.log(`Using Murf AI TTS for ${language}`);
       
+      const murfResponse = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/murf-tts`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ text, language }),
+          signal: abortControllerRef.current.signal,
+        }
+      );
+
+      if (murfResponse.ok) {
+        const data = await murfResponse.json();
+        if (data.audioContent) {
+          const audioUrl = `data:audio/mpeg;base64,${data.audioContent}`;
+          const audio = new Audio(audioUrl);
+          audioRef.current = audio;
+
+          audio.onended = () => {
+            setIsSpeaking(false);
+            audioRef.current = null;
+          };
+
+          audio.onerror = async () => {
+            console.log('Murf audio error, falling back to Bhashini/browser TTS');
+            audioRef.current = null;
+            try {
+              if (isRegionalLanguage) {
+                // Try Bhashini for regional languages
+                const bhashiniResponse = await fetch(
+                  `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bhashini-tts`,
+                  {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                      'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+                    },
+                    body: JSON.stringify({ text, language }),
+                  }
+                );
+                if (bhashiniResponse.ok) {
+                  const audioBlob = await bhashiniResponse.blob();
+                  const bhashiniUrl = URL.createObjectURL(audioBlob);
+                  const bhashiniAudio = new Audio(bhashiniUrl);
+                  bhashiniAudio.onended = () => {
+                    URL.revokeObjectURL(bhashiniUrl);
+                    setIsSpeaking(false);
+                  };
+                  await bhashiniAudio.play();
+                  return;
+                }
+              }
+              await speakWithBrowserTTS(text, language);
+            } catch (e) {
+              console.error('All TTS fallbacks failed:', e);
+            }
+            setIsSpeaking(false);
+          };
+
+          setIsLoading(false);
+          setIsSpeaking(true);
+          await audio.play();
+          return;
+        }
+      }
+
+      // Murf failed - try Bhashini for regional languages
       if (isRegionalLanguage) {
-        console.log(`Using Bhashini TTS for ${language} (native Indian voice)`);
+        console.log(`Murf failed, trying Bhashini TTS for ${language}`);
         
         const bhashiniResponse = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bhashini-tts`,
@@ -240,131 +311,15 @@ export const useOpenAITTS = (): OpenAITTSHook => {
             return;
           }
         }
-        
-        // Bhashini failed - try ElevenLabs for Hindi/Telugu/Tamil (premium voices)
-        const premiumLanguages = ['hi-IN', 'hinglish', 'te-IN', 'ta-IN'];
-        if (premiumLanguages.includes(language)) {
-          console.log(`Trying ElevenLabs for ${language}`);
-          
-          try {
-            const elevenLabsResponse = await fetch(
-              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`,
-              {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-                  'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-                },
-                body: JSON.stringify({ text, language }),
-                signal: abortControllerRef.current.signal,
-              }
-            );
-
-            if (elevenLabsResponse.ok) {
-              const data = await elevenLabsResponse.json();
-              if (data.audioContent) {
-                const audioUrl = `data:audio/mpeg;base64,${data.audioContent}`;
-                const audio = new Audio(audioUrl);
-                audioRef.current = audio;
-
-                audio.onended = () => {
-                  setIsSpeaking(false);
-                  audioRef.current = null;
-                };
-
-                audio.onerror = async () => {
-                  console.log('ElevenLabs audio error, falling back to browser TTS');
-                  audioRef.current = null;
-                  try {
-                    await speakWithBrowserTTS(text, language);
-                  } catch (e) {
-                    console.error('Browser TTS also failed:', e);
-                  }
-                  setIsSpeaking(false);
-                };
-
-                setIsLoading(false);
-                setIsSpeaking(true);
-                await audio.play();
-                return;
-              }
-            }
-          } catch (e) {
-            console.log('ElevenLabs unavailable:', e);
-          }
-        }
-        
-        // All cloud services failed - use browser TTS as last resort
-        console.log(`Using browser TTS fallback for ${language}`);
-        setIsLoading(false);
-        setIsSpeaking(true);
-        await speakWithBrowserTTS(text, language);
-        setIsSpeaking(false);
-        return;
       }
-
-      // For English (en-IN), use ElevenLabs (OpenAI quota exceeded)
-      console.log(`Using ElevenLabs for English: ${language}`);
       
-      try {
-        const elevenLabsResponse = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            },
-            body: JSON.stringify({ text, language }),
-            signal: abortControllerRef.current.signal,
-          }
-        );
-
-        if (elevenLabsResponse.ok) {
-          const data = await elevenLabsResponse.json();
-          if (data.audioContent) {
-            const audioUrl = `data:audio/mpeg;base64,${data.audioContent}`;
-            const audio = new Audio(audioUrl);
-            audioRef.current = audio;
-
-            audio.onended = () => {
-              setIsSpeaking(false);
-              audioRef.current = null;
-            };
-
-            audio.onerror = async () => {
-              console.log('ElevenLabs audio error, falling back to browser TTS');
-              audioRef.current = null;
-              try {
-                await speakWithBrowserTTS(text, language);
-              } catch (e) {
-                console.error('Browser TTS also failed:', e);
-              }
-              setIsSpeaking(false);
-            };
-
-            setIsLoading(false);
-            setIsSpeaking(true);
-            await audio.play();
-            return;
-          }
-        }
-      } catch (e) {
-        console.log('ElevenLabs unavailable for English:', e);
-      }
-
-      // ElevenLabs failed - use browser TTS
-      console.log('Using browser TTS fallback for English');
+      // All cloud services failed - use browser TTS as last resort
+      console.log(`Using browser TTS fallback for ${language}`);
       setIsLoading(false);
       setIsSpeaking(true);
-      try {
-        await speakWithBrowserTTS(text, language);
-      } catch (e) {
-        console.error('Browser TTS also failed:', e);
-      }
+      await speakWithBrowserTTS(text, language);
       setIsSpeaking(false);
+      return;
 
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
