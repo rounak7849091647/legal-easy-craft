@@ -5,23 +5,49 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Voice mapping for Indian languages - using Murf's voice IDs
-const VOICE_MAP: Record<string, string> = {
-  'en-IN': 'en-IN-isha',
-  'en-US': 'en-US-natalie',
-  'hi-IN': 'hi-IN-vani',
-  'hinglish': 'hi-IN-vani',
-  'ta-IN': 'ta-IN-ananya',
-  'te-IN': 'te-IN-keerthi',
-  'bn-IN': 'bn-IN-ananya',
-  'mr-IN': 'mr-IN-swara',
-  'gu-IN': 'gu-IN-riddhi',
-  'kn-IN': 'kn-IN-deepa',
-  'ml-IN': 'ml-IN-meera',
-  'pa-IN': 'pa-IN-simran',
+// Voice mapping for Indian languages - using Murf's FALCON model voices
+// Using native Indian voices for best pronunciation
+const VOICE_MAP: Record<string, { voiceId: string; multiNativeLocale?: string }> = {
+  // English - India (native Indian English voices)
+  'en-IN': { voiceId: 'Anisha' },
+  'en-US': { voiceId: 'Natalie' },
+  
+  // Hindi - India (native Hindi voices)
+  'hi-IN': { voiceId: 'Namrita' },
+  'hinglish': { voiceId: 'Namrita' },
+  
+  // Tamil - India
+  'ta-IN': { voiceId: 'Alicia', multiNativeLocale: 'ta-IN' },
+  
+  // Telugu - India  
+  'te-IN': { voiceId: 'Josie', multiNativeLocale: 'te-IN' },
+  
+  // Bengali/Bangla - India
+  'bn-IN': { voiceId: 'Lia', multiNativeLocale: 'bn-IN' },
+  
+  // Marathi - India
+  'mr-IN': { voiceId: 'Rujuta' },
+  
+  // Gujarati - India
+  'gu-IN': { voiceId: 'Lia', multiNativeLocale: 'gu-IN' },
+  
+  // Kannada - India
+  'kn-IN': { voiceId: 'Julia', multiNativeLocale: 'kn-IN' },
+  
+  // Malayalam - India
+  'ml-IN': { voiceId: 'Alicia', multiNativeLocale: 'ml-IN' },
+  
+  // Punjabi - India
+  'pa-IN': { voiceId: 'Harman' },
+  
+  // Odia - India (fallback to English India)
+  'or-IN': { voiceId: 'Anisha' },
+  
+  // Assamese - India (fallback to Bengali voice)
+  'as-IN': { voiceId: 'Lia', multiNativeLocale: 'bn-IN' },
 };
 
-const DEFAULT_VOICE = 'en-IN-isha';
+const DEFAULT_VOICE = { voiceId: 'Anisha' };
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -48,8 +74,24 @@ serve(async (req) => {
       );
     }
 
-    const voiceId = VOICE_MAP[language] || DEFAULT_VOICE;
-    console.log(`Generating speech with Murf AI - voice: ${voiceId}, language: ${language}`);
+    const voiceConfig = VOICE_MAP[language] || DEFAULT_VOICE;
+    console.log(`Generating speech with Murf AI FALCON - voice: ${voiceConfig.voiceId}, language: ${language}, multiNativeLocale: ${voiceConfig.multiNativeLocale || 'none'}`);
+
+    // Build request body
+    const requestBody: Record<string, unknown> = {
+      text: text,
+      voiceId: voiceConfig.voiceId,
+      format: 'MP3',
+      encodeAsBase64: true,
+      model: 'FALCON',
+      sampleRate: 24000,
+      style: 'Conversation',
+    };
+
+    // Add multiNativeLocale for cross-language voices
+    if (voiceConfig.multiNativeLocale) {
+      requestBody.multiNativeLocale = voiceConfig.multiNativeLocale;
+    }
 
     // Call Murf API
     const response = await fetch('https://api.murf.ai/v1/speech/generate', {
@@ -58,14 +100,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
         'api-key': apiKey,
       },
-      body: JSON.stringify({
-        text: text,
-        voiceId: voiceId,
-        format: 'MP3',
-        encodeAsBase64: true,
-        modelVersion: 'GEN2',
-        sampleRate: 44100,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
