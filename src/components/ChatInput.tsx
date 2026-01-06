@@ -47,7 +47,7 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
   // Choose the right recognition system
   const isListening = isIOS ? whisper.isRecording : webSpeech.isListening;
   const transcript = isIOS ? whisper.transcript : webSpeech.transcript;
-  const detectedLanguage = isIOS ? 'en-IN' : webSpeech.detectedLanguage;
+  const detectedLanguage = isIOS ? whisper.detectedLanguage : webSpeech.detectedLanguage;
   const isSupported = isIOS ? whisper.isSupported : webSpeech.isSupported;
   const isProcessingVoice = isIOS ? whisper.isProcessing : false;
   const voiceError = isIOS ? whisper.error : webSpeech.error;
@@ -61,13 +61,13 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
     }
   };
   
-  const stopListening = async () => {
+  const stopListening = async (): Promise<{ text: string; language: string }> => {
     if (isIOS) {
-      const text = await whisper.stopRecording();
-      return text;
+      const result = await whisper.stopRecording();
+      return result;
     } else {
       webSpeech.stopListening();
-      return webSpeech.transcript;
+      return { text: webSpeech.transcript, language: webSpeech.detectedLanguage };
     }
   };
   
@@ -282,14 +282,15 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
       // Turn off voice mode / stop recording
       setVoiceMode(false);
       
-      // For iOS, stopListening returns the transcribed text
-      const finalText = await stopListening();
+      // For iOS, stopListening returns the transcribed text and detected language
+      const result = await stopListening();
       
-      // Send any pending transcript
-      const textToSend = finalText || transcript;
+      // Send any pending transcript with detected language
+      const textToSend = result.text || transcript;
+      const langToUse = result.language || detectedLanguage;
       if (textToSend && textToSend.trim()) {
         if (onVoiceTranscript) {
-          onVoiceTranscript(textToSend.trim(), detectedLanguage);
+          onVoiceTranscript(textToSend.trim(), langToUse);
         } else {
           onSend(textToSend.trim(), uploadedDoc?.content);
         }

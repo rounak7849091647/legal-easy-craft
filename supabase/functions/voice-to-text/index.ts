@@ -35,6 +35,34 @@ function processBase64Chunks(base64String: string, chunkSize = 32768): Uint8Arra
   return result;
 }
 
+// Detect language from text using character patterns
+function detectLanguageFromText(text: string): string {
+  if (!text) return 'en-IN';
+  
+  // Hindi/Devanagari
+  if (/[\u0900-\u097F]/.test(text)) return 'hi-IN';
+  // Tamil
+  if (/[\u0B80-\u0BFF]/.test(text)) return 'ta-IN';
+  // Telugu  
+  if (/[\u0C00-\u0C7F]/.test(text)) return 'te-IN';
+  // Bengali
+  if (/[\u0980-\u09FF]/.test(text)) return 'bn-IN';
+  // Gujarati
+  if (/[\u0A80-\u0AFF]/.test(text)) return 'gu-IN';
+  // Kannada
+  if (/[\u0C80-\u0CFF]/.test(text)) return 'kn-IN';
+  // Malayalam
+  if (/[\u0D00-\u0D7F]/.test(text)) return 'ml-IN';
+  // Punjabi (Gurmukhi)
+  if (/[\u0A00-\u0A7F]/.test(text)) return 'pa-IN';
+  // Marathi uses Devanagari, check for common Marathi words
+  if (/[\u0900-\u097F]/.test(text)) return 'hi-IN'; // Will be handled as Hindi
+  // Odia
+  if (/[\u0B00-\u0B7F]/.test(text)) return 'or-IN';
+  
+  return 'en-IN';
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -73,7 +101,7 @@ serve(async (req) => {
     const blob = new Blob([binaryAudio as unknown as ArrayBuffer], { type: audioMimeType });
     formData.append('file', blob, `audio.${extension}`);
     formData.append('model', 'whisper-1');
-    formData.append('language', 'en'); // Can be auto-detected
+    // Don't specify language - let Whisper auto-detect for multilingual support
 
     // Use OpenAI's Whisper API
     const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
@@ -88,12 +116,10 @@ serve(async (req) => {
       const errorText = await response.text();
       console.error("Whisper API error:", response.status, errorText);
       
-      // If Whisper fails, try using Gemini with a simple prompt
-      console.log("Falling back to Gemini for audio description");
-      
       return new Response(
         JSON.stringify({ 
           text: "", 
+          detectedLanguage: "en-IN",
           error: "Voice transcription not available. Please type your message.",
           fallback: true
         }),
@@ -105,10 +131,18 @@ serve(async (req) => {
     }
 
     const result = await response.json();
-    console.log("Transcription successful:", result.text?.slice(0, 50));
+    const transcribedText = result.text || "";
+    
+    // Detect language from transcribed text
+    const detectedLanguage = detectLanguageFromText(transcribedText);
+    
+    console.log(`Transcription successful: "${transcribedText.slice(0, 50)}...", detected language: ${detectedLanguage}`);
 
     return new Response(
-      JSON.stringify({ text: result.text || "" }),
+      JSON.stringify({ 
+        text: transcribedText,
+        detectedLanguage: detectedLanguage
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
@@ -117,7 +151,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: error instanceof Error ? error.message : "Transcription failed",
-        text: ""
+        text: "",
+        detectedLanguage: "en-IN"
       }),
       {
         status: 500,
