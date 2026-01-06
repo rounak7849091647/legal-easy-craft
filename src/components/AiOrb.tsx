@@ -35,6 +35,7 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
   const {
     isRecording,
     transcript: whisperTranscript,
+    detectedLanguage: whisperDetectedLanguage,
     error: whisperError,
     startRecording,
     stopRecording,
@@ -45,7 +46,7 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
 
   const isListening = isIOS ? isRecording : webIsListening;
   const transcript = isIOS ? whisperTranscript : webTranscript;
-  const detectedLanguage = isIOS ? 'en-IN' : webDetectedLanguage;
+  const detectedLanguage = isIOS ? whisperDetectedLanguage : webDetectedLanguage;
   const speechSupported = isIOS ? whisperSupported : webSpeechSupported;
   const speechError = isIOS ? whisperError : webSpeechError;
 
@@ -143,10 +144,10 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
         }
 
         try {
-          const text = await stopRecording();
+          const result = await stopRecording();
           setIsActive(false);
-          if (text.trim() && onTranscript) {
-            onTranscript(text.trim(), 'en-IN');
+          if (result.text.trim() && onTranscript) {
+            onTranscript(result.text.trim(), result.language);
           }
           resetTranscript();
           lastTranscriptRef.current = '';
