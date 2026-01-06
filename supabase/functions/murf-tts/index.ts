@@ -5,49 +5,49 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Voice mapping for Indian languages - using Murf's FALCON model voices
+// Voice mapping for Indian languages - using Murf's GEN2 model voices
 // Using native Indian voices for best pronunciation
-const VOICE_MAP: Record<string, { voiceId: string; multiNativeLocale?: string }> = {
-  // English - India (native Indian English voices)
-  'en-IN': { voiceId: 'Anisha' },
-  'en-US': { voiceId: 'Natalie' },
+const VOICE_MAP: Record<string, { voiceId: string; multiNativeLocale?: string; style?: string }> = {
+  // English - India (native Indian English voices from GEN2)
+  'en-IN': { voiceId: 'en-IN-priya', style: 'Conversational' },
+  'en-US': { voiceId: 'en-US-natalie', style: 'Conversational' },
   
-  // Hindi - India (native Hindi voices)
-  'hi-IN': { voiceId: 'Namrita' },
-  'hinglish': { voiceId: 'Namrita' },
+  // Hindi - India (using Ruby with hi-IN locale - supports Hindi natively)
+  'hi-IN': { voiceId: 'en-UK-ruby', multiNativeLocale: 'hi-IN', style: 'Conversational' },
+  'hinglish': { voiceId: 'en-UK-ruby', multiNativeLocale: 'hi-IN', style: 'Conversational' },
   
-  // Tamil - India
-  'ta-IN': { voiceId: 'Alicia', multiNativeLocale: 'ta-IN' },
+  // Tamil - India (using Iniya or Suresh)
+  'ta-IN': { voiceId: 'ta-IN-suresh', style: 'Conversational' },
   
-  // Telugu - India  
-  'te-IN': { voiceId: 'Josie', multiNativeLocale: 'te-IN' },
+  // Telugu - India (using Ruby with te-IN locale)
+  'te-IN': { voiceId: 'en-UK-ruby', multiNativeLocale: 'te-IN', style: 'Conversational' },
   
-  // Bengali/Bangla - India
-  'bn-IN': { voiceId: 'Lia', multiNativeLocale: 'bn-IN' },
+  // Bengali/Bangla - India (using Ishani)
+  'bn-IN': { voiceId: 'bn-IN-ishani', style: 'Conversational' },
   
-  // Marathi - India
-  'mr-IN': { voiceId: 'Rujuta' },
+  // Marathi - India (using Ruby with mr-IN locale)
+  'mr-IN': { voiceId: 'en-UK-ruby', multiNativeLocale: 'mr-IN', style: 'Conversational' },
   
-  // Gujarati - India
-  'gu-IN': { voiceId: 'Lia', multiNativeLocale: 'gu-IN' },
+  // Gujarati - India (using Ruby with gu-IN locale)
+  'gu-IN': { voiceId: 'en-UK-ruby', multiNativeLocale: 'gu-IN', style: 'Conversational' },
   
-  // Kannada - India
-  'kn-IN': { voiceId: 'Julia', multiNativeLocale: 'kn-IN' },
+  // Kannada - India (using Ruby with kn-IN locale)
+  'kn-IN': { voiceId: 'en-UK-ruby', multiNativeLocale: 'kn-IN', style: 'Conversational' },
   
-  // Malayalam - India
-  'ml-IN': { voiceId: 'Alicia', multiNativeLocale: 'ml-IN' },
+  // Malayalam - India (using Ruby with ml-IN locale)
+  'ml-IN': { voiceId: 'en-UK-ruby', multiNativeLocale: 'ml-IN', style: 'Conversational' },
   
-  // Punjabi - India
-  'pa-IN': { voiceId: 'Harman' },
+  // Punjabi - India (using Ruby with pa-IN locale)
+  'pa-IN': { voiceId: 'en-UK-ruby', multiNativeLocale: 'pa-IN', style: 'Conversational' },
   
   // Odia - India (fallback to English India)
-  'or-IN': { voiceId: 'Anisha' },
+  'or-IN': { voiceId: 'en-IN-priya', style: 'Conversational' },
   
   // Assamese - India (fallback to Bengali voice)
-  'as-IN': { voiceId: 'Lia', multiNativeLocale: 'bn-IN' },
+  'as-IN': { voiceId: 'bn-IN-ishani', style: 'Conversational' },
 };
 
-const DEFAULT_VOICE = { voiceId: 'Anisha' };
+const DEFAULT_VOICE = { voiceId: 'en-IN-priya', style: 'Conversational' };
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -75,18 +75,22 @@ serve(async (req) => {
     }
 
     const voiceConfig = VOICE_MAP[language] || DEFAULT_VOICE;
-    console.log(`Generating speech with Murf AI FALCON - voice: ${voiceConfig.voiceId}, language: ${language}, multiNativeLocale: ${voiceConfig.multiNativeLocale || 'none'}`);
+    console.log(`Generating speech with Murf AI GEN2 - voice: ${voiceConfig.voiceId}, language: ${language}, multiNativeLocale: ${voiceConfig.multiNativeLocale || 'none'}`);
 
-    // Build request body
+    // Build request body for GEN2 model
     const requestBody: Record<string, unknown> = {
       text: text,
       voiceId: voiceConfig.voiceId,
       format: 'MP3',
       encodeAsBase64: true,
-      model: 'FALCON',
-      sampleRate: 24000,
-      style: 'Conversation',
+      modelVersion: 'GEN2',
+      sampleRate: 44100,
     };
+
+    // Add style if specified
+    if (voiceConfig.style) {
+      requestBody.style = voiceConfig.style;
+    }
 
     // Add multiNativeLocale for cross-language voices
     if (voiceConfig.multiNativeLocale) {
