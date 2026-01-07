@@ -73,7 +73,8 @@ serve(async (req) => {
     const blob = new Blob([binaryAudio as unknown as ArrayBuffer], { type: audioMimeType });
     formData.append('file', blob, `audio.${extension}`);
     formData.append('model', 'whisper-1');
-    formData.append('language', 'en'); // Can be auto-detected
+    // Don't specify language - let Whisper auto-detect
+    formData.append('response_format', 'verbose_json'); // This returns detected language
 
     // Use OpenAI's Whisper API
     const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
@@ -88,12 +89,10 @@ serve(async (req) => {
       const errorText = await response.text();
       console.error("Whisper API error:", response.status, errorText);
       
-      // If Whisper fails, try using Gemini with a simple prompt
-      console.log("Falling back to Gemini for audio description");
-      
       return new Response(
         JSON.stringify({ 
           text: "", 
+          detectedLanguage: "en-IN",
           error: "Voice transcription not available. Please type your message.",
           fallback: true
         }),
@@ -105,10 +104,32 @@ serve(async (req) => {
     }
 
     const result = await response.json();
-    console.log("Transcription successful:", result.text?.slice(0, 50));
+    console.log("Transcription successful:", result.text?.slice(0, 50), "Language:", result.language);
+
+    // Map Whisper language codes to our Indian language codes
+    const languageMap: Record<string, string> = {
+      'en': 'en-IN',
+      'hi': 'hi-IN',
+      'ta': 'ta-IN',
+      'te': 'te-IN',
+      'bn': 'bn-IN',
+      'mr': 'mr-IN',
+      'gu': 'gu-IN',
+      'kn': 'kn-IN',
+      'ml': 'ml-IN',
+      'pa': 'pa-IN',
+      'or': 'or-IN',
+      'as': 'as-IN'
+    };
+
+    const whisperLang = result.language || 'en';
+    const detectedLanguage = languageMap[whisperLang] || 'en-IN';
 
     return new Response(
-      JSON.stringify({ text: result.text || "" }),
+      JSON.stringify({ 
+        text: result.text || "",
+        detectedLanguage
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 

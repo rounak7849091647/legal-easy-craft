@@ -4,9 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 interface WhisperRecognitionHook {
   isRecording: boolean;
   transcript: string;
+  detectedLanguage: string;
   error: string | null;
   startRecording: () => Promise<void>;
-  stopRecording: () => Promise<string>;
+  stopRecording: () => Promise<{ text: string; language: string }>;
   resetTranscript: () => void;
   isSupported: boolean;
   isProcessing: boolean;
@@ -16,6 +17,7 @@ export const useWhisperRecognition = (): WhisperRecognitionHook => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcript, setTranscript] = useState('');
+  const [detectedLanguage, setDetectedLanguage] = useState('en-IN');
   const [error, setError] = useState<string | null>(null);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -98,10 +100,10 @@ export const useWhisperRecognition = (): WhisperRecognitionHook => {
     }
   }, [isSupported]);
 
-  const stopRecording = useCallback(async (): Promise<string> => {
+  const stopRecording = useCallback(async (): Promise<{ text: string; language: string }> => {
     return new Promise((resolve) => {
       if (!mediaRecorderRef.current || !isRecording) {
-        resolve('');
+        resolve({ text: '', language: 'en-IN' });
         return;
       }
 
@@ -115,7 +117,7 @@ export const useWhisperRecognition = (): WhisperRecognitionHook => {
         }
 
         if (audioChunksRef.current.length === 0) {
-          resolve('');
+          resolve({ text: '', language: 'en-IN' });
           return;
         }
 
@@ -127,7 +129,7 @@ export const useWhisperRecognition = (): WhisperRecognitionHook => {
           
           if (audioBlob.size < 1000) {
             setIsProcessing(false);
-            resolve('');
+            resolve({ text: '', language: 'en-IN' });
             return;
           }
 
@@ -148,14 +150,16 @@ export const useWhisperRecognition = (): WhisperRecognitionHook => {
 
           if (fnError || !data?.text) {
             setError(data?.error || 'Transcription failed');
-            resolve('');
+            resolve({ text: '', language: 'en-IN' });
           } else {
+            const lang = data.detectedLanguage || 'en-IN';
             setTranscript(data.text);
-            resolve(data.text);
+            setDetectedLanguage(lang);
+            resolve({ text: data.text, language: lang });
           }
         } catch (err) {
           setError('Processing failed');
-          resolve('');
+          resolve({ text: '', language: 'en-IN' });
         } finally {
           setIsProcessing(false);
           audioChunksRef.current = [];
@@ -169,12 +173,14 @@ export const useWhisperRecognition = (): WhisperRecognitionHook => {
 
   const resetTranscript = useCallback(() => {
     setTranscript('');
+    setDetectedLanguage('en-IN');
     setError(null);
   }, []);
 
   return {
     isRecording,
     transcript,
+    detectedLanguage,
     error,
     startRecording,
     stopRecording,
