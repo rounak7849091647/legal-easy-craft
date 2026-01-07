@@ -73,10 +73,12 @@ serve(async (req) => {
     const blob = new Blob([binaryAudio as unknown as ArrayBuffer], { type: audioMimeType });
     formData.append('file', blob, `audio.${extension}`);
     formData.append('model', 'whisper-1');
-    // Don't specify language - let Whisper auto-detect
-    formData.append('response_format', 'verbose_json'); // This returns detected language
+    // Use verbose_json to get detected language info
+    // IMPORTANT: Using transcriptions endpoint (NOT translations) to keep original language
+    // This ensures Hindi stays in Hindi script, Tamil in Tamil script, etc.
+    formData.append('response_format', 'verbose_json');
 
-    // Use OpenAI's Whisper API
+    // Use OpenAI's TRANSCRIPTIONS API (not translations) - keeps original language text
     const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
       method: "POST",
       headers: {
