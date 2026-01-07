@@ -279,8 +279,11 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
     if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
     
     if (voiceMode || isListening) {
-      // Turn off voice mode / stop recording
+      // Turn off voice mode FIRST to allow typing immediately
       setVoiceMode(false);
+      setMessage('');
+      resetTranscript();
+      lastTranscriptRef.current = '';
       
       // For iOS, stopListening returns the transcribed text
       const finalText = await stopListening();
@@ -294,9 +297,6 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
           onSend(textToSend.trim(), uploadedDoc?.content);
         }
       }
-      setMessage('');
-      resetTranscript();
-      lastTranscriptRef.current = '';
     } else {
       // Turn on voice mode / start recording
       setVoiceMode(true);
