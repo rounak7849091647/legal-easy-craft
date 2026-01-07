@@ -143,10 +143,10 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
         }
 
         try {
-          const text = await stopRecording();
+          const result = await stopRecording();
           setIsActive(false);
-          if (text.trim() && onTranscript) {
-            onTranscript(text.trim(), 'en-IN');
+          if (result.text.trim() && onTranscript) {
+            onTranscript(result.text.trim(), result.language);
           }
           resetTranscript();
           lastTranscriptRef.current = '';
