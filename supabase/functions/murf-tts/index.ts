@@ -6,44 +6,44 @@ const corsHeaders = {
 };
 
 // Voice mapping for Indian languages - using Murf's GEN2 model voices
-// Using native Indian voices for best pronunciation
+// Using native Indian voices with modern, conversational style for Gen Z users
 const VOICE_MAP: Record<string, { voiceId: string; multiNativeLocale?: string; style?: string }> = {
-  // English - India (native Indian English voices from GEN2)
+  // English - India (native Indian English - young, modern voice)
   'en-IN': { voiceId: 'en-IN-priya', style: 'Conversational' },
   'en-US': { voiceId: 'en-US-natalie', style: 'Conversational' },
   
-  // Hindi - India (using Ruby with hi-IN locale - supports Hindi natively)
+  // Hindi - India (Ruby with modern Hindi locale - casual and friendly)
   'hi-IN': { voiceId: 'en-UK-ruby', multiNativeLocale: 'hi-IN', style: 'Conversational' },
   'hinglish': { voiceId: 'en-UK-ruby', multiNativeLocale: 'hi-IN', style: 'Conversational' },
   
-  // Tamil - India (using Iniya or Suresh)
+  // Tamil - India (native Tamil voice - clear and modern)
   'ta-IN': { voiceId: 'ta-IN-suresh', style: 'Conversational' },
   
-  // Telugu - India (using Ruby with te-IN locale)
+  // Telugu - India (Ruby with Telugu locale - friendly tone)
   'te-IN': { voiceId: 'en-UK-ruby', multiNativeLocale: 'te-IN', style: 'Conversational' },
   
-  // Bengali/Bangla - India (using Ishani)
+  // Bengali/Bangla - India (native Bengali voice - warm and clear)
   'bn-IN': { voiceId: 'bn-IN-ishani', style: 'Conversational' },
   
-  // Marathi - India (using Ruby with mr-IN locale)
+  // Marathi - India (Ruby with Marathi locale)
   'mr-IN': { voiceId: 'en-UK-ruby', multiNativeLocale: 'mr-IN', style: 'Conversational' },
   
-  // Gujarati - India (using Ruby with gu-IN locale)
+  // Gujarati - India (Ruby with Gujarati locale)
   'gu-IN': { voiceId: 'en-UK-ruby', multiNativeLocale: 'gu-IN', style: 'Conversational' },
   
-  // Kannada - India (using Ruby with kn-IN locale)
+  // Kannada - India (Ruby with Kannada locale)
   'kn-IN': { voiceId: 'en-UK-ruby', multiNativeLocale: 'kn-IN', style: 'Conversational' },
   
-  // Malayalam - India (using Ruby with ml-IN locale)
+  // Malayalam - India (Ruby with Malayalam locale)
   'ml-IN': { voiceId: 'en-UK-ruby', multiNativeLocale: 'ml-IN', style: 'Conversational' },
   
-  // Punjabi - India (using Ruby with pa-IN locale)
+  // Punjabi - India (Ruby with Punjabi locale)
   'pa-IN': { voiceId: 'en-UK-ruby', multiNativeLocale: 'pa-IN', style: 'Conversational' },
   
-  // Odia - India (fallback to English India)
-  'or-IN': { voiceId: 'en-IN-priya', style: 'Conversational' },
+  // Odia - India (Ruby with Odia locale - proper Odia support!)
+  'or-IN': { voiceId: 'en-UK-ruby', multiNativeLocale: 'or-IN', style: 'Conversational' },
   
-  // Assamese - India (fallback to Bengali voice)
+  // Assamese - India (fallback to Bengali voice - similar language family)
   'as-IN': { voiceId: 'bn-IN-ishani', style: 'Conversational' },
 };
 
