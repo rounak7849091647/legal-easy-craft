@@ -73,10 +73,14 @@ serve(async (req) => {
     const blob = new Blob([binaryAudio as unknown as ArrayBuffer], { type: audioMimeType });
     formData.append('file', blob, `audio.${extension}`);
     formData.append('model', 'whisper-1');
-    // Use verbose_json to get detected language info
+    // Use verbose_json to get detected language info AND keep original script
     // IMPORTANT: Using transcriptions endpoint (NOT translations) to keep original language
-    // This ensures Hindi stays in Hindi script, Tamil in Tamil script, etc.
+    // This ensures Hindi stays in Devanagari, Tamil in Tamil script, etc.
     formData.append('response_format', 'verbose_json');
+    // Add prompt hint to preserve native scripts for Indian languages
+    formData.append('prompt', 'Transcribe in the original language script. हिंदी में देवनागरी लिपि। தமிழில் தமிழ் எழுத்துக்கள். తెలుగులో తెలుగు లిపి. বাংলায় বাংলা লিপি. ಕನ್ನಡದಲ್ಲಿ ಕನ್ನಡ ಲಿಪಿ. മലയാളത്തിൽ മലയാളം ലിപി. ગુજરાતીમાં ગુજરાતી લિપિ. ਪੰਜਾਬੀ ਵਿੱਚ ਗੁਰਮੁਖੀ. ଓଡ଼ିଆରେ ଓଡ଼ିଆ ଲିପି. অসমীয়াত অসমীয়া লিপি.');
+
+    console.log("Calling Whisper transcriptions API with native script prompt...");
 
     // Use OpenAI's TRANSCRIPTIONS API (not translations) - keeps original language text
     const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
@@ -106,9 +110,10 @@ serve(async (req) => {
     }
 
     const result = await response.json();
-    console.log("Transcription successful:", result.text?.slice(0, 50), "Language:", result.language);
+    console.log("Transcription result - Text sample:", result.text?.slice(0, 100), "| Detected language:", result.language);
 
     // Map Whisper language codes to our Indian language codes
+    // All 14 supported languages including Hinglish detection
     const languageMap: Record<string, string> = {
       'en': 'en-IN',
       'hi': 'hi-IN',
@@ -121,11 +126,38 @@ serve(async (req) => {
       'ml': 'ml-IN',
       'pa': 'pa-IN',
       'or': 'or-IN',
-      'as': 'as-IN'
+      'as': 'as-IN',
+      // Fallbacks for any variations
+      'ory': 'or-IN', // Odia alternate code
+      'ori': 'or-IN', // Odia alternate code
+      'asm': 'as-IN', // Assamese alternate code
+      'punjabi': 'pa-IN',
+      'hindi': 'hi-IN',
+      'tamil': 'ta-IN',
+      'telugu': 'te-IN',
+      'bengali': 'bn-IN',
+      'marathi': 'mr-IN',
+      'gujarati': 'gu-IN',
+      'kannada': 'kn-IN',
+      'malayalam': 'ml-IN',
+      'odia': 'or-IN',
+      'assamese': 'as-IN'
     };
 
-    const whisperLang = result.language || 'en';
-    const detectedLanguage = languageMap[whisperLang] || 'en-IN';
+    const whisperLang = (result.language || 'en').toLowerCase();
+    let detectedLanguage = languageMap[whisperLang] || 'en-IN';
+    
+    // Check if it's Hinglish (Hindi words in Roman script mixed with English)
+    // Detect by checking if language is 'en' but text contains Hindi patterns
+    if (whisperLang === 'en' && result.text) {
+      const hinglishPatterns = /\b(kya|hai|hain|nahi|aur|mein|toh|kaise|kyun|kab|kaun|kaha|ho|kar|raha|rahe|tha|thi|the)\b/i;
+      if (hinglishPatterns.test(result.text)) {
+        detectedLanguage = 'hinglish';
+        console.log("Detected Hinglish based on text patterns");
+      }
+    }
+
+    console.log("Final detected language:", detectedLanguage);
 
     return new Response(
       JSON.stringify({ 
