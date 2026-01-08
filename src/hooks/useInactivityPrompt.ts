@@ -11,8 +11,8 @@ const INACTIVITY_PROMPTS = [
   "Do you need any more help?"
 ];
 
-const INACTIVITY_TIMEOUT = 60000; // 60 seconds
-const PROMPT_RESPONSE_TIMEOUT = 15000; // 15 seconds to respond to each prompt
+const INACTIVITY_TIMEOUT = 15000; // 15 seconds
+const PROMPT_RESPONSE_TIMEOUT = 10000; // 10 seconds to respond to each prompt
 
 interface UseInactivityPromptOptions {
   onPrompt: (message: string) => void;
