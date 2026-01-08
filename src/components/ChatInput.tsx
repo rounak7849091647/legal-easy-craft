@@ -3,6 +3,7 @@ import { Send, Mic, Square, Paperclip, X, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { useWhisperRecognition } from '@/hooks/useWhisperRecognition';
+import { useInactivityPrompt } from '@/hooks/useInactivityPrompt';
 import { toast } from 'sonner';
 import { isIOSDevice } from '@/lib/device/isIOSDevice';
 
@@ -14,6 +15,7 @@ interface ChatInputProps {
   onVoiceTranscript?: (transcript: string, language: string) => void;
   continuousMode?: boolean;
   onContinuousModeChange?: (active: boolean) => void;
+  onInactivityPrompt?: (message: string) => void;
 }
 
 interface UploadedDocument {
@@ -31,6 +33,7 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
   onVoiceTranscript,
   continuousMode = false,
   onContinuousModeChange,
+  onInactivityPrompt,
 }, ref) => {
   const [message, setMessage] = useState('');
   const [voiceMode, setVoiceMode] = useState(false);
@@ -84,6 +87,33 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
   const restartTimerRef = useRef<NodeJS.Timeout | null>(null);
   const wasSpeakingRef = useRef<boolean>(false);
 
+  // Inactivity prompt handler - auto-close mic after 3 unanswered prompts
+  const handleInactivityClose = useCallback(() => {
+    console.log('Closing voice mode due to inactivity');
+    setVoiceMode(false);
+    setMessage('');
+    resetTranscript();
+    lastTranscriptRef.current = '';
+    stopListening();
+    toast.info('Voice mode closed due to inactivity');
+  }, [resetTranscript, stopListening]);
+
+  const handleInactivityPrompt = useCallback((promptMessage: string) => {
+    console.log('Inactivity prompt:', promptMessage);
+    if (onInactivityPrompt) {
+      onInactivityPrompt(promptMessage);
+    }
+  }, [onInactivityPrompt]);
+
+  const { onUserActivity, currentPromptIndex } = useInactivityPrompt({
+    onPrompt: handleInactivityPrompt,
+    onClose: handleInactivityClose,
+    isActive: voiceMode,
+    isListening,
+    isSpeaking,
+    isLoading
+  });
+
   // Clear timers on unmount
   useEffect(() => {
     return () => {
@@ -99,6 +129,9 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
     
     if (transcript && voiceMode) {
       setMessage(transcript);
+      
+      // Reset inactivity timer when user is speaking
+      onUserActivity();
       
       // Auto-send after 2.5 seconds of pause
       if (transcript !== lastTranscriptRef.current) {
@@ -120,7 +153,7 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
         }, 2500);
       }
     }
-  }, [transcript, detectedLanguage, onSend, onVoiceTranscript, voiceMode, uploadedDoc, isIOS, resetTranscript]);
+  }, [transcript, detectedLanguage, onSend, onVoiceTranscript, voiceMode, uploadedDoc, isIOS, resetTranscript, onUserActivity]);
 
   // Restart listening when it stops (browser auto-stops after silence) - non-iOS only
   useEffect(() => {
@@ -445,13 +478,15 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
       
       {voiceMode && (
         <p className={`text-center text-xs mt-2 ${
+          currentPromptIndex > 0 ? 'text-orange-400 animate-pulse' :
           isProcessingVoice ? 'text-yellow-400 animate-pulse' :
           isSpeaking ? 'text-primary' : isListening ? 'text-green-400 animate-pulse' : 'text-muted-foreground'
         }`}>
-          {isProcessingVoice ? 'Transcribing audio...' :
+          {currentPromptIndex > 0 ? `Waiting for response... (${currentPromptIndex}/3)` :
+           isProcessingVoice ? 'Transcribing audio...' :
            isSpeaking ? (isIOS ? 'AI speaking...' : 'AI speaking... will resume listening after') : 
            isListening && transcript ? (isIOS ? 'Tap square to send' : 'Auto-sending after pause...') :
-           isListening ? (isIOS ? 'Recording... tap to send' : 'Listening...') : 
+           isListening ? (isIOS ? 'Recording... tap to send' : 'Continuous listening mode active') : 
            isLoading ? 'Processing...' : 'Ready'}
         </p>
       )}

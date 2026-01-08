@@ -64,6 +64,12 @@ const MainContent = ({ isMobile = false }: MainContentProps) => {
     setContinuousVoiceMode(active);
   }, []);
 
+  // Handle inactivity prompts - AI asks if user is still there
+  const handleInactivityPrompt = useCallback(async (promptMessage: string) => {
+    // Send the prompt as an AI-initiated message
+    await sendMessage(promptMessage, currentLanguage.code);
+  }, [sendMessage, currentLanguage.code]);
+
   const hasMessages = messages.length > 0;
 
   return (
@@ -98,6 +104,7 @@ const MainContent = ({ isMobile = false }: MainContentProps) => {
                 onVoiceTranscript={handleVoiceTranscript}
                 continuousMode={continuousVoiceMode}
                 onContinuousModeChange={handleContinuousModeChange}
+                onInactivityPrompt={handleInactivityPrompt}
               />
             </div>
           </div>
@@ -121,6 +128,7 @@ const MainContent = ({ isMobile = false }: MainContentProps) => {
                 onVoiceTranscript={handleVoiceTranscript}
                 continuousMode={continuousVoiceMode}
                 onContinuousModeChange={handleContinuousModeChange}
+                onInactivityPrompt={handleInactivityPrompt}
               />
             </div>
           </div>
