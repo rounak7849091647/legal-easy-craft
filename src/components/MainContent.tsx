@@ -64,11 +64,12 @@ const MainContent = ({ isMobile = false }: MainContentProps) => {
     setContinuousVoiceMode(active);
   }, []);
 
-  // Handle inactivity prompts - AI asks if user is still there
-  const handleInactivityPrompt = useCallback(async (promptMessage: string) => {
-    // Send the prompt as an AI-initiated message
-    await sendMessage(promptMessage, currentLanguage.code);
-  }, [sendMessage, currentLanguage.code]);
+  // Handle inactivity prompts - AI SPEAKS directly to user (not as a message)
+  const handleInactivityPrompt = useCallback((promptMessage: string) => {
+    // AI speaks the prompt directly using TTS - NOT added to chat
+    console.log('AI speaking inactivity prompt:', promptMessage);
+    speak(promptMessage, currentLanguage.code);
+  }, [speak, currentLanguage.code]);
 
   const hasMessages = messages.length > 0;
 
