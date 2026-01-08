@@ -43,10 +43,10 @@ export const useInactivityPrompt = ({
   // Reset inactivity timer
   const resetInactivityTimer = useCallback(() => {
     lastActivityRef.current = Date.now();
-    
+
     // Reset prompt state
     setState({ promptIndex: 0, isWaitingForResponse: false });
-    
+
     // Clear existing timers
     if (inactivityTimerRef.current) {
       clearTimeout(inactivityTimerRef.current);
@@ -56,15 +56,16 @@ export const useInactivityPrompt = ({
       clearTimeout(promptTimerRef.current);
       promptTimerRef.current = null;
     }
-    
-    // Only set new timer if voice mode is active and not loading/speaking
-    if (isActive && !isSpeaking && !isLoading) {
+
+    // Only set new timer if voice mode is active, we're listening for the user,
+    // and the AI isn't speaking/loading.
+    if (isActive && isListening && !isSpeaking && !isLoading) {
       inactivityTimerRef.current = setTimeout(() => {
         // Start the prompt sequence
         triggerNextPrompt(0);
       }, INACTIVITY_TIMEOUT);
     }
-  }, [isActive, isSpeaking, isLoading]);
+  }, [isActive, isListening, isSpeaking, isLoading]);
 
   // Trigger the next prompt in sequence
   const triggerNextPrompt = useCallback((currentIndex: number) => {
@@ -114,13 +115,23 @@ export const useInactivityPrompt = ({
       return;
     }
 
-    // Reset timer when AI finishes speaking (conversation just happened).
+    // Never allow the inactivity countdown to run while the AI is speaking/loading,
+    // or when we're not actually listening for the user.
+    if (isSpeaking || isLoading || !isListening) {
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+        inactivityTimerRef.current = null;
+      }
+      return;
+    }
+
+    // Start/reset timer when we're ready for user input.
     // IMPORTANT: don't reset while we're in the inactivity prompt sequence,
     // otherwise prompt #1 repeats forever and #2/#3 never run.
-    if (!isSpeaking && !isLoading && isActive && !state.isWaitingForResponse) {
+    if (!state.isWaitingForResponse) {
       resetInactivityTimer();
     }
-  }, [isActive, isSpeaking, isLoading, resetInactivityTimer, state.isWaitingForResponse]);
+  }, [isActive, isListening, isSpeaking, isLoading, resetInactivityTimer, state.isWaitingForResponse]);
 
   // Cleanup on unmount
   useEffect(() => {
