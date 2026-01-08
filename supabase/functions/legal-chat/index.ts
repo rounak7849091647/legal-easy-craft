@@ -262,7 +262,7 @@ ${languageInstructions}`;
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages,
-        max_tokens: hasDocument ? 1000 : 600,
+        max_tokens: 4000,
         temperature: 0.7,
       }),
     });
