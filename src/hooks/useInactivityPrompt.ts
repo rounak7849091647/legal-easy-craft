@@ -114,11 +114,13 @@ export const useInactivityPrompt = ({
       return;
     }
 
-    // Reset timer when AI finishes speaking (conversation just happened)
-    if (!isSpeaking && !isLoading && isActive) {
+    // Reset timer when AI finishes speaking (conversation just happened).
+    // IMPORTANT: don't reset while we're in the inactivity prompt sequence,
+    // otherwise prompt #1 repeats forever and #2/#3 never run.
+    if (!isSpeaking && !isLoading && isActive && !state.isWaitingForResponse) {
       resetInactivityTimer();
     }
-  }, [isActive, isSpeaking, isLoading, resetInactivityTimer]);
+  }, [isActive, isSpeaking, isLoading, resetInactivityTimer, state.isWaitingForResponse]);
 
   // Cleanup on unmount
   useEffect(() => {
