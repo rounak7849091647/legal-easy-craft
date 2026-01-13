@@ -1,11 +1,39 @@
 import { useState } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { Search, FileText, Eye, Download, Star, Copy, Check, Briefcase, Home, Users, Scale, Building, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import PageLayout from '@/components/PageLayout';
+import SEOHead from '@/components/SEOHead';
+
+const documentsSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'Legal Document Templates',
+  description: 'Free legal document templates for Indian law including rental agreements, employment contracts, NDAs, and more.',
+  numberOfItems: 18,
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'House Rental Agreement',
+      description: 'Standard house rental agreement template for residential properties in India',
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Employment Contract',
+      description: 'Comprehensive employment contract template for hiring employees',
+    },
+    {
+      '@type': 'ListItem',
+      position: 3,
+      name: 'Non-Disclosure Agreement',
+      description: 'NDA template for protecting confidential business information',
+    },
+  ],
+};
 
 interface DocumentTemplate {
   id: number;
@@ -498,10 +526,17 @@ const Documents = () => {
 
   return (
     <PageLayout>
-      <Helmet>
-        <title>Legal Documents - LegalCareAI</title>
-        <meta name="description" content="Access 100+ legal document templates. Download rental agreements, employment contracts, NDAs, and more." />
-      </Helmet>
+      <SEOHead
+        title="Legal Document Templates India - 100+ Free Downloads"
+        description="Download 100+ free legal document templates for India. Rental agreements, employment contracts, NDAs, power of attorney, sale deeds, and more. Ready to use formats."
+        keywords="legal documents India, rental agreement template, employment contract template, NDA template, power of attorney format, sale deed, legal templates free download"
+        canonicalUrl="/documents"
+        structuredData={documentsSchema}
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Legal Documents', url: '/documents' },
+        ]}
+      />
 
       <div className="p-3 sm:p-6 lg:p-8">
         {/* Header */}

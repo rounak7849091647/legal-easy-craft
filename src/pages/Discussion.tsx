@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
-import { Helmet } from 'react-helmet-async';
 import PageLayout from '@/components/PageLayout';
+import SEOHead from '@/components/SEOHead';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -150,10 +150,16 @@ ${document}`;
 
   return (
     <PageLayout>
-      <Helmet>
-        <title>Discussion - LegalCareAI</title>
-        <meta name="description" content="Private AI-powered document discussion for deeper insights" />
-      </Helmet>
+      <SEOHead
+        title="Document Discussion Room - AI-Powered Analysis"
+        description="Upload documents and have thoughtful, private AI-powered discussions. Get deeper insights on legal documents, contracts, and agreements."
+        keywords="document analysis, AI discussion, legal document review, contract analysis, document insights"
+        canonicalUrl="/discussion"
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Discussion', url: '/discussion' },
+        ]}
+      />
 
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         <div className="text-center mb-6">
