@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { Search, FileText, Eye, Download, Star, Copy, Check, Briefcase, Home, Users, Scale, Building, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import PageLayout from '@/components/PageLayout';
+import SEOHead from '@/components/SEOHead';
 
 interface DocumentTemplate {
   id: number;
@@ -496,12 +496,33 @@ const Documents = () => {
     toast.success('Downloaded');
   };
 
+  // Document templates schema
+  const documentsSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Legal Document Templates',
+    description: 'Free legal document templates for India',
+    numberOfItems: documents.length,
+    itemListElement: documents.slice(0, 10).map((doc, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      item: {
+        '@type': 'DigitalDocument',
+        name: doc.name,
+        description: doc.description,
+      },
+    })),
+  };
+
   return (
     <PageLayout>
-      <Helmet>
-        <title>Legal Documents - LegalCareAI</title>
-        <meta name="description" content="Access 100+ legal document templates. Download rental agreements, employment contracts, NDAs, and more." />
-      </Helmet>
+      <SEOHead
+        title="Free Legal Document Templates India - Agreements, Contracts, Deeds"
+        description="Download 100+ free legal document templates. Rental agreements, employment contracts, NDAs, power of attorney, sale deeds, partnership deeds and more for Indian law."
+        keywords="legal documents India, rental agreement template, employment contract, NDA template, power of attorney, sale deed format, partnership deed, affidavit format, legal notice"
+        canonicalUrl="/documents"
+        structuredData={documentsSchema}
+      />
 
       <div className="p-3 sm:p-6 lg:p-8">
         {/* Header */}

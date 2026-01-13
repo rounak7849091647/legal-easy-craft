@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Helmet } from 'react-helmet-async';
 import PageLayout from '@/components/PageLayout';
+import SEOHead from '@/components/SEOHead';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -211,10 +211,12 @@ Content: ${newPost.content}`,
 
   return (
     <PageLayout>
-      <Helmet>
-        <title>Community - LegalCareAI</title>
-        <meta name="description" content="Join the legal community for discussions, advice, and shared experiences" />
-      </Helmet>
+      <SEOHead
+        title="Legal Community Forum India - Ask Questions, Share Experiences"
+        description="Join India's largest legal community forum. Ask legal questions, share experiences, get advice on property disputes, consumer rights, employment issues and more."
+        keywords="legal forum India, ask legal questions, legal advice community, property dispute help, consumer rights forum, employment law questions"
+        canonicalUrl="/community"
+      />
 
       <div className="container mx-auto px-4 py-6 max-w-5xl">
         <div className="text-center mb-6">
