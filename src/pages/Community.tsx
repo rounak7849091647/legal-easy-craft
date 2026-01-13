@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Helmet } from 'react-helmet-async';
 import PageLayout from '@/components/PageLayout';
+import SEOHead from '@/components/SEOHead';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -24,6 +24,13 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+const communitySchema = {
+  '@context': 'https://schema.org',
+  '@type': 'DiscussionForumPosting',
+  headline: 'Legal Community Forum - LegalCareAI',
+  description: 'Join the legal community for discussions, advice, and shared experiences on Indian law matters.',
+};
 
 interface Post {
   id: string;
@@ -211,10 +218,17 @@ Content: ${newPost.content}`,
 
   return (
     <PageLayout>
-      <Helmet>
-        <title>Community - LegalCareAI</title>
-        <meta name="description" content="Join the legal community for discussions, advice, and shared experiences" />
-      </Helmet>
+      <SEOHead
+        title="Legal Community Forum - Discuss & Share Legal Experiences"
+        description="Join India's largest legal community forum. Discuss legal matters, share experiences, get advice from verified lawyers and fellow citizens on property disputes, consumer rights, and more."
+        keywords="legal forum India, legal community, legal advice forum, property dispute help, consumer court experience, lawyer advice, legal discussion"
+        canonicalUrl="/community"
+        structuredData={communitySchema}
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Community', url: '/community' },
+        ]}
+      />
 
       <div className="container mx-auto px-4 py-6 max-w-5xl">
         <div className="text-center mb-6">

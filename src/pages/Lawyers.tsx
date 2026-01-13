@@ -1,12 +1,28 @@
 import { useState, useMemo } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { Search, Users, CheckCircle, Globe, Star, BadgeCheck, MapPin, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import PageLayout from '@/components/PageLayout';
+import SEOHead from '@/components/SEOHead';
 import { lawyers, indianStates, citiesByState, practiceAreas } from '@/data/lawyersData';
+
+const lawyerDirectorySchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: 'Find a Lawyer - LegalCareAI',
+  description: 'Connect with Bar Council verified legal experts across India. 10M+ verified lawyers covering all states and practice areas.',
+  provider: {
+    '@type': 'Organization',
+    name: 'LegalCareAI',
+  },
+  areaServed: {
+    '@type': 'Country',
+    name: 'India',
+  },
+  serviceType: 'Legal Professional Directory',
+};
 
 const Lawyers = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -45,10 +61,17 @@ const Lawyers = () => {
 
   return (
     <PageLayout>
-      <Helmet>
-        <title>Find a Lawyer - LegalCareAI</title>
-        <meta name="description" content="Connect with Bar Council verified legal experts across India. 2M+ verified lawyers, 100% verified, covering 28 States & UTs." />
-      </Helmet>
+      <SEOHead
+        title="Find a Lawyer in India - 10M+ Verified Lawyers"
+        description="Connect with Bar Council verified legal experts across India. Search 10M+ lawyers by state, city, and practice area. 100% verified, 4.8★ average rating."
+        keywords="find lawyer India, Bar Council verified lawyers, legal experts, advocate near me, lawyer directory, criminal lawyer, civil lawyer, corporate lawyer"
+        canonicalUrl="/lawyers"
+        structuredData={lawyerDirectorySchema}
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Find a Lawyer', url: '/lawyers' },
+        ]}
+      />
 
       <div className="p-4 sm:p-6 lg:p-8">
         {/* Header */}

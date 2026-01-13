@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { 
   FileText, Upload, Users, TrendingUp, RefreshCw, Receipt, 
@@ -10,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageLayout from '@/components/PageLayout';
+import SEOHead from '@/components/SEOHead';
 
 const quickServices = [
   { icon: FileText, title: 'File Your Return', description: 'ITR filing with step-by-step guidance', path: '/tax-services/file-return' },
@@ -36,6 +36,51 @@ const taxSlabsNew = [
   { range: '12,00,001 - 15,00,000', rate: '20%' },
   { range: 'Above 15,00,000', rate: '30%' },
 ];
+
+const taxServicesSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: 'Tax Services - LegalCareAI',
+  description: 'Comprehensive tax services for Indian citizens including ITR filing, CA assistance, tax planning, refund tracking, and NRI taxation.',
+  provider: {
+    '@type': 'Organization',
+    name: 'LegalCareAI',
+  },
+  areaServed: {
+    '@type': 'Country',
+    name: 'India',
+  },
+  hasOfferCatalog: {
+    '@type': 'OfferCatalog',
+    name: 'Tax Services',
+    itemListElement: [
+      {
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'Service',
+          name: 'ITR Filing',
+          description: 'File income tax return with step-by-step guidance',
+        },
+      },
+      {
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'Service',
+          name: 'CA Assisted Filing',
+          description: 'Expert CA assistance for tax filing',
+        },
+      },
+      {
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'Service',
+          name: 'Tax Planning',
+          description: 'Optimize your tax savings with expert planning',
+        },
+      },
+    ],
+  },
+};
 
 const TaxServices = () => {
   const [income, setIncome] = useState('');
@@ -82,10 +127,17 @@ const TaxServices = () => {
 
   return (
     <PageLayout>
-      <Helmet>
-        <title>Tax Services - LegalCareAI</title>
-        <meta name="description" content="Comprehensive tax services for Indian citizens. File ITR, get CA assistance, track refunds, and calculate taxes easily." />
-      </Helmet>
+      <SEOHead
+        title="Tax Services India - ITR Filing, Tax Planning & CA Assistance"
+        description="Comprehensive tax services for Indian citizens. File ITR online, get expert CA assistance, track refunds, calculate taxes with our free calculator. FY 2024-25 tax slabs."
+        keywords="ITR filing, income tax return, tax calculator India, CA assisted filing, tax planning, refund status, TDS, NRI taxes, capital gains tax"
+        canonicalUrl="/tax-services"
+        structuredData={taxServicesSchema}
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Tax Services', url: '/tax-services' },
+        ]}
+      />
 
       <div className="p-4 sm:p-6 lg:p-8">
         {/* Header */}
