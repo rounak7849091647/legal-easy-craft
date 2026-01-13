@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { 
   FileText, Upload, Users, TrendingUp, RefreshCw, Receipt, 
@@ -9,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageLayout from '@/components/PageLayout';
-import SEOHead from '@/components/SEOHead';
 
 const quickServices = [
   { icon: FileText, title: 'File Your Return', description: 'ITR filing with step-by-step guidance', path: '/tax-services/file-return' },
@@ -80,48 +80,12 @@ const TaxServices = () => {
     }).format(num);
   };
 
-  // Breadcrumb schema for tax services
-  const breadcrumbSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://legalcareai.com/' },
-      { '@type': 'ListItem', position: 2, name: 'Tax Services', item: 'https://legalcareai.com/tax-services' },
-    ],
-  };
-
-  // Service schema
-  const serviceSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'Service',
-    name: 'Tax Filing Services',
-    provider: {
-      '@type': 'Organization',
-      name: 'LegalCareAI',
-    },
-    serviceType: 'Tax Preparation and Filing',
-    areaServed: { '@type': 'Country', name: 'India' },
-    hasOfferCatalog: {
-      '@type': 'OfferCatalog',
-      name: 'Tax Services',
-      itemListElement: [
-        { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'ITR Filing' } },
-        { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'CA Assisted Filing' } },
-        { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Tax Planning' } },
-        { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'TDS Solutions' } },
-      ],
-    },
-  };
-
   return (
     <PageLayout>
-      <SEOHead
-        title="Tax Services India - ITR Filing, Tax Planning, CA Assistance"
-        description="Comprehensive tax services for Indian citizens. File ITR online, get CA assistance, track refunds, calculate income tax, TDS solutions, NRI taxes, and expert tax advisory."
-        keywords="ITR filing online, income tax calculator India, CA assisted filing, tax planning, TDS solution, NRI tax filing, capital gains tax, tax refund status, income tax India"
-        canonicalUrl="/tax-services"
-        structuredData={{ ...breadcrumbSchema, ...serviceSchema }}
-      />
+      <Helmet>
+        <title>Tax Services - LegalCareAI</title>
+        <meta name="description" content="Comprehensive tax services for Indian citizens. File ITR, get CA assistance, track refunds, and calculate taxes easily." />
+      </Helmet>
 
       <div className="p-4 sm:p-6 lg:p-8">
         {/* Header */}

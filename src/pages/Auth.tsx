@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Scale, Mail, Lock, User, ArrowLeft, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { z } from 'zod';
-import SEOHead from '@/components/SEOHead';
 
 const emailSchema = z.string().email('Please enter a valid email');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
@@ -149,14 +148,7 @@ const Auth = () => {
   }
 
   return (
-    <>
-      <SEOHead
-        title="Sign In - LegalCareAI"
-        description="Sign in or create an account to access LegalCareAI dashboard, case management, and personalized legal assistance."
-        canonicalUrl="/auth"
-        noIndex={true}
-      />
-      <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="flex items-center justify-between p-4 sm:p-6">
         <button 
@@ -309,7 +301,6 @@ const Auth = () => {
         </div>
       </main>
     </div>
-    </>
   );
 };
 

@@ -1,11 +1,11 @@
 import { useState, useMemo } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Search, Users, CheckCircle, Globe, Star, BadgeCheck, MapPin, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import PageLayout from '@/components/PageLayout';
-import SEOHead from '@/components/SEOHead';
 import { lawyers, indianStates, citiesByState, practiceAreas } from '@/data/lawyersData';
 
 const Lawyers = () => {
@@ -43,30 +43,12 @@ const Lawyers = () => {
     });
   }, [searchQuery, selectedState, selectedCity, selectedPractice]);
 
-  // Professional service schema
-  const lawyerServiceSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'ProfessionalService',
-    name: 'LegalCareAI Lawyer Directory',
-    description: 'Connect with Bar Council verified lawyers across India',
-    areaServed: { '@type': 'Country', name: 'India' },
-    serviceType: 'Legal Services',
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.8',
-      reviewCount: '10000',
-    },
-  };
-
   return (
     <PageLayout>
-      <SEOHead
-        title="Find Lawyers in India - Bar Council Verified Legal Experts"
-        description="Connect with 10M+ Bar Council verified lawyers across India. Find lawyers by state, city, and practice area. Criminal, civil, family, corporate law specialists available."
-        keywords="find lawyer India, Bar Council verified lawyers, legal experts India, criminal lawyer, civil lawyer, family lawyer, corporate lawyer, advocate near me"
-        canonicalUrl="/lawyers"
-        structuredData={lawyerServiceSchema}
-      />
+      <Helmet>
+        <title>Find a Lawyer - LegalCareAI</title>
+        <meta name="description" content="Connect with Bar Council verified legal experts across India. 2M+ verified lawyers, 100% verified, covering 28 States & UTs." />
+      </Helmet>
 
       <div className="p-4 sm:p-6 lg:p-8">
         {/* Header */}
