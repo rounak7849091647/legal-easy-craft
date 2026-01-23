@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { getBNSContext } from "./bns-knowledge.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -211,23 +212,38 @@ Remember: Write as if you're explaining to a friend over chai. No markdown forma
     }
 
     // Build system prompt based on context
+    // Get BNS knowledge base for accurate legal information
+    const bnsKnowledge = getBNSContext();
+    
     let systemPrompt = '';
     
     if (hasDocument) {
       // Document Q&A mode
       systemPrompt = `You are CARE, an expert Indian legal assistant with memory of our conversation. A document has been provided. Be precise and cite specific parts of the document when relevant. Remember our previous conversation and refer to it when appropriate.
 
+IMPORTANT LEGAL KNOWLEDGE BASE:
+${bnsKnowledge}
+
 ${languageInstructions}
 
 DOCUMENT CONTENT:
-${documentContent.slice(0, 6000)}
+${documentContent.slice(0, 5000)}
 
-Answer the user's question based on this document and our conversation history.`;
+Answer the user's question based on this document, the legal knowledge base above, and our conversation history. Always cite relevant BNS sections when applicable.`;
     } else {
-      // Normal legal chat mode with memory
-      systemPrompt = `You are CARE, a friendly Indian legal assistant with perfect memory of our conversation. Be warm and helpful. Remember everything we discussed and refer to previous questions/answers when relevant. Provide helpful legal guidance on Indian laws. If the user refers to something from earlier in our conversation, acknowledge and build upon it.
+      // Normal legal chat mode with memory and BNS knowledge
+      systemPrompt = `You are CARE, a friendly Indian legal assistant with perfect memory of our conversation and expert knowledge of Indian laws including the new Bharatiya Nyaya Sanhita (BNS) 2023. Be warm and helpful. Remember everything we discussed and refer to previous questions/answers when relevant. Provide helpful legal guidance on Indian laws.
 
-${languageInstructions}`;
+IMPORTANT LEGAL KNOWLEDGE BASE:
+${bnsKnowledge}
+
+${languageInstructions}
+
+When answering legal questions:
+- Cite specific BNS sections when relevant
+- Explain the IPC to BNS mapping when users mention old IPC sections
+- Highlight new provisions in BNS 2023 when applicable
+- Always mention that BNS replaced IPC from 2023 onwards`;
     }
 
     // Build messages array with conversation history
