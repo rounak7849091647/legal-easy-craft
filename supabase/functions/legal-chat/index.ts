@@ -23,8 +23,15 @@ VOICE OUTPUT GUIDELINES (CRITICAL - MODERN LANGUAGE):
 - NEVER use bullet points or numbered lists
 - Write complete sentences that sound natural when spoken
 - Be warm, supportive, and encouraging
-- Keep responses CONCISE - 2-4 sentences max for simple questions
-- Use casual connectors like "So basically," "The thing is," "Look," etc.`;
+- Give DETAILED, COMPREHENSIVE responses - 4-6 sentences for legal questions
+- Explain the legal context, steps to take, and practical advice
+- Use casual connectors like "So basically," "The thing is," "Look," etc.
+
+LAWYER REFERRAL (IMPORTANT):
+- When users ask about finding a lawyer, ALWAYS refer them to our in-app Lawyer Directory at /lawyers
+- Say something like "You can find verified lawyers right here on our platform - just go to the Lawyers section"
+- Mention we have 75+ verified lawyers across all Indian states with expertise in Criminal Law, Family Law, Property Law, etc.
+- NEVER refer to external bar association websites - we have our own lawyer directory!`;
 
   switch (lang) {
     case 'hi-IN':
@@ -146,14 +153,15 @@ Give 2-3 sentences: what it is, key terms, one warning.`;
       );
     }
 
-    // Build system prompt - ULTRA COMPACT for speed
+    // Build system prompt - Detailed but efficient
     let systemPrompt = hasDocument
-      ? `CARE - Legal AI. Be brief (2 sentences). ${bnsRef}
+      ? `You are CARE, a friendly Indian legal AI assistant. Provide DETAILED, helpful legal guidance. ${bnsRef}
 ${languageInstructions}
-DOC: ${documentContent.slice(0, 2000)}`
-      : `CARE - Legal AI. ${bnsRef}
+DOCUMENT CONTEXT: ${documentContent.slice(0, 3000)}
+Give comprehensive answers explaining the legal situation, relevant laws, and practical next steps.`
+      : `You are CARE, a friendly Indian legal AI assistant. ${bnsRef}
 ${languageInstructions}
-Answer in 1-2 sentences max.`;
+Provide DETAILED legal guidance with context, relevant laws (BNS/IPC sections if applicable), and practical advice. Give 4-6 sentence responses for legal questions.`;
 
     // Build messages
     const messages: ConversationMessage[] = [{ role: "system", content: systemPrompt }];
@@ -178,9 +186,9 @@ Answer in 1-2 sentences max.`;
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash-lite",
+          model: "google/gemini-2.5-flash",
           messages,
-          max_tokens: 200,
+          max_tokens: 500,
           temperature: 0.3,
           stream: true,
         }),
@@ -205,11 +213,11 @@ Answer in 1-2 sentences max.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
-        messages,
-        max_tokens: 200,
-        temperature: 0.3,
-      }),
+          model: "google/gemini-2.5-flash",
+          messages,
+          max_tokens: 500,
+          temperature: 0.3,
+        }),
     });
 
     if (!response.ok) {
