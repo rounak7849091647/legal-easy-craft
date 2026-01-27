@@ -81,8 +81,63 @@ export const useOpenAITTS = (): OpenAITTSHook => {
 
     abortControllerRef.current = new AbortController();
 
+    const isIndianLanguage = INDIAN_LANGUAGES.includes(language);
+
     try {
-      // PRIMARY: Use ElevenLabs turbo for fast, high-quality TTS
+      // PRIMARY: Use Murf for Indian languages (working well), ElevenLabs for English
+      if (isIndianLanguage) {
+        console.log(`Using Murf TTS for Indian language: ${language}`);
+        
+        const murfResponse = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/murf-tts`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({ text, language }),
+            signal: abortControllerRef.current.signal,
+          }
+        );
+
+        if (murfResponse.ok) {
+          const data = await murfResponse.json();
+          if (data.audioContent) {
+            const audioUrl = `data:audio/mpeg;base64,${data.audioContent}`;
+            const audio = new Audio(audioUrl);
+            audio.preload = 'auto';
+            audioRef.current = audio;
+
+            audio.onended = () => {
+              setIsSpeaking(false);
+              audioRef.current = null;
+            };
+
+            audio.onerror = async () => {
+              console.log('Murf audio error, falling back to browser TTS');
+              audioRef.current = null;
+              try {
+                await speakWithBrowserTTS(text, language);
+              } catch (e) {
+                console.error('Browser TTS also failed:', e);
+              }
+              setIsSpeaking(false);
+            };
+
+            setIsLoading(false);
+            setIsSpeaking(true);
+            await audio.play();
+            return;
+          }
+        }
+        
+        // Murf failed - try ElevenLabs as fallback
+        console.log('Murf failed, trying ElevenLabs as fallback');
+      }
+      
+      // SECONDARY: Try ElevenLabs (for English or as fallback)
       console.log(`Using ElevenLabs TTS for ${language}`);
       
       const response = await fetch(
@@ -130,54 +185,6 @@ export const useOpenAITTS = (): OpenAITTSHook => {
         }
       }
 
-      // ElevenLabs failed - try Murf as fallback for Indian languages
-      if (INDIAN_LANGUAGES.includes(language)) {
-        console.log(`ElevenLabs failed, trying Murf TTS for ${language}`);
-        
-        const murfResponse = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/murf-tts`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            },
-            body: JSON.stringify({ text, language }),
-            signal: abortControllerRef.current.signal,
-          }
-        );
-
-        if (murfResponse.ok) {
-          const data = await murfResponse.json();
-          if (data.audioContent) {
-            const audioUrl = `data:audio/mpeg;base64,${data.audioContent}`;
-            const audio = new Audio(audioUrl);
-            audioRef.current = audio;
-
-            audio.onended = () => {
-              setIsSpeaking(false);
-              audioRef.current = null;
-            };
-
-            audio.onerror = async () => {
-              audioRef.current = null;
-              try {
-                await speakWithBrowserTTS(text, language);
-              } catch (e) {
-                console.error('Browser TTS also failed:', e);
-              }
-              setIsSpeaking(false);
-            };
-
-            setIsLoading(false);
-            setIsSpeaking(true);
-            await audio.play();
-            return;
-          }
-        }
-      }
-      
       // All cloud services failed - use browser TTS
       console.log(`Using browser TTS fallback for ${language}`);
       setIsLoading(false);
