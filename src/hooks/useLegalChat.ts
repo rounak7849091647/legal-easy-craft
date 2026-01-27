@@ -24,15 +24,14 @@ interface LegalChatHook {
   setDocumentContext: (content: string | null) => void;
 }
 
-// Format messages for AI context - only include role and content
 const formatMessagesForAI = (messages: Message[]): { role: string; content: string }[] => {
   return messages
     .filter(msg => msg.role === 'user' || msg.role === 'assistant')
-    .map(msg => ({
-      role: msg.role,
-      content: msg.voiceContent || msg.content
-    }));
+    .slice(-10)
+    .map(msg => ({ role: msg.role, content: msg.voiceContent || msg.content }));
 };
+
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/legal-chat`;
 
 export const useLegalChat = (): LegalChatHook => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -48,15 +47,12 @@ export const useLegalChat = (): LegalChatHook => {
     documentContextRef.current = content;
   }, []);
 
-  // Summarize document when uploaded
   const summarizeDocument = useCallback(async (documentContent: string, documentName: string, detectedLanguage: string = 'en-IN') => {
     if (!documentContent || isLoading) return;
 
-    // Store document context
     documentContextRef.current = documentContent;
     setDocumentContext(documentContent);
 
-    // Add a system message indicating document upload
     const uploadMessage: Message = {
       id: `upload-${Date.now()}`,
       role: 'user',
@@ -71,19 +67,12 @@ export const useLegalChat = (): LegalChatHook => {
 
     try {
       const { data, error } = await supabase.functions.invoke('legal-chat', {
-        body: { 
-          sessionId,
-          detectedLanguage,
-          documentContent,
-          action: 'summarize'
-        }
+        body: { sessionId, detectedLanguage, documentContent, action: 'summarize' }
       });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      const summaryContent = data.response || 'Could not generate summary. You can still ask questions about the document.';
+      const summaryContent = data.response || 'Could not generate summary.';
 
       const summaryMessage: Message = {
         id: `summary-${Date.now()}`,
@@ -115,7 +104,6 @@ export const useLegalChat = (): LegalChatHook => {
   const sendMessage = useCallback(async (message: string, detectedLanguage: string = 'en-IN', documentContent?: string) => {
     if (!message.trim() || isLoading) return;
 
-    // If document content is passed without prior summarization, store it
     if (documentContent && !documentContextRef.current) {
       documentContextRef.current = documentContent;
       setDocumentContext(documentContent);
@@ -129,52 +117,109 @@ export const useLegalChat = (): LegalChatHook => {
       language: detectedLanguage
     };
 
-    // Get current messages before adding new one for history
     const currentMessages = [...messages];
-    
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
     setLastLanguage(detectedLanguage);
 
+    // Create placeholder for streaming response
+    const assistantId = `assistant-${Date.now()}`;
+    let fullResponse = '';
+
     try {
-      // Include conversation history for context
       const conversationHistory = formatMessagesForAI(currentMessages);
-      
-      const { data, error } = await supabase.functions.invoke('legal-chat', {
-        body: { 
+
+      // Use streaming for faster perceived response
+      const resp = await fetch(CHAT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
           message: message.trim(),
           sessionId,
           detectedLanguage,
           documentContent: documentContextRef.current || undefined,
-          conversationHistory // Send conversation history
-        }
+          conversationHistory,
+          stream: true
+        }),
       });
 
-      if (error) {
-        throw error;
+      if (!resp.ok || !resp.body) {
+        throw new Error('Failed to get response');
       }
 
-      const displayContent = data.response || 'I apologize, but I could not generate a response. Please try again.';
-      const voiceContent = data.voiceResponse || displayContent;
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let hasAddedMessage = false;
 
-      const assistantMessage: Message = {
-        id: `assistant-${Date.now()}`,
-        role: 'assistant',
-        content: displayContent,
-        voiceContent: voiceContent,
-        timestamp: new Date(),
-        language: data.language || detectedLanguage
-      };
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-      setMessages(prev => [...prev, assistantMessage]);
-      setLastLanguage(data.language || detectedLanguage);
-      setLastVoiceResponse(voiceContent);
+        buffer += decoder.decode(value, { stream: true });
+
+        let newlineIdx: number;
+        while ((newlineIdx = buffer.indexOf('\n')) !== -1) {
+          let line = buffer.slice(0, newlineIdx);
+          buffer = buffer.slice(newlineIdx + 1);
+
+          if (line.endsWith('\r')) line = line.slice(0, -1);
+          if (!line.startsWith('data: ')) continue;
+
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === '[DONE]') break;
+
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              fullResponse += content;
+
+              // Update message in real-time
+              if (!hasAddedMessage) {
+                hasAddedMessage = true;
+                setMessages(prev => [...prev, {
+                  id: assistantId,
+                  role: 'assistant',
+                  content: fullResponse,
+                  voiceContent: fullResponse,
+                  timestamp: new Date(),
+                  language: detectedLanguage
+                }]);
+              } else {
+                setMessages(prev => prev.map(m => 
+                  m.id === assistantId 
+                    ? { ...m, content: fullResponse, voiceContent: fullResponse }
+                    : m
+                ));
+              }
+            }
+          } catch {
+            // Incomplete JSON, continue
+          }
+        }
+      }
+
+      // Final update
+      if (fullResponse) {
+        setMessages(prev => prev.map(m => 
+          m.id === assistantId 
+            ? { ...m, content: fullResponse, voiceContent: fullResponse }
+            : m
+        ));
+        setLastVoiceResponse(fullResponse);
+      }
+
+      setLastLanguage(detectedLanguage);
     } catch (error) {
       console.error('Chat error:', error);
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
         role: 'assistant',
-        content: 'I apologize, but there was an error processing your request. Please try again.',
+        content: 'Sorry, there was an error. Please try again.',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
