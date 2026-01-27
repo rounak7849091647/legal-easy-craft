@@ -1,15 +1,16 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { prepareTextForVoice } from '@/lib/textToVoice';
 
-interface OpenAITTSHook {
+interface BrowserTTSHook {
   isSpeaking: boolean;
   speak: (text: string, language?: string) => Promise<void>;
   stop: () => void;
   isSupported: boolean;
   isLoading: boolean;
+  availableVoices: SpeechSynthesisVoice[];
 }
 
-// Voice preferences for browser TTS (prioritized list)
+// Language to voice name preferences (prioritized list)
 const VOICE_PREFERENCES: Record<string, string[]> = {
   'hi-IN': ['Google हिन्दी', 'Microsoft Swara', 'Hindi India', 'hi-IN', 'Hindi'],
   'hinglish': ['Google हिन्दी', 'Microsoft Swara', 'Hindi India', 'hi-IN', 'Hindi'],
@@ -30,6 +31,7 @@ const VOICE_PREFERENCES: Record<string, string[]> = {
 const findBestVoice = (voices: SpeechSynthesisVoice[], language: string): SpeechSynthesisVoice | null => {
   const preferences = VOICE_PREFERENCES[language] || VOICE_PREFERENCES['en-IN'];
   
+  // First try exact preference matches
   for (const pref of preferences) {
     const match = voices.find(v => 
       v.name.toLowerCase().includes(pref.toLowerCase()) ||
@@ -38,37 +40,48 @@ const findBestVoice = (voices: SpeechSynthesisVoice[], language: string): Speech
     if (match) return match;
   }
   
+  // Try matching by language code
   const langCode = language.split('-')[0];
   const langMatch = voices.find(v => v.lang.startsWith(langCode));
   if (langMatch) return langMatch;
   
+  // Fall back to any English voice
   const englishVoice = voices.find(v => v.lang.startsWith('en'));
-  return englishVoice || voices[0] || null;
+  if (englishVoice) return englishVoice;
+  
+  // Return first available voice
+  return voices[0] || null;
 };
 
-export const useOpenAITTS = (): OpenAITTSHook => {
+export const useBrowserTTS = (): BrowserTTSHook => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   const isSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
 
-  // Load voices
+  // Load voices when available
   useEffect(() => {
     if (!isSupported) return;
 
     const loadVoices = () => {
-      const availableVoices = window.speechSynthesis.getVoices();
-      if (availableVoices.length > 0) {
-        setVoices(availableVoices);
-        console.log(`TTS: Loaded ${availableVoices.length} voices`);
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length > 0) {
+        setAvailableVoices(voices);
+        console.log(`Loaded ${voices.length} TTS voices`);
       }
     };
 
+    // Load immediately if available
     loadVoices();
+
+    // Also listen for voiceschanged event (Chrome loads voices async)
     window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
-    return () => window.speechSynthesis.removeEventListener('voiceschanged', loadVoices);
+
+    return () => {
+      window.speechSynthesis.removeEventListener('voiceschanged', loadVoices);
+    };
   }, [isSupported]);
 
   const stop = useCallback(() => {
@@ -86,7 +99,9 @@ export const useOpenAITTS = (): OpenAITTSHook => {
     stop();
     setIsLoading(true);
 
+    // Clean and prepare text for natural voice output
     const text = prepareTextForVoice(rawText, language);
+    
     if (!text.trim()) {
       setIsLoading(false);
       return;
@@ -96,19 +111,19 @@ export const useOpenAITTS = (): OpenAITTSHook => {
       const utterance = new SpeechSynthesisUtterance(text);
       utteranceRef.current = utterance;
 
-      // Find and set the best voice
-      const bestVoice = findBestVoice(voices, language);
+      // Find the best voice for this language
+      const bestVoice = findBestVoice(availableVoices, language);
       if (bestVoice) {
         utterance.voice = bestVoice;
-        console.log(`TTS: Using ${bestVoice.name} (${bestVoice.lang}) for ${language}`);
+        console.log(`Using voice: ${bestVoice.name} (${bestVoice.lang})`);
       }
 
-      // Set language
+      // Map language codes
       const langMap: Record<string, string> = { 'hinglish': 'hi-IN' };
       utterance.lang = langMap[language] || language;
 
       // Natural speech settings
-      utterance.rate = 0.92;
+      utterance.rate = 0.92; // Slightly slower for clarity
       utterance.pitch = 1.0;
       utterance.volume = 1.0;
 
@@ -129,29 +144,32 @@ export const useOpenAITTS = (): OpenAITTSHook => {
         utteranceRef.current = null;
       };
 
-      // Resume if paused (Chrome bug workaround)
+      // Chrome bug workaround: resume synthesis if paused
       if (window.speechSynthesis.paused) {
         window.speechSynthesis.resume();
       }
 
       window.speechSynthesis.speak(utterance);
 
-      // Chrome stuck speech workaround
-      const checkInterval = setInterval(() => {
+      // Chrome bug workaround: restart synthesis if it gets stuck
+      const checkSpeaking = setInterval(() => {
         if (!window.speechSynthesis.speaking && utteranceRef.current === utterance) {
-          clearInterval(checkInterval);
-          setIsSpeaking(false);
+          clearInterval(checkSpeaking);
+          if (isSpeaking) {
+            setIsSpeaking(false);
+          }
         }
       }, 100);
 
-      setTimeout(() => clearInterval(checkInterval), 60000);
+      // Cleanup interval after max duration (60 seconds)
+      setTimeout(() => clearInterval(checkSpeaking), 60000);
 
     } catch (error) {
       console.error('TTS error:', error);
       setIsLoading(false);
       setIsSpeaking(false);
     }
-  }, [isSupported, voices, stop]);
+  }, [isSupported, availableVoices, stop, isSpeaking]);
 
   return {
     isSpeaking,
@@ -159,5 +177,6 @@ export const useOpenAITTS = (): OpenAITTSHook => {
     stop,
     isSupported,
     isLoading,
+    availableVoices,
   };
 };
