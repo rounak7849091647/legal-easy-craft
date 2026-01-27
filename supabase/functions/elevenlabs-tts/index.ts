@@ -49,9 +49,9 @@ serve(async (req) => {
     
     console.log(`TTS - Language: ${language}, Voice: ${voiceId}, Text length: ${text.length}`);
 
-    // Use multilingual v2 model - best for Indian languages with natural pronunciation
+    // Use turbo v2.5 model - fastest with high quality for Indian languages
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_22050_32`,
       {
         method: "POST",
         headers: {
@@ -59,14 +59,14 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          text: text.substring(0, 5000),
-          model_id: "eleven_multilingual_v2",
+          text: text.substring(0, 3000),
+          model_id: "eleven_turbo_v2_5",
           voice_settings: {
-            stability: 0.65, // Higher stability for clear Indian language pronunciation
-            similarity_boost: 0.75,
-            style: 0.2, // Lower style for more natural, less exaggerated speech
+            stability: 0.6,
+            similarity_boost: 0.7,
+            style: 0.15,
             use_speaker_boost: true,
-            speed: 0.95, // Slightly slower for better pronunciation
+            speed: 1.0,
           },
         }),
       }
