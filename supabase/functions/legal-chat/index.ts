@@ -173,12 +173,12 @@ Remember: Write as if you're explaining to a friend over chai. No markdown forma
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash-lite",
+          model: "google/gemini-3-flash-preview",
           messages: [
             { role: "user", content: summaryPrompt }
           ],
-          max_tokens: 800,
-          temperature: 0.4,
+          max_tokens: 600,
+          temperature: 0.3,
         }),
       });
 
@@ -276,10 +276,10 @@ When answering legal questions:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
+        model: "google/gemini-3-flash-preview",
         messages,
-        max_tokens: 1000,
-        temperature: 0.5,
+        max_tokens: 500,
+        temperature: 0.4,
       }),
     });
 
