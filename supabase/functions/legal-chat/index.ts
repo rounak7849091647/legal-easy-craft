@@ -94,20 +94,19 @@ serve(async (req) => {
     const hasDocument = documentContent && documentContent.length > 0;
     const hasHistory = conversationHistory && Array.isArray(conversationHistory) && conversationHistory.length > 0;
     const languageInstructions = getLanguageInstructions(detectedLanguage);
-    const bnsKnowledge = getBNSContext();
+    const bnsRef = getBNSContext();
 
     // Handle document summarization
     if (action === 'summarize' && hasDocument) {
       console.log(`Summarizing document (${documentContent.length} chars)`);
       
-      const summaryPrompt = `You are CARE, a friendly Indian legal document expert. Analyze this document briefly and conversationally.
+      const summaryPrompt = `You are CARE, a friendly legal assistant. Summarize briefly.
 
 ${languageInstructions}
 
-DOCUMENT:
-${documentContent.slice(0, 4000)}
+DOC: ${documentContent.slice(0, 3000)}
 
-Give a BRIEF summary (3-4 sentences) covering: what it is, key terms, and one important thing to watch out for.`;
+Give 2-3 sentences: what it is, key terms, one warning.`;
 
       const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -116,10 +115,10 @@ Give a BRIEF summary (3-4 sentences) covering: what it is, key terms, and one im
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
+          model: "google/gemini-2.5-flash-lite",
           messages: [{ role: "user", content: summaryPrompt }],
-          max_tokens: 300,
-          temperature: 0.3,
+          max_tokens: 150,
+          temperature: 0.2,
         }),
       });
 
@@ -147,24 +146,14 @@ Give a BRIEF summary (3-4 sentences) covering: what it is, key terms, and one im
       );
     }
 
-    // Build system prompt
+    // Build system prompt - ULTRA COMPACT for speed
     let systemPrompt = hasDocument
-      ? `You are CARE, a friendly Indian legal assistant. A document is provided. Be BRIEF and cite specific parts when relevant.
-
-LEGAL KNOWLEDGE: ${bnsKnowledge.slice(0, 2000)}
-
+      ? `CARE - Legal AI. Be brief (2 sentences). ${bnsRef}
 ${languageInstructions}
-
-DOCUMENT: ${documentContent.slice(0, 3000)}
-
-Answer briefly in 2-4 sentences.`
-      : `You are CARE, a friendly Indian legal assistant with knowledge of Indian laws including BNS 2023.
-
-LEGAL KNOWLEDGE: ${bnsKnowledge.slice(0, 2000)}
-
+DOC: ${documentContent.slice(0, 2000)}`
+      : `CARE - Legal AI. ${bnsRef}
 ${languageInstructions}
-
-Keep answers BRIEF - 2-4 sentences. Cite BNS sections when relevant.`;
+Answer in 1-2 sentences max.`;
 
     // Build messages
     const messages: ConversationMessage[] = [{ role: "system", content: systemPrompt }];
@@ -189,10 +178,10 @@ Keep answers BRIEF - 2-4 sentences. Cite BNS sections when relevant.`;
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
+          model: "google/gemini-2.5-flash-lite",
           messages,
-          max_tokens: 400,
-          temperature: 0.4,
+          max_tokens: 200,
+          temperature: 0.3,
           stream: true,
         }),
       });
@@ -216,10 +205,10 @@ Keep answers BRIEF - 2-4 sentences. Cite BNS sections when relevant.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash-lite",
         messages,
-        max_tokens: 400,
-        temperature: 0.4,
+        max_tokens: 200,
+        temperature: 0.3,
       }),
     });
 
