@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { prepareTextForVoice } from '@/lib/textToVoice';
 
 interface OpenAITTSHook {
@@ -27,6 +27,7 @@ const VOICE_PREFERENCES: Record<string, string[]> = {
   'en-US': ['Google US English', 'Microsoft Zira', 'en-US', 'English'],
 };
 
+// Find best matching voice for a language
 const findBestVoice = (voices: SpeechSynthesisVoice[], language: string): SpeechSynthesisVoice | null => {
   const preferences = VOICE_PREFERENCES[language] || VOICE_PREFERENCES['en-IN'];
   
@@ -49,33 +50,34 @@ const findBestVoice = (voices: SpeechSynthesisVoice[], language: string): Speech
 export const useOpenAITTS = (): OpenAITTSHook => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
 
   const isSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
 
-  // Load voices
+  // Load voices on mount
   useEffect(() => {
     if (!isSupported) return;
 
     const loadVoices = () => {
       const availableVoices = window.speechSynthesis.getVoices();
       if (availableVoices.length > 0) {
-        setVoices(availableVoices);
+        voicesRef.current = availableVoices;
         console.log(`TTS: Loaded ${availableVoices.length} voices`);
       }
     };
 
     loadVoices();
     window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
-    return () => window.speechSynthesis.removeEventListener('voiceschanged', loadVoices);
+    
+    return () => {
+      window.speechSynthesis.removeEventListener('voiceschanged', loadVoices);
+    };
   }, [isSupported]);
 
   const stop = useCallback(() => {
     if (isSupported) {
       window.speechSynthesis.cancel();
     }
-    utteranceRef.current = null;
     setIsSpeaking(false);
     setIsLoading(false);
   }, [isSupported]);
@@ -83,8 +85,10 @@ export const useOpenAITTS = (): OpenAITTSHook => {
   const speak = useCallback(async (rawText: string, language: string = 'en-IN') => {
     if (!rawText?.trim() || !isSupported) return;
 
-    stop();
+    // Stop any current speech
+    window.speechSynthesis.cancel();
     setIsLoading(true);
+    setIsSpeaking(false);
 
     const text = prepareTextForVoice(rawText, language);
     if (!text.trim()) {
@@ -94,13 +98,12 @@ export const useOpenAITTS = (): OpenAITTSHook => {
 
     try {
       const utterance = new SpeechSynthesisUtterance(text);
-      utteranceRef.current = utterance;
 
       // Find and set the best voice
-      const bestVoice = findBestVoice(voices, language);
+      const bestVoice = findBestVoice(voicesRef.current, language);
       if (bestVoice) {
         utterance.voice = bestVoice;
-        console.log(`TTS: Using ${bestVoice.name} (${bestVoice.lang}) for ${language}`);
+        console.log(`TTS: Using ${bestVoice.name} for ${language}`);
       }
 
       // Set language
@@ -119,14 +122,12 @@ export const useOpenAITTS = (): OpenAITTSHook => {
 
       utterance.onend = () => {
         setIsSpeaking(false);
-        utteranceRef.current = null;
       };
 
       utterance.onerror = (event) => {
         console.error('TTS error:', event.error);
         setIsSpeaking(false);
         setIsLoading(false);
-        utteranceRef.current = null;
       };
 
       // Resume if paused (Chrome bug workaround)
@@ -136,22 +137,12 @@ export const useOpenAITTS = (): OpenAITTSHook => {
 
       window.speechSynthesis.speak(utterance);
 
-      // Chrome stuck speech workaround
-      const checkInterval = setInterval(() => {
-        if (!window.speechSynthesis.speaking && utteranceRef.current === utterance) {
-          clearInterval(checkInterval);
-          setIsSpeaking(false);
-        }
-      }, 100);
-
-      setTimeout(() => clearInterval(checkInterval), 60000);
-
     } catch (error) {
       console.error('TTS error:', error);
       setIsLoading(false);
       setIsSpeaking(false);
     }
-  }, [isSupported, voices, stop]);
+  }, [isSupported]);
 
   return {
     isSpeaking,
