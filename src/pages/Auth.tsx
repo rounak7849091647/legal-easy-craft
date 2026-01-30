@@ -119,10 +119,8 @@ const Auth = () => {
             <span className="text-sm">Back</span>
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-foreground rounded-lg flex items-center justify-center">
-              <Scale className="w-4 h-4 text-background" />
-            </div>
-            <span className="text-lg font-semibold">LegalCareAI</span>
+          <img src="/favicon.ico" alt="LegalCareAI" className="w-8 h-8" />
+          <span className="text-lg font-semibold">LegalCareAI</span>
           </div>
         </header>
 
@@ -167,9 +165,7 @@ const Auth = () => {
           <span className="text-sm">Back</span>
         </button>
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-foreground rounded-lg flex items-center justify-center">
-            <Scale className="w-4 h-4 text-background" />
-          </div>
+          <img src="/favicon.ico" alt="LegalCareAI" className="w-8 h-8" />
           <span className="text-lg font-semibold">LegalCareAI</span>
         </div>
       </header>
