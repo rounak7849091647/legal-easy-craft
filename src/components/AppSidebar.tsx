@@ -87,7 +87,7 @@ const AppSidebar = () => {
       <SidebarHeader className="p-3">
         <div className="flex items-center justify-between">
           {!isCollapsed && <Link to="/" className="flex flex-col">
-              <h1 className="font-semibold text-foreground tracking-tight text-xs">LegalCareAI</h1>
+              <h1 className="font-semibold text-foreground tracking-tight text-lg">LegalCareAI</h1>
               
             </Link>}
           <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
