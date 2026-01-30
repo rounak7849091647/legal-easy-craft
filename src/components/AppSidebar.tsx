@@ -49,7 +49,7 @@ const AppSidebar = () => {
     window.location.href = '/';
   };
   const mainItems = [{
-    title: 'AI Assistant',
+    title: 'Legal Assistant',
     icon: Home,
     href: '/',
     onClick: handleAIAssistantClick
