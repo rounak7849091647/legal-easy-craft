@@ -93,15 +93,15 @@ const AppSidebar = () => {
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
-      <SidebarHeader className="p-3">
-        <div className="flex items-center justify-between">
+      <SidebarHeader className="p-2">
+        <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
           {!isCollapsed && (
-            <Link to="/" className="flex flex-col">
+            <Link to="/" className="flex flex-col pl-1">
               <h1 className="text-lg font-semibold text-foreground tracking-tight">LegalCareAI</h1>
               <p className="text-xs text-muted-foreground">Legal Intelligence</p>
             </Link>
           )}
-          <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
+          <SidebarTrigger className={`text-muted-foreground hover:text-foreground ${isCollapsed ? 'h-8 w-8' : ''}`} />
         </div>
       </SidebarHeader>
 
