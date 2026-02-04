@@ -22,13 +22,17 @@
 10. [Edge Functions](./10-edge-functions.md)
 11. [UI Components](./11-ui-components.md)
 12. [Pages & Routing](./12-pages-routing.md)
-13. [Hooks & Custom Logic](./13-hooks-custom-logic.md)
+13. [Hooks & Custom Logic](./13-hooks-custom-logic.md) ✅ NEW
 14. [Styling & Design System](./14-styling-design-system.md)
 15. [SEO Implementation](./15-seo-implementation.md)
-16. [Data Files](./16-data-files.md)
-17. [Configuration Files](./17-configuration-files.md)
+16. [Data Files](./16-data-files.md) ✅ NEW
+17. [Configuration Files](./17-configuration-files.md) ✅ NEW
 18. [Security Implementation](./18-security-implementation.md)
 19. [Appendix - Complete Source Code](./appendix/)
+    - [Core Components](./appendix/source-code-components.md) ✅ NEW
+    - [Edge Functions](./appendix/source-code-edge-functions.md) ✅ NEW
+    - [Context Providers](./appendix/source-code-contexts.md) ✅ NEW
+    - [Source Code Index](./appendix/source-code-index.md)
 
 ---
 
