@@ -59,7 +59,7 @@ const Dashboard = () => {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               
-              <span className="font-serif text-xl font-semibold">LawCare</span>
+              <span className="font-serif text-xl font-semibold">LegalCare</span>
             </div>
             <span className="text-muted-foreground hidden sm:inline">|</span>
             <span className="text-muted-foreground text-sm hidden sm:inline">Dashboard</span>
