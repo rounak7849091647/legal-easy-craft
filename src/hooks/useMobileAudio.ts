@@ -19,6 +19,33 @@ interface MobileAudioUnlock {
 let sharedAudioContext: AudioContext | null = null;
 let isAudioUnlocked = false;
 
+/**
+ * Standalone function to unlock audio context within a user gesture.
+ * Can be called directly without the hook.
+ */
+export const unlockAudioContext = async (): Promise<void> => {
+  if (isAudioUnlocked && sharedAudioContext?.state === 'running') return;
+
+  try {
+    if (!sharedAudioContext) {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      sharedAudioContext = new AudioContextClass();
+    }
+    if (sharedAudioContext.state === 'suspended') {
+      await sharedAudioContext.resume();
+    }
+    const buffer = sharedAudioContext.createBuffer(1, 1, 22050);
+    const source = sharedAudioContext.createBufferSource();
+    source.buffer = buffer;
+    source.connect(sharedAudioContext.destination);
+    source.start(0);
+    isAudioUnlocked = true;
+    console.log('Audio context unlocked');
+  } catch (err) {
+    console.error('Failed to unlock audio context:', err);
+  }
+};
+
 export const useMobileAudio = (): MobileAudioUnlock => {
   const audioContextRef = useRef<AudioContext | null>(sharedAudioContext);
 

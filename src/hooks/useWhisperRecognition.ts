@@ -1,5 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { isIOSDevice } from '@/lib/device/isIOSDevice';
+import { unlockAudioContext } from '@/hooks/useMobileAudio';
 
 interface WhisperRecognitionHook {
   isRecording: boolean;
@@ -45,20 +47,22 @@ export const useWhisperRecognition = (): WhisperRecognitionHook => {
     setError(null);
     audioChunksRef.current = [];
 
+    const isIOS = isIOSDevice();
+
     try {
+      // Unlock AudioContext within the same user gesture (critical for iOS)
+      await unlockAudioContext();
+
       // CRITICAL: getUserMedia MUST be called within user gesture
-      // Using minimal constraints for best mobile compatibility
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true }
+      });
       streamRef.current = stream;
 
-      // Detect best supported format
-      const mimeTypes = [
-        'audio/webm;codecs=opus',
-        'audio/webm',
-        'audio/mp4',
-        'audio/wav',
-        ''
-      ];
+      // iOS Safari does NOT support audio/webm - prioritize audio/mp4
+      const mimeTypes = isIOS
+        ? ['audio/mp4', 'audio/wav', 'audio/webm', '']
+        : ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', ''];
       
       const mimeType = mimeTypes.find(type => 
         type === '' || MediaRecorder.isTypeSupported(type)
@@ -92,6 +96,8 @@ export const useWhisperRecognition = (): WhisperRecognitionHook => {
       if (err instanceof Error) {
         if (err.name === 'NotFoundError') {
           msg = 'No microphone found';
+        } else if (err.name === 'NotAllowedError' && isIOS) {
+          msg = 'Microphone blocked. Enable in Settings > Safari > Microphone';
         }
       }
 
