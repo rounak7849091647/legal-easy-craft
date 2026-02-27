@@ -6,6 +6,7 @@ import { useWhisperRecognition } from '@/hooks/useWhisperRecognition';
 import { useInactivityPrompt } from '@/hooks/useInactivityPrompt';
 import { toast } from 'sonner';
 import { isIOSDevice } from '@/lib/device/isIOSDevice';
+import { unlockAudioContext } from '@/hooks/useMobileAudio';
 
 interface ChatInputProps {
   onSend: (message: string, documentContent?: string) => void;
@@ -308,6 +309,9 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
   };
 
   const handleMicClick = async () => {
+    // Unlock audio context within user gesture (critical for iOS)
+    await unlockAudioContext();
+
     if (autoSendTimerRef.current) clearTimeout(autoSendTimerRef.current);
     if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
     

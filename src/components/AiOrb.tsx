@@ -4,6 +4,7 @@ import { useWhisperRecognition } from '@/hooks/useWhisperRecognition';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { isIOSDevice } from '@/lib/device/isIOSDevice';
 import { useTheme } from '@/contexts/ThemeContext';
+import { unlockAudioContext } from '@/hooks/useMobileAudio';
 
 interface AiOrbProps {
   onTranscript?: (transcript: string, language: string) => void;
@@ -130,6 +131,9 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
   const handleOrbClick = async () => {
     // Mark that user has interacted (enables audio on mobile)
     setHasUserInteracted(true);
+
+    // Unlock audio context within user gesture (critical for iOS)
+    await unlockAudioContext();
 
     if (isSpeaking || isLoading) {
       stopSpeaking();
