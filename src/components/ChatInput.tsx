@@ -6,7 +6,6 @@ import { useWhisperRecognition } from '@/hooks/useWhisperRecognition';
 import { useInactivityPrompt } from '@/hooks/useInactivityPrompt';
 import { toast } from 'sonner';
 import { isIOSDevice } from '@/lib/device/isIOSDevice';
-import { unlockAudioContext } from '@/hooks/useMobileAudio';
 
 interface ChatInputProps {
   onSend: (message: string, documentContent?: string) => void;
