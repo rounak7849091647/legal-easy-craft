@@ -1,96 +1,98 @@
 
+### Clear result (what is actually broken)
 
-# Fix iOS Audio Input Issues
+Do I know what the issue is? **Yes.**
 
-## Problem Analysis
+Your iPhone is **not blocking speech-to-text by itself**.  
+Audio capture is working on iOS (the backend receives `audio/mp4`), but transcription fails afterward.
 
-iOS devices (Safari/WebKit) have several strict restrictions that cause audio input failures:
+Evidence from backend logs:
+- `Processing audio transcription, mimeType: audio/mp4; codecs=mp4a.40.2`
+- then `Whisper API error: 401 ... invalid_api_key`
 
-1. **MediaRecorder codec support**: iOS Safari does NOT support `audio/webm`. The current code tries `audio/webm;codecs=opus` first, which fails silently on iOS.
-2. **AudioContext not unlocked**: The `useMobileAudio` hook exists but is never called before starting recording on iOS, meaning the AudioContext may remain suspended.
-3. **getUserMedia constraints**: iOS works better with explicit audio constraints (`echoCancellation`, `noiseSuppression`).
-4. **Missing error handling for iOS-specific failures**: No specific detection or recovery for iOS permission/codec issues.
-5. **Auto-restart logic leaking into iOS**: Some `useEffect` hooks may attempt to call `startListening` outside a user gesture, which iOS blocks.
+So the failure point is **backend transcription authentication**, not iOS mic capture.
 
-## Solution
+---
 
-### 1. Fix `useWhisperRecognition.ts` - iOS-first codec detection
+### Why Android/desktop work but iPhone fails
 
-Reorder MIME type priority to try `audio/mp4` before `audio/webm` on iOS, add better audio constraints, and improve error messages for iOS-specific failures.
+- Android/desktop path uses browser speech recognition (`useSpeechRecognition`) and can work without the Whisper backend.
+- iOS path is forced to Whisper recording/transcription (`useWhisperRecognition`), so it depends on backend STT API credentials.
+- Therefore iOS fails first and hardest when backend STT auth is wrong.
 
-```text
-Changes:
-- Import isIOSDevice helper
-- Reorder mimeTypes: prioritize 'audio/mp4' on iOS
-- Add echoCancellation/noiseSuppression to getUserMedia constraints
-- Add iOS-specific error messages (e.g., "Enable microphone in Settings > Safari")
-- Add a safety check: if MediaRecorder is not available, throw a clear error
-```
+---
 
-### 2. Fix `useMobileAudio.ts` - Integrate audio unlock into recording flow
+### Implementation plan to fix all likely failure scenarios
 
-Ensure `unlockAudio()` is called as part of the recording start flow on iOS, within the same user gesture.
+## 1) Fix backend STT credential source and error classification
+**File:** `supabase/functions/voice-to-text/index.ts`
 
-```text
-Changes:
-- Export a standalone unlockAudioContext() function
-- Call it at the top of startRecording in useWhisperRecognition
-```
+- Switch Whisper auth to the correct key source for OpenAI transcription calls (`OPENAI_API_KEY`), instead of using the gateway key intended for chat completions.
+- Keep strict validation: if STT key missing, return explicit error code (`stt_key_missing`) instead of generic fallback text.
+- Add structured error mapping:
+  - `401` -> `stt_auth_invalid`
+  - `429` -> `stt_quota_exceeded`
+  - `5xx` -> `stt_provider_unavailable`
+  - malformed/unsupported audio -> `stt_audio_invalid`
+- Return machine-readable payload:
+  - `ok`, `errorCode`, `userMessage`, `retryable`, `detectedLanguage`, `text`
+- Keep MIME and extension handling for iOS `audio/mp4` as-is (already correct).
 
-### 3. Fix `AiOrb.tsx` - Unlock audio on first iOS tap
+## 2) Improve iOS client handling for every common failure mode
+**File:** `src/hooks/useWhisperRecognition.ts`
 
-Call `unlockAudio()` at the start of `handleOrbClick` before any recording starts, ensuring it happens within the user gesture context.
+- Preserve current iOS-safe capture flow (`getUserMedia` first in gesture chain).
+- Improve MIME fallback order and logging of selected recorder MIME type.
+- Reduce false “empty recording” drops by adjusting minimum blob threshold (current 1000 bytes is too aggressive for very short commands on some iPhones).
+- Parse backend `errorCode` and surface specific messages:
+  - invalid key
+  - quota exceeded
+  - temporary provider outage
+  - invalid/too-short audio
+- Add retry-safe behavior:
+  - clear recorder/stream state consistently after failures
+  - do not silently resolve empty text on backend hard errors
 
-```text
-Changes:
-- Import useMobileAudio hook
-- Call unlockAudio() at the beginning of handleOrbClick
-```
+## 3) Add graceful fallback strategy in UI for iOS
+**Files:** `src/components/ChatInput.tsx`, `src/components/AiOrb.tsx`
 
-### 4. Fix `ChatInput.tsx` - Same audio unlock for mic button
+- If Whisper backend returns hard STT errors, show actionable guidance inline:
+  - “Voice service unavailable right now. You can type, or retry in a moment.”
+- If browser speech recognition is available on that iOS version, offer optional fallback path.
+- Keep current push-to-talk UX but ensure stop/send always reflects latest hook error state.
 
-Apply the same audio unlock pattern to the ChatInput mic button handler.
+## 4) Add lightweight STT diagnostics (non-invasive)
+**Files:** `src/hooks/useWhisperRecognition.ts`, `src/components/ChatInput.tsx` (small UI hint)
 
-```text
-Changes:
-- Import useMobileAudio hook
-- Call unlockAudio() at the beginning of handleMicClick
-```
+- Track and expose:
+  - `selectedMimeType`
+  - `lastErrorCode`
+  - `lastFailureStage` (`capture` | `upload` | `transcription`)
+- This makes future troubleshooting immediate without guessing whether mic, codec, network, or provider failed.
 
-### 5. Fix `voice-to-text` Edge Function - Handle iOS audio format
+## 5) Validate end-to-end with a strict device matrix
+- iPhone Safari + iPhone Chrome:
+  - first-time mic permission flow
+  - short command (1–2 words)
+  - normal sentence (3–8 seconds)
+  - repeated attempts (3+ cycles)
+- Confirm each step:
+  - recording state starts
+  - audio is sent
+  - transcript returns
+  - message is actually posted to chat
 
-Ensure the edge function correctly handles `audio/mp4` MIME type from iOS recordings.
+---
 
-```text
-This already handles mp4 - just verify the mapping is correct (it is).
-No changes needed here.
-```
+### Expected outcome after this fix
 
-## Technical Details
+- iOS Safari/Chrome will no longer fail due to hidden backend auth mismatch.
+- When STT provider has quota/outage issues, users get explicit error states and fallback behavior instead of “it’s not listening.”
+- You’ll have deterministic diagnostics to identify any remaining edge cases quickly.
 
-### MIME Type Priority (iOS vs Android/Desktop)
+---
 
-```text
-iOS:     ['audio/mp4', 'audio/wav', 'audio/webm', '']
-Others:  ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', '']
-```
+### Technical note on scope
 
-### Audio Unlock Flow (iOS)
-
-```text
-User taps mic button
-  -> unlockAudioContext() [creates/resumes AudioContext, plays silent buffer]
-  -> getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })
-  -> new MediaRecorder(stream, { mimeType: 'audio/mp4' })
-  -> recorder.start(500)
-```
-
-### Files to Modify
-
-| File | Change |
-|------|--------|
-| `src/hooks/useWhisperRecognition.ts` | iOS-first codec detection, better constraints, clearer errors |
-| `src/hooks/useMobileAudio.ts` | Export standalone unlock function for use in recording flow |
-| `src/components/AiOrb.tsx` | Call audio unlock on first tap |
-| `src/components/ChatInput.tsx` | Call audio unlock on mic click |
-
+- No database schema changes are needed.
+- This is a backend-function + client voice-flow hardening update only.
