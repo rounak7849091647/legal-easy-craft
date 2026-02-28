@@ -4,7 +4,6 @@ import { useWhisperRecognition } from '@/hooks/useWhisperRecognition';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { isIOSDevice } from '@/lib/device/isIOSDevice';
 import { useTheme } from '@/contexts/ThemeContext';
-import { unlockAudioContext } from '@/hooks/useMobileAudio';
 
 interface AiOrbProps {
   onTranscript?: (transcript: string, language: string) => void;

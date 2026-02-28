@@ -28,7 +28,8 @@ export const useWhisperRecognition = (): WhisperRecognitionHook => {
 
   const isSupported = typeof window !== 'undefined' && 
     typeof navigator !== 'undefined' && 
-    !!navigator.mediaDevices?.getUserMedia;
+    !!navigator.mediaDevices?.getUserMedia &&
+    typeof MediaRecorder !== 'undefined';
 
   // Start recording - MUST be called directly from user gesture (click/tap)
   const startRecording = useCallback(async () => {
@@ -49,31 +50,39 @@ export const useWhisperRecognition = (): WhisperRecognitionHook => {
 
     const isIOS = isIOSDevice();
 
-    try {
-      // CRITICAL: getUserMedia MUST be the FIRST async call in the user gesture.
-      // Calling any other await (like unlockAudioContext) before this breaks
-      // iOS Safari's gesture chain and causes NotAllowedError.
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true }
-      });
+    let stream: MediaStream | null = null;
 
-      // Unlock AudioContext AFTER getUserMedia succeeds (still within gesture context)
-      unlockAudioContext().catch(() => {});
+    try {
+      if (typeof MediaRecorder === 'undefined') {
+        throw new Error('MediaRecorderUnsupported');
+      }
+
+      // CRITICAL: getUserMedia MUST be the FIRST awaited browser permission call
+      // in this gesture chain for iOS Safari.
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: true, noiseSuppression: true }
+        });
+      } catch {
+        // Some iOS Safari versions reject audio constraints.
+        // Fallback to broad audio request.
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
+
       streamRef.current = stream;
 
-      // iOS Safari does NOT support audio/webm - prioritize audio/mp4
-      const mimeTypes = isIOS
-        ? ['audio/mp4', 'audio/wav', 'audio/webm', '']
-        : ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', ''];
-      
-      const mimeType = mimeTypes.find(type => 
-        type === '' || MediaRecorder.isTypeSupported(type)
-      ) || '';
+      // Unlock AudioContext after mic permission succeeds.
+      unlockAudioContext().catch(() => {});
 
-      const mediaRecorder = new MediaRecorder(
-        stream, 
-        mimeType ? { mimeType } : undefined
-      );
+      const mimeTypes = isIOS
+        ? ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm', 'audio/wav']
+        : ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
+
+      const mimeType = mimeTypes.find((type) => MediaRecorder.isTypeSupported(type));
+
+      const mediaRecorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
 
       mediaRecorder.ondataavailable = (event) => {
@@ -93,13 +102,24 @@ export const useWhisperRecognition = (): WhisperRecognitionHook => {
       
     } catch (err) {
       console.error('Recording start failed:', err);
+
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
       
-      let msg = 'Microphone access denied';
+      let msg = 'Unable to start microphone recording';
       if (err instanceof Error) {
-        if (err.name === 'NotFoundError') {
+        if (err.message === 'MediaRecorderUnsupported') {
+          msg = 'Audio recording is not supported on this iOS Safari version';
+        } else if (err.name === 'NotFoundError') {
           msg = 'No microphone found';
         } else if (err.name === 'NotAllowedError' && isIOS) {
-          msg = 'Microphone blocked. Enable in Settings > Safari > Microphone';
+          msg = 'iOS blocked microphone access. Enable Microphone for Safari and try again.';
+        } else if (err.name === 'NotReadableError') {
+          msg = 'Microphone is busy in another app. Close other apps and retry.';
+        } else if (err.name === 'OverconstrainedError' || err.name === 'TypeError') {
+          msg = 'Microphone constraints unsupported on this device. Please retry.';
         }
       }
 
