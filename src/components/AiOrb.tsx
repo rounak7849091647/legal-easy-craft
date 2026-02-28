@@ -132,8 +132,8 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
     // Mark that user has interacted (enables audio on mobile)
     setHasUserInteracted(true);
 
-    // Unlock audio context within user gesture (critical for iOS)
-    await unlockAudioContext();
+    // DO NOT await unlockAudioContext here - it breaks iOS gesture chain for getUserMedia
+    // Audio unlock happens inside startRecording after getUserMedia succeeds
 
     if (isSpeaking || isLoading) {
       stopSpeaking();

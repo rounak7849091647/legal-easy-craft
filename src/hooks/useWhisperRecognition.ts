@@ -50,13 +50,15 @@ export const useWhisperRecognition = (): WhisperRecognitionHook => {
     const isIOS = isIOSDevice();
 
     try {
-      // Unlock AudioContext within the same user gesture (critical for iOS)
-      await unlockAudioContext();
-
-      // CRITICAL: getUserMedia MUST be called within user gesture
+      // CRITICAL: getUserMedia MUST be the FIRST async call in the user gesture.
+      // Calling any other await (like unlockAudioContext) before this breaks
+      // iOS Safari's gesture chain and causes NotAllowedError.
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true }
       });
+
+      // Unlock AudioContext AFTER getUserMedia succeeds (still within gesture context)
+      unlockAudioContext().catch(() => {});
       streamRef.current = stream;
 
       // iOS Safari does NOT support audio/webm - prioritize audio/mp4

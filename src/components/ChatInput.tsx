@@ -309,8 +309,8 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
   };
 
   const handleMicClick = async () => {
-    // Unlock audio context within user gesture (critical for iOS)
-    await unlockAudioContext();
+    // DO NOT await unlockAudioContext here - it breaks iOS gesture chain for getUserMedia
+    // Audio unlock happens inside startRecording after getUserMedia succeeds
 
     if (autoSendTimerRef.current) clearTimeout(autoSendTimerRef.current);
     if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
