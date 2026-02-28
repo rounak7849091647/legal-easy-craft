@@ -41,6 +41,7 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
     resetTranscript: resetWhisperTranscript,
     isSupported: whisperSupported,
     isProcessing: isProcessingVoice,
+    lastErrorCode: whisperLastErrorCode,
   } = useWhisperRecognition();
 
   const isListening = isIOS ? isRecording : webIsListening;
@@ -304,7 +305,12 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
         
         {/* Error display */}
         {speechError && (
-          <p className="text-destructive text-xs mt-1">{speechError}</p>
+          <p className="text-destructive text-xs mt-1">
+            {speechError}
+            {isIOS && whisperLastErrorCode && (
+              <span className="block text-muted-foreground/60 text-[10px]">[{whisperLastErrorCode}]</span>
+            )}
+          </p>
         )}
       </div>
 

@@ -54,6 +54,8 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
   const isSupported = isIOS ? whisper.isSupported : webSpeech.isSupported;
   const isProcessingVoice = isIOS ? whisper.isProcessing : false;
   const voiceError = isIOS ? whisper.error : webSpeech.error;
+  const lastErrorCode = isIOS ? whisper.lastErrorCode : null;
+  const lastFailureStage = isIOS ? whisper.lastFailureStage : null;
   
   // Unified control functions - wrapped in useCallback to maintain hook order
   const startListening = useCallback(async () => {
@@ -495,8 +497,13 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
       )}
       
       {voiceError && (
-        <p className="text-center text-xs mt-1 text-red-400">
+        <p className="text-center text-xs mt-1 text-destructive">
           {voiceError}
+          {lastErrorCode && lastFailureStage && (
+            <span className="block text-muted-foreground/60 text-[10px] mt-0.5">
+              [{lastFailureStage}:{lastErrorCode}]
+            </span>
+          )}
         </p>
       )}
       
