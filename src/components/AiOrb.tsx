@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { useWhisperRecognition } from '@/hooks/useWhisperRecognition';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { isIOSDevice } from '@/lib/device/isIOSDevice';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -20,6 +21,7 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
   const isLightMode = theme === 'light';
 
   const isIOS = useMemo(() => isIOSDevice(), []);
+  const { currentLanguage } = useLanguage();
 
   const {
     isListening: webIsListening,
@@ -30,7 +32,7 @@ const AiOrb = ({ onTranscript, isProcessing = false, responseText, responseLangu
     resetTranscript: resetWebTranscript,
     isSupported: webSpeechSupported,
     error: webSpeechError,
-  } = useSpeechRecognition();
+  } = useSpeechRecognition(currentLanguage.code);
 
   const {
     isRecording,
