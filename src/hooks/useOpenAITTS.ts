@@ -1,5 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { prepareTextForVoice } from '@/lib/textToVoice';
+import { useState, useCallback, useRef } from 'react';
 
 interface OpenAITTSHook {
   isSpeaking: boolean;
@@ -9,252 +8,121 @@ interface OpenAITTSHook {
   isLoading: boolean;
 }
 
-// Indian language voice preferences (prioritized - best voices first)
-const INDIAN_VOICE_PREFERENCES: Record<string, string[]> = {
-  'hi-IN': [
-    'Google हिन्दी', 'Microsoft Swara Online', 'Microsoft Swara', 
-    'Lekha', 'Hindi India Female', 'Hindi India', 'hi-IN', 'Hindi'
-  ],
-  'hinglish': [
-    'Google हिन्दी', 'Microsoft Swara Online', 'Microsoft Swara',
-    'Lekha', 'Hindi India', 'hi-IN', 'Hindi'
-  ],
-  'ta-IN': [
-    'Google தமிழ்', 'Microsoft Valluvar Online', 'Microsoft Valluvar',
-    'Tamil India Female', 'Tamil India', 'ta-IN', 'Tamil'
-  ],
-  'te-IN': [
-    'Google తెలుగు', 'Microsoft Chitra Online', 'Microsoft Chitra',
-    'Telugu India Female', 'Telugu India', 'te-IN', 'Telugu'
-  ],
-  'bn-IN': [
-    'Google বাংলা', 'Microsoft Tanishaa Online', 'Microsoft Tanishaa',
-    'Bengali India Female', 'Bengali India', 'bn-IN', 'Bengali', 'Bangla'
-  ],
-  'mr-IN': [
-    'Google मराठी', 'Microsoft Aarohi Online', 'Microsoft Aarohi',
-    'Marathi India Female', 'Marathi India', 'mr-IN', 'Marathi'
-  ],
-  'gu-IN': [
-    'Google ગુજરાતી', 'Microsoft Dhwani Online', 'Microsoft Dhwani',
-    'Gujarati India Female', 'Gujarati India', 'gu-IN', 'Gujarati'
-  ],
-  'kn-IN': [
-    'Google ಕನ್ನಡ', 'Microsoft Sapna Online', 'Microsoft Sapna',
-    'Kannada India Female', 'Kannada India', 'kn-IN', 'Kannada'
-  ],
-  'ml-IN': [
-    'Google മലയാളം', 'Microsoft Sobhana Online', 'Microsoft Sobhana',
-    'Malayalam India Female', 'Malayalam India', 'ml-IN', 'Malayalam'
-  ],
-  'pa-IN': [
-    'Google ਪੰਜਾਬੀ', 'Microsoft Neerja Online', 'Punjabi India Female',
-    'Punjabi India', 'pa-IN', 'Punjabi'
-  ],
-  'or-IN': [
-    'Odia India Female', 'Odia India', 'or-IN', 'Odia', 'Oriya'
-  ],
-  'as-IN': [
-    'Assamese India Female', 'Assamese India', 'as-IN', 'Assamese',
-    'Bengali India', 'bn-IN' // Fallback to Bengali (similar)
-  ],
-  'en-IN': [
-    'Google UK English Female', 'Microsoft Ravi Online', 'Microsoft Ravi',
-    'Google US English Female', 'English India', 'en-IN', 'en-GB', 'en-US'
-  ],
-  'en-US': [
-    'Google US English Female', 'Google US English', 'Microsoft Zira',
-    'en-US', 'English United States'
-  ],
-};
-
-// Find the best available voice for a language
-const findBestVoice = (voices: SpeechSynthesisVoice[], language: string): SpeechSynthesisVoice | null => {
-  const preferences = INDIAN_VOICE_PREFERENCES[language] || INDIAN_VOICE_PREFERENCES['en-IN'];
-  
-  // Try exact preference matches
-  for (const pref of preferences) {
-    const match = voices.find(v => 
-      v.name.toLowerCase().includes(pref.toLowerCase()) ||
-      v.lang.toLowerCase() === pref.toLowerCase() ||
-      v.lang.toLowerCase().startsWith(pref.toLowerCase().split('-')[0])
-    );
-    if (match) {
-      return match;
-    }
-  }
-  
-  // Try matching by primary language code
-  const langCode = language.split('-')[0].toLowerCase();
-  const langMatch = voices.find(v => v.lang.toLowerCase().startsWith(langCode));
-  if (langMatch) return langMatch;
-  
-  // For Indian languages, try Hindi as fallback (widely supported)
-  if (['hinglish', 'mr-IN', 'gu-IN', 'pa-IN', 'or-IN', 'as-IN'].includes(language)) {
-    const hindiVoice = voices.find(v => v.lang.toLowerCase().startsWith('hi'));
-    if (hindiVoice) return hindiVoice;
-  }
-  
-  // Final fallback to any English voice
-  const englishVoice = voices.find(v => v.lang.toLowerCase().startsWith('en'));
-  return englishVoice || voices[0] || null;
-};
-
-// Get language display name for logging
-const getLanguageName = (code: string): string => {
-  const names: Record<string, string> = {
-    'hi-IN': 'Hindi', 'hinglish': 'Hinglish', 'ta-IN': 'Tamil',
-    'te-IN': 'Telugu', 'bn-IN': 'Bengali', 'mr-IN': 'Marathi',
-    'gu-IN': 'Gujarati', 'kn-IN': 'Kannada', 'ml-IN': 'Malayalam',
-    'pa-IN': 'Punjabi', 'or-IN': 'Odia', 'as-IN': 'Assamese',
-    'en-IN': 'English (India)', 'en-US': 'English (US)'
-  };
-  return names[code] || code;
-};
+const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/text-to-speech`;
 
 export const useOpenAITTS = (): OpenAITTSHook => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  const isSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
-
-  // Load available voices
-  useEffect(() => {
-    if (!isSupported) return;
-
-    const loadVoices = () => {
-      const availableVoices = window.speechSynthesis.getVoices();
-      if (availableVoices.length > 0) {
-        voicesRef.current = availableVoices;
-        
-        // Log available Indian language voices
-        const indianVoices = availableVoices.filter(v => 
-          v.lang.match(/^(hi|ta|te|bn|mr|gu|kn|ml|pa|or|as|en-IN)/i)
-        );
-        console.log(`TTS: Loaded ${availableVoices.length} voices (${indianVoices.length} Indian)`);
-      }
-    };
-
-    // Load immediately and also on voiceschanged event
-    loadVoices();
-    window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
-    
-    // Some browsers need a delay
-    setTimeout(loadVoices, 100);
-    
-    return () => {
-      window.speechSynthesis.removeEventListener('voiceschanged', loadVoices);
-    };
-  }, [isSupported]);
+  const isSupported = typeof window !== 'undefined';
 
   const stop = useCallback(() => {
-    if (isSupported) {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current.src = '';
+      audioRef.current = null;
+    }
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    // Also stop any browser TTS fallback
+    if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
-    utteranceRef.current = null;
     setIsSpeaking(false);
     setIsLoading(false);
-  }, [isSupported]);
+  }, []);
 
-  const speak = useCallback(async (rawText: string, language: string = 'en-IN') => {
-    if (!rawText?.trim() || !isSupported) return;
+  const speak = useCallback(
+    async (text: string, language: string = 'en-IN') => {
+      if (!text?.trim() || !isSupported) return;
 
-    // Stop any ongoing speech
-    window.speechSynthesis.cancel();
-    utteranceRef.current = null;
-    setIsLoading(true);
-    setIsSpeaking(false);
+      stop();
 
-    // Prepare text for natural voice output
-    const text = prepareTextForVoice(rawText, language);
-    if (!text.trim()) {
-      setIsLoading(false);
-      return;
-    }
+      try {
+        setIsLoading(true);
+        abortControllerRef.current = new AbortController();
 
-    try {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utteranceRef.current = utterance;
+        const response = await fetch(TTS_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ text: text.substring(0, 4096), language }),
+          signal: abortControllerRef.current.signal,
+        });
 
-      // Find and set the best voice for this language
-      const bestVoice = findBestVoice(voicesRef.current, language);
-      if (bestVoice) {
-        utterance.voice = bestVoice;
-        console.log(`TTS [${getLanguageName(language)}]: Using "${bestVoice.name}" (${bestVoice.lang})`);
-      } else {
-        console.log(`TTS [${getLanguageName(language)}]: No specific voice found, using default`);
-      }
-
-      // Map language codes
-      const langMap: Record<string, string> = { 
-        'hinglish': 'hi-IN',
-        'as-IN': 'bn-IN' // Assamese fallback to Bengali
-      };
-      utterance.lang = langMap[language] || language;
-
-      // Optimized speech settings for Indian languages
-      // Slightly slower rate for better clarity in Indian languages
-      const isIndianLang = ['hi-IN', 'hinglish', 'ta-IN', 'te-IN', 'bn-IN', 
-        'mr-IN', 'gu-IN', 'kn-IN', 'ml-IN', 'pa-IN', 'or-IN', 'as-IN'].includes(language);
-      
-      utterance.rate = isIndianLang ? 0.85 : 0.95; // Slower for Indian languages
-      utterance.pitch = 1.0;
-      utterance.volume = 1.0;
-
-      // Event handlers
-      utterance.onstart = () => {
-        setIsLoading(false);
-        setIsSpeaking(true);
-      };
-
-      utterance.onend = () => {
-        setIsSpeaking(false);
-        utteranceRef.current = null;
-      };
-
-      utterance.onerror = (event) => {
-        // Ignore 'interrupted' errors (happens when stop() is called)
-        if (event.error !== 'interrupted') {
-          console.error(`TTS Error [${getLanguageName(language)}]:`, event.error);
+        if (!response.ok) {
+          const contentType = response.headers.get('content-type');
+          if (contentType?.includes('application/json')) {
+            const errorData = await response.json();
+            console.warn('OpenAI TTS unavailable, using browser fallback:', errorData.error);
+            setIsLoading(false);
+            fallbackSpeak(text, language);
+            return;
+          }
+          throw new Error(`TTS request failed: ${response.status}`);
         }
-        setIsSpeaking(false);
+
         setIsLoading(false);
-        utteranceRef.current = null;
-      };
 
-      // Chrome bug workarounds
-      if (window.speechSynthesis.paused) {
-        window.speechSynthesis.resume();
-      }
+        // Response is raw audio/mpeg binary from OpenAI TTS API
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
 
-      // Speak!
-      window.speechSynthesis.speak(utterance);
+        const audio = new Audio();
+        audio.preload = 'auto';
+        audio.src = audioUrl;
+        audioRef.current = audio;
 
-      // Chrome sometimes gets stuck - force end after timeout
-      const textLength = text.length;
-      const estimatedDuration = Math.max(5000, textLength * 100); // ~100ms per character
-      
-      setTimeout(() => {
-        if (utteranceRef.current === utterance && !window.speechSynthesis.speaking) {
+        audio.onended = () => {
           setIsSpeaking(false);
-          setIsLoading(false);
+          URL.revokeObjectURL(audioUrl);
+          audioRef.current = null;
+        };
+
+        audio.onerror = (e) => {
+          console.error('Audio playback error:', e);
+          setIsSpeaking(false);
+          URL.revokeObjectURL(audioUrl);
+          audioRef.current = null;
+        };
+
+        audio.onplay = () => {
+          setIsSpeaking(true);
+        };
+
+        try {
+          await audio.play();
+        } catch (playError) {
+          console.warn('Autoplay blocked:', playError);
+          setIsSpeaking(false);
         }
-      }, estimatedDuration);
+      } catch (error) {
+        if ((error as Error).name === 'AbortError') return;
+        console.error('OpenAI TTS error, using browser fallback:', error);
+        setIsLoading(false);
+        fallbackSpeak(text, language);
+      }
+    },
+    [isSupported, stop]
+  );
 
-    } catch (error) {
-      console.error('TTS error:', error);
-      setIsLoading(false);
-      setIsSpeaking(false);
-    }
-  }, [isSupported, stop]);
-
-  return {
-    isSpeaking,
-    speak,
-    stop,
-    isSupported,
-    isLoading,
-  };
+  return { isSpeaking, speak, stop, isSupported, isLoading };
 };
+
+// Browser TTS fallback when OpenAI API is unavailable
+function fallbackSpeak(text: string, language: string) {
+  if (!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text.substring(0, 500));
+  utterance.lang = language === 'hinglish' ? 'hi-IN' : language;
+  utterance.rate = 0.9;
+  utterance.pitch = 1.0;
+  window.speechSynthesis.speak(utterance);
+}
