@@ -86,7 +86,7 @@ const detectIndianLanguage = (text: string): string => {
   return 'en-IN';
 };
 
-export const useSpeechRecognition = (): SpeechRecognitionHook => {
+export const useSpeechRecognition = (preferredLanguage?: string): SpeechRecognitionHook => {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [detectedLanguage, setDetectedLanguage] = useState('en-IN');
@@ -124,11 +124,15 @@ export const useSpeechRecognition = (): SpeechRecognitionHook => {
       recognition.continuous = !isMobileDevice(); // Single result on mobile is more reliable
       recognition.interimResults = true;
       
-      // MULTILINGUAL: Don't set a specific language - let browser auto-detect
-      // This allows recognition of Hindi, Tamil, Telugu, Bengali, etc.
-      // The browser will use the device's language settings as a hint
-      // but will transcribe whatever language is actually spoken
-      // Note: Some browsers may still prefer English, but will transcribe in native scripts
+      // Set the recognition language to match the user's selected language
+      // This ensures the browser transcribes in the correct language/script
+      if (preferredLanguage && preferredLanguage !== 'en-IN') {
+        recognition.lang = preferredLanguage;
+        console.log('Speech recognition language set to:', preferredLanguage);
+      } else {
+        // Default: let browser auto-detect
+        recognition.lang = 'en-IN';
+      }
 
       recognition.onstart = () => {
         setIsListening(true);

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { useWhisperRecognition } from '@/hooks/useWhisperRecognition';
 import { useInactivityPrompt } from '@/hooks/useInactivityPrompt';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
 import { isIOSDevice } from '@/lib/device/isIOSDevice';
 
@@ -41,10 +42,13 @@ const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(({
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  // Use the user's selected language for speech recognition
+  const { currentLanguage } = useLanguage();
+  
   // Use Whisper for iOS, Web Speech API for others
   const isIOS = useMemo(() => isIOSDevice(), []);
   
-  const webSpeech = useSpeechRecognition();
+  const webSpeech = useSpeechRecognition(currentLanguage.code);
   const whisper = useWhisperRecognition();
   
   // Choose the right recognition system
