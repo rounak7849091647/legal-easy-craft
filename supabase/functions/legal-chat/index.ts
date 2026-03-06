@@ -188,8 +188,8 @@ Provide DETAILED legal guidance with context, relevant laws (BNS/IPC sections if
         body: JSON.stringify({
           model: "google/gemini-2.5-flash",
           messages,
-          max_tokens: 500,
-          temperature: 0.3,
+          max_tokens: 2048,
+          temperature: 0.87,
           stream: true,
         }),
       });
@@ -215,8 +215,8 @@ Provide DETAILED legal guidance with context, relevant laws (BNS/IPC sections if
       body: JSON.stringify({
           model: "google/gemini-2.5-flash",
           messages,
-          max_tokens: 500,
-          temperature: 0.3,
+          max_tokens: 2048,
+          temperature: 0.87,
         }),
     });
 
