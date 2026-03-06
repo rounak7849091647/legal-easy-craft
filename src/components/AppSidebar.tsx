@@ -10,12 +10,20 @@ import {
   LayoutDashboard,
   User,
   MessageSquare,
-  Globe
+  Globe,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { toast } from 'sonner';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import {
   Sidebar,
   SidebarContent,
@@ -31,6 +39,60 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+
+const SettingsDialog = ({ isCollapsed }: { isCollapsed: boolean }) => {
+  const { theme, toggleTheme } = useTheme();
+  const { currentLanguage, setLanguage, availableLanguages } = useLanguage();
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <SidebarMenuButton className="hover:bg-sidebar-accent">
+          <Settings size={18} className="text-muted-foreground" />
+          {!isCollapsed && <span className="text-sm">Settings</span>}
+        </SidebarMenuButton>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Settings</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {theme === 'dark' ? <Moon size={16} /> : <Sun size={16} />}
+              <Label>Dark Mode</Label>
+            </div>
+            <Switch
+              checked={theme === 'dark'}
+              onCheckedChange={() => toggleTheme()}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2">
+              <Globe size={16} />
+              Language
+            </Label>
+            <Select value={currentLanguage.code} onValueChange={setLanguage}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {availableLanguages.map((lang) => (
+                  <SelectItem key={lang.code} value={lang.code}>
+                    {lang.nativeName} ({lang.name})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Voice input and AI responses will use this language
+            </p>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const AppSidebar = () => {
   const location = useLocation();
@@ -239,10 +301,7 @@ const AppSidebar = () => {
           )}
           
           <SidebarMenuItem>
-            <SidebarMenuButton className="hover:bg-sidebar-accent">
-              <Settings size={18} className="text-muted-foreground" />
-              {!isCollapsed && <span className="text-sm">Settings</span>}
-            </SidebarMenuButton>
+            <SettingsDialog isCollapsed={isCollapsed} />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
