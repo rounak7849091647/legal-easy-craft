@@ -43,6 +43,10 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 const SettingsDialog = ({ isCollapsed }: { isCollapsed: boolean }) => {
   const { theme, toggleTheme } = useTheme();
   const { currentLanguage, setLanguage, availableLanguages } = useLanguage();
+  const [fontSize, setFontSize] = useState('medium');
+  const [notifications, setNotifications] = useState(true);
+  const [soundEffects, setSoundEffects] = useState(true);
+  const [autoSave, setAutoSave] = useState(true);
 
   return (
     <Dialog>
@@ -52,41 +56,128 @@ const SettingsDialog = ({ isCollapsed }: { isCollapsed: boolean }) => {
           {!isCollapsed && <span className="text-sm">Settings</span>}
         </SidebarMenuButton>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Settings</DialogTitle>
+          <DialogTitle className="text-xl">Settings</DialogTitle>
+          <p className="text-sm text-muted-foreground">Customize your LegalCareAI experience</p>
         </DialogHeader>
-        <div className="space-y-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {theme === 'dark' ? <Moon size={16} /> : <Sun size={16} />}
-              <Label>Dark Mode</Label>
+        <div className="space-y-1 py-2">
+          {/* Appearance Section */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Appearance</h3>
+            <div className="space-y-3 rounded-lg border border-border p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {theme === 'dark' ? <Moon size={16} className="text-primary" /> : <Sun size={16} className="text-primary" />}
+                  <div>
+                    <Label className="text-sm font-medium">Dark Mode</Label>
+                    <p className="text-xs text-muted-foreground">Switch between light and dark theme</p>
+                  </div>
+                </div>
+                <Switch checked={theme === 'dark'} onCheckedChange={() => toggleTheme()} />
+              </div>
+              <div className="border-t border-border pt-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm font-medium">Font Size</Label>
+                    <p className="text-xs text-muted-foreground">Adjust text size across the app</p>
+                  </div>
+                  <Select value={fontSize} onValueChange={setFontSize}>
+                    <SelectTrigger className="w-28">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="small">Small</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="large">Large</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
-            <Switch
-              checked={theme === 'dark'}
-              onCheckedChange={() => toggleTheme()}
-            />
           </div>
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <Globe size={16} />
-              Language
-            </Label>
-            <Select value={currentLanguage.code} onValueChange={setLanguage}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {availableLanguages.map((lang) => (
-                  <SelectItem key={lang.code} value={lang.code}>
-                    {lang.nativeName} ({lang.name})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              Voice input and AI responses will use this language
-            </p>
+
+          {/* Language Section */}
+          <div className="space-y-4 pt-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Language & Region</h3>
+            <div className="space-y-3 rounded-lg border border-border p-4">
+              <div>
+                <Label className="flex items-center gap-2 text-sm font-medium">
+                  <Globe size={16} className="text-primary" />
+                  Language
+                </Label>
+                <p className="text-xs text-muted-foreground mt-1 mb-2">Voice input and AI responses will use this language</p>
+                <Select value={currentLanguage.code} onValueChange={setLanguage}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableLanguages.map((lang) => (
+                      <SelectItem key={lang.code} value={lang.code}>
+                        {lang.nativeName} ({lang.name})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          {/* Notifications Section */}
+          <div className="space-y-4 pt-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Notifications & Sounds</h3>
+            <div className="space-y-3 rounded-lg border border-border p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm font-medium">Push Notifications</Label>
+                  <p className="text-xs text-muted-foreground">Get notified about case updates</p>
+                </div>
+                <Switch checked={notifications} onCheckedChange={setNotifications} />
+              </div>
+              <div className="border-t border-border pt-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm font-medium">Sound Effects</Label>
+                    <p className="text-xs text-muted-foreground">Play sounds for messages and alerts</p>
+                  </div>
+                  <Switch checked={soundEffects} onCheckedChange={setSoundEffects} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Chat Preferences */}
+          <div className="space-y-4 pt-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Chat Preferences</h3>
+            <div className="space-y-3 rounded-lg border border-border p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm font-medium">Auto-save Conversations</Label>
+                  <p className="text-xs text-muted-foreground">Automatically save chat history</p>
+                </div>
+                <Switch checked={autoSave} onCheckedChange={setAutoSave} />
+              </div>
+            </div>
+          </div>
+
+          {/* About Section */}
+          <div className="space-y-4 pt-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">About</h3>
+            <div className="rounded-lg border border-border p-4 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Version</span>
+                <span className="font-medium">1.0.0</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Platform</span>
+                <span className="font-medium">LegalCareAI</span>
+              </div>
+              <div className="border-t border-border pt-2 mt-2">
+                <p className="text-xs text-muted-foreground text-center">
+                  © 2025 LegalCareAI. All rights reserved.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </DialogContent>
