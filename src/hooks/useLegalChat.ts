@@ -27,7 +27,7 @@ interface LegalChatHook {
 const formatMessagesForAI = (messages: Message[]): { role: string; content: string }[] => {
   return messages
     .filter(msg => msg.role === 'user' || msg.role === 'assistant')
-    .slice(-10)
+    .slice(-6)
     .map(msg => ({ role: msg.role, content: msg.voiceContent || msg.content }));
 };
 

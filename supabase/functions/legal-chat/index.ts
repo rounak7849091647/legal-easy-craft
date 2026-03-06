@@ -11,78 +11,27 @@ interface ConversationMessage {
   content: string;
 }
 
-// Language-specific prompts optimized for natural voice output
+// Compact language instructions - critical for speed
 const getLanguageInstructions = (lang: string): string => {
-  const voiceGuidelines = `
-VOICE OUTPUT GUIDELINES (CRITICAL - MODERN LANGUAGE):
-- Write in a super chill, friendly, and relatable tone - like chatting with a smart friend
-- Use SIMPLE, EVERYDAY words - the kind young people actually speak TODAY
-- AVOID old-fashioned, formal, or "textbook" language
-- Mix common English words naturally when that's how people talk
-- NEVER use markdown formatting (no **, ##, *, _, etc.)
-- NEVER use bullet points or numbered lists
-- Write complete sentences that sound natural when spoken
-- Be warm, supportive, and encouraging
-- Give DETAILED, COMPREHENSIVE responses - 4-6 sentences for legal questions
-- Explain the legal context, steps to take, and practical advice
-- Use casual connectors like "So basically," "The thing is," "Look," etc.
+  const langMap: Record<string, string> = {
+    'hi-IN': 'Reply ONLY in Hindi (Devanagari script). Mix English words naturally like young Indians do.',
+    'hinglish': 'Reply in Hinglish - mix Hindi and English naturally. Use Devanagari for Hindi parts.',
+    'ta-IN': 'Reply ONLY in Tamil (தமிழ்). Use Tamil script throughout.',
+    'te-IN': 'Reply ONLY in Telugu (తెలుగు). Use Telugu script throughout.',
+    'bn-IN': 'Reply ONLY in Bengali (বাংলা). Use Bengali script throughout.',
+    'mr-IN': 'Reply ONLY in Marathi (मराठी). Use Devanagari script throughout.',
+    'gu-IN': 'Reply ONLY in Gujarati (ગુજરાતી). Use Gujarati script throughout.',
+    'kn-IN': 'Reply ONLY in Kannada (ಕನ್ನಡ). Use Kannada script throughout.',
+    'ml-IN': 'Reply ONLY in Malayalam (മലയാളം). Use Malayalam script throughout.',
+    'pa-IN': 'Reply ONLY in Punjabi (ਪੰਜਾਬੀ). Use Gurmukhi script throughout.',
+    'or-IN': 'Reply ONLY in Odia (ଓଡ଼ିଆ). Use Odia script throughout.',
+  };
 
-LAWYER REFERRAL (IMPORTANT):
-- When users ask about finding a lawyer, ALWAYS refer them to our in-app Lawyer Directory at /lawyers
-- Say something like "You can find verified lawyers right here on our platform - just go to the Lawyers section"
-- Mention we have 75+ verified lawyers across all Indian states with expertise in Criminal Law, Family Law, Property Law, etc.
-- NEVER refer to external bar association websites - we have our own lawyer directory!`;
+  const langInstruction = langMap[lang] || 'Reply in simple, clear Indian English.';
 
-  switch (lang) {
-    case 'hi-IN':
-      return `${voiceGuidelines}
-LANGUAGE: Modern, everyday Hindi. Mix English naturally.
-Example: "Dekho, yeh case mein basically tera point strong hai..."`;
-    case 'hinglish':
-      return `${voiceGuidelines}
-LANGUAGE: Natural Hinglish - code-switch between Hindi and English.
-Example: "Okay so basically, tera case dekh ke lag raha hai..."`;
-    case 'ta-IN':
-      return `${voiceGuidelines}
-LANGUAGE: Modern conversational Tamil.
-Example: "Paaru, indha case la actually enna problem na..."`;
-    case 'te-IN':
-      return `${voiceGuidelines}
-LANGUAGE: Modern conversational Telugu.
-Example: "Chudu, ee vishayam lo actually jarigedi enti ante..."`;
-    case 'bn-IN':
-      return `${voiceGuidelines}
-LANGUAGE: Modern Bengali - Cholti bhasha.
-Example: "Dekho, ei case ta te actually hocche ki..."`;
-    case 'mr-IN':
-      return `${voiceGuidelines}
-LANGUAGE: Modern Marathi - casual and friendly.
-Example: "Bagh, ya case madhe actually kay hota na..."`;
-    case 'gu-IN':
-      return `${voiceGuidelines}
-LANGUAGE: Modern Gujarati - conversational.
-Example: "Jo, aa case ma actually su thay che ke..."`;
-    case 'kn-IN':
-      return `${voiceGuidelines}
-LANGUAGE: Modern Kannada - everyday style.
-Example: "Nodu, ee case alli actually en agthide andre..."`;
-    case 'ml-IN':
-      return `${voiceGuidelines}
-LANGUAGE: Modern Malayalam - conversational.
-Example: "Nokku, ee case il actually enthaanu karyam..."`;
-    case 'pa-IN':
-      return `${voiceGuidelines}
-LANGUAGE: Modern Punjabi - friendly.
-Example: "Vekh, is case vich actually ki ho reha hai ki..."`;
-    case 'or-IN':
-      return `${voiceGuidelines}
-LANGUAGE: Modern Odia - simple and conversational.
-Example: "Dekh, ei case re actually kana heuchi na..."`;
-    default:
-      return `${voiceGuidelines}
-LANGUAGE: Simple, clear Indian English.
-Example: "Okay so basically, here's the thing about your case..."`;
-  }
+  return `LANGUAGE RULE (ABSOLUTELY CRITICAL): ${langInstruction}
+You MUST match the user's language. If they write in Hindi, respond in Hindi. If Tamil, respond in Tamil. NEVER switch to English unless the user writes in English.
+TONE: Friendly, casual, like a smart friend. No markdown (no **, ##, bullets). 3-5 spoken sentences. Refer lawyers to our /lawyers page.`;
 };
 
 serve(async (req) => {
@@ -153,22 +102,15 @@ Give 2-3 sentences: what it is, key terms, one warning.`;
       );
     }
 
-    // Build system prompt - Detailed but efficient
-    let systemPrompt = hasDocument
-      ? `You are CARE, a friendly Indian legal AI assistant. Provide DETAILED, helpful legal guidance. ${bnsRef}
-${languageInstructions}
-DOCUMENT CONTEXT: ${documentContent.slice(0, 3000)}
-Give comprehensive answers explaining the legal situation, relevant laws, and practical next steps.`
-      : `You are CARE, a friendly Indian legal AI assistant. ${bnsRef}
-${languageInstructions}
-Provide DETAILED legal guidance with context, relevant laws (BNS/IPC sections if applicable), and practical advice. Give 4-6 sentence responses for legal questions.`;
+    // Build system prompt - compact for speed
+    const systemPrompt = `You are CARE, an Indian legal AI. ${bnsRef}
+${languageInstructions}${hasDocument ? `\nDOC CONTEXT: ${documentContent.slice(0, 2000)}` : ''}`;
 
     // Build messages
     const messages: ConversationMessage[] = [{ role: "system", content: systemPrompt }];
 
     if (hasHistory) {
-      const recentHistory = conversationHistory.slice(-10);
-      for (const msg of recentHistory) {
+      for (const msg of conversationHistory.slice(-6)) {
         messages.push({ role: msg.role === 'assistant' ? 'assistant' : 'user', content: msg.content });
       }
     }
@@ -186,10 +128,10 @@ Provide DETAILED legal guidance with context, relevant laws (BNS/IPC sections if
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: "google/gemini-2.5-flash-lite",
           messages,
-          max_tokens: 2048,
-          temperature: 0.6,
+          max_tokens: 600,
+          temperature: 0.4,
           stream: true,
         }),
       });
@@ -213,10 +155,10 @@ Provide DETAILED legal guidance with context, relevant laws (BNS/IPC sections if
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: "google/gemini-2.5-flash-lite",
           messages,
-          max_tokens: 2048,
-          temperature: 0.6,
+          max_tokens: 600,
+          temperature: 0.4,
         }),
     });
 
