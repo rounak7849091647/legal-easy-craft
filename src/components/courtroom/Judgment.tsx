@@ -57,14 +57,14 @@ const Judgment = ({ judgment, isLoading, caseTitle, onReset }: JudgmentProps) =>
           <p className="text-xs text-muted-foreground">Delivered on {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[400px] pr-4">
+          <ScrollArea className="h-[500px] pr-4">
             <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{judgment}</p>
           </ScrollArea>
         </CardContent>
       </Card>
 
-      <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
-        <p className="text-xs text-amber-800 dark:text-amber-300">
+      <div className="p-3 rounded-lg bg-accent/50 border border-accent">
+        <p className="text-xs text-accent-foreground">
           <strong>Disclaimer:</strong> This is an AI-generated courtroom simulation for educational and informational purposes only. It does not constitute legal advice. Please consult a qualified lawyer for actual legal matters.
         </p>
       </div>
