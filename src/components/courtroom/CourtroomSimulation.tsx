@@ -29,7 +29,7 @@ interface Argument {
 interface CourtroomSimulationProps {
   caseAnalysis: any;
   userRole: 'accused' | 'complainant';
-  onComplete: (arguments: Argument[]) => void;
+  onComplete: (args: Argument[]) => void;
 }
 
 const speakerConfig: Record<string, { icon: typeof Gavel; color: string; bg: string }> = {
