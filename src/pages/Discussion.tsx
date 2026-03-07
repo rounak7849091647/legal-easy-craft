@@ -7,6 +7,7 @@ import CourtroomSimulation from '@/components/courtroom/CourtroomSimulation';
 import Judgment from '@/components/courtroom/Judgment';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 type Step = 'upload' | 'analysis' | 'courtroom' | 'judgment';
 
@@ -18,12 +19,15 @@ const Discussion = () => {
   const [courtroomArgs, setCourtroomArgs] = useState<any[]>([]);
   const [judgment, setJudgment] = useState<string | null>(null);
   const [isJudging, setIsJudging] = useState(false);
+  const { currentLanguage } = useLanguage();
+
+  const langCode = currentLanguage.code;
 
   const handleAnalyze = async (content: string) => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('courtroom-ai', {
-        body: { action: 'analyze', documentContent: content }
+        body: { action: 'analyze', documentContent: content, language: langCode }
       });
       if (error) throw error;
       setCaseAnalysis(data.analysis);
@@ -47,7 +51,7 @@ const Discussion = () => {
     setIsJudging(true);
     try {
       const { data, error } = await supabase.functions.invoke('courtroom-ai', {
-        body: { action: 'judgment', caseAnalysis, previousArguments: args }
+        body: { action: 'judgment', caseAnalysis, previousArguments: args, language: langCode }
       });
       if (error) throw error;
       setJudgment(data.judgment);
@@ -71,8 +75,8 @@ const Discussion = () => {
     <PageLayout>
       <SEOHead
         title="AI Courtroom - Simulate Legal Hearings"
-        description="Upload legal case files and simulate a court hearing with AI Judge and AI Lawyers. Get structured legal arguments and neutral judgment."
-        keywords="AI courtroom, legal simulation, court hearing, AI judge, legal analysis, case simulation"
+        description="Upload legal case files and simulate a court hearing with AI Judge and AI Lawyers."
+        keywords="AI courtroom, legal simulation, court hearing, AI judge"
         canonicalUrl="/discussion"
         breadcrumbs={[
           { name: 'Home', url: '/' },
@@ -81,7 +85,6 @@ const Discussion = () => {
       />
 
       <div className="container mx-auto px-4 py-6 max-w-4xl">
-        {/* Step indicator */}
         <div className="flex items-center justify-center gap-1 mb-6">
           {(['upload', 'analysis', 'courtroom', 'judgment'] as Step[]).map((s, i) => (
             <div key={s} className="flex items-center">
@@ -99,7 +102,7 @@ const Discussion = () => {
         {step === 'upload' && <FileUpload onSubmit={handleAnalyze} isLoading={isLoading} />}
         {step === 'analysis' && caseAnalysis && <CaseAnalysis analysis={caseAnalysis} onProceed={handleProceed} />}
         {step === 'courtroom' && caseAnalysis && (
-          <CourtroomSimulation caseAnalysis={caseAnalysis} userRole={userRole} onComplete={handleCourtroomComplete} />
+          <CourtroomSimulation caseAnalysis={caseAnalysis} userRole={userRole} onComplete={handleCourtroomComplete} language={langCode} />
         )}
         {step === 'judgment' && (
           <Judgment judgment={judgment} isLoading={isJudging} caseTitle={caseAnalysis?.caseTitle || 'Case'} onReset={handleReset} />
