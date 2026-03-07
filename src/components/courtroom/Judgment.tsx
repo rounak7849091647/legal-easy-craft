@@ -57,7 +57,7 @@ const Judgment = ({ judgment, isLoading, caseTitle, onReset }: JudgmentProps) =>
           <p className="text-xs text-muted-foreground">Delivered on {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[400px] pr-4">
+          <ScrollArea className="h-[500px] pr-4">
             <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{judgment}</p>
           </ScrollArea>
         </CardContent>
