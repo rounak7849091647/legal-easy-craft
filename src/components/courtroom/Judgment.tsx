@@ -63,8 +63,8 @@ const Judgment = ({ judgment, isLoading, caseTitle, onReset }: JudgmentProps) =>
         </CardContent>
       </Card>
 
-      <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
-        <p className="text-xs text-amber-800 dark:text-amber-300">
+      <div className="p-3 rounded-lg bg-accent/50 border border-accent">
+        <p className="text-xs text-accent-foreground">
           <strong>Disclaimer:</strong> This is an AI-generated courtroom simulation for educational and informational purposes only. It does not constitute legal advice. Please consult a qualified lawyer for actual legal matters.
         </p>
       </div>
