@@ -95,16 +95,16 @@ const CaseAnalysis = ({ analysis, onProceed }: CaseAnalysisProps) => {
           <CardTitle className="text-lg">Select Your Role</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">Choose which party you represent. The AI will assign lawyers accordingly.</p>
+          <p className="text-sm text-muted-foreground mb-4">You will argue your own case as your own lawyer. The AI will provide a Judge and an opposing lawyer.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Button variant="outline" className="h-auto py-4 flex flex-col gap-1" onClick={() => onProceed('complainant')}>
               <span className="font-semibold">I am the Complainant</span>
-              <span className="text-xs text-muted-foreground">AI defends the accused</span>
+              <span className="text-xs text-muted-foreground">You argue your case • AI Defense Lawyer opposes you</span>
               <ArrowRight className="h-4 w-4 mt-1" />
             </Button>
             <Button variant="outline" className="h-auto py-4 flex flex-col gap-1" onClick={() => onProceed('accused')}>
               <span className="font-semibold">I am the Accused</span>
-              <span className="text-xs text-muted-foreground">AI prosecutes the case</span>
+              <span className="text-xs text-muted-foreground">You defend yourself • AI Prosecution Lawyer opposes you</span>
               <ArrowRight className="h-4 w-4 mt-1" />
             </Button>
           </div>

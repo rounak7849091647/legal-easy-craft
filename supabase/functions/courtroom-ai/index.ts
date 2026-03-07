@@ -35,6 +35,43 @@ const getLanguageInstruction = (lang: string): string => {
   return langMap[lang] || 'Respond in English. Use clear legal English terminology.';
 };
 
+const callAI = async (apiKey: string, messages: any[], maxTokens = 1500) => {
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages,
+      max_tokens: maxTokens,
+      temperature: 0.3,
+    }),
+  });
+
+  if (!response.ok) {
+    if (response.status === 429) return { error: "Rate limit exceeded. Please wait a moment.", status: 429 };
+    if (response.status === 402) return { error: "Payment required. Please add credits.", status: 402 };
+    const text = await response.text();
+    console.error("AI error:", response.status, text);
+    throw new Error("AI gateway error");
+  }
+
+  const data = await response.json();
+  return { content: data.choices?.[0]?.message?.content || "" };
+};
+
+const errorResponse = (result: any) => new Response(
+  JSON.stringify({ error: result.error }),
+  { status: result.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+);
+
+const jsonResponse = (data: any) => new Response(
+  JSON.stringify(data),
+  { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+);
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -47,48 +84,11 @@ serve(async (req) => {
 
     const langInstruction = getLanguageInstruction(body.language || 'en-IN');
 
-    const callAI = async (messages: any[], maxTokens = 1500) => {
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages,
-          max_tokens: maxTokens,
-          temperature: 0.3,
-        }),
-      });
-
-      if (!response.ok) {
-        if (response.status === 429) return { error: "Rate limit exceeded. Please wait a moment.", status: 429 };
-        if (response.status === 402) return { error: "Payment required. Please add credits.", status: 402 };
-        const text = await response.text();
-        console.error("AI error:", response.status, text);
-        throw new Error("AI gateway error");
-      }
-
-      const data = await response.json();
-      return { content: data.choices?.[0]?.message?.content || "" };
-    };
-
-    const errorResponse = (result: any) => new Response(
-      JSON.stringify({ error: result.error }),
-      { status: result.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-
-    const jsonResponse = (data: any) => new Response(
-      JSON.stringify(data),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-
     // ACTION: ANALYZE CASE
     if (body.action === 'analyze') {
       const docContent = (body.documentContent || '').slice(0, 15000);
 
-      const result = await callAI([
+      const result = await callAI(LOVABLE_API_KEY, [
         {
           role: "system",
           content: `You are an expert Indian legal case analyzer. Analyze the provided legal documents and extract structured information. You must respond in valid JSON format only, no markdown. ${langInstruction} — but keep JSON keys in English, only values should be in the selected language.`
@@ -132,24 +132,25 @@ ${docContent}`
       const analysis = JSON.stringify(caseAnalysis);
       const prevArgs = previousArguments?.map(a => `[${a.speaker}]: ${a.content}`).join('\n') || 'None yet.';
 
+      // Determine the opponent role based on user's role
+      const opponentRole = userRole === 'complainant' ? 'Defense Lawyer' : 'Prosecution Lawyer';
+
       const phasePrompts: Record<string, { speaker: string; prompt: string }> = {
         case_introduction: { speaker: 'Judge', prompt: 'You are an AI Judge in an Indian courtroom. Introduce the case formally. State the case type, parties involved, and the charges/claims. Be authoritative but neutral. 4-6 sentences.' },
-        opening_prosecution: { speaker: 'Prosecution Lawyer', prompt: 'You are the Prosecution/Complainant\'s Lawyer. Deliver your opening statement. Present key claims, outline evidence, state what you aim to prove. Be persuasive but factual. 5-7 sentences.' },
-        opening_defense: { speaker: 'Defense Lawyer', prompt: 'You are the Defense Lawyer. Deliver your opening statement. Challenge prosecution claims, outline defense strategy. Be assertive and logical. 5-7 sentences.' },
+        opening_prosecution: { speaker: opponentRole, prompt: `You are the ${opponentRole} (AI) in an Indian courtroom. The user is representing the other side as their own lawyer. Deliver your opening statement. Present key claims or defense strategy, outline evidence. Be persuasive but factual. 5-7 sentences.` },
+        opening_defense: { speaker: opponentRole, prompt: `You are the ${opponentRole} (AI) in an Indian courtroom. The user is representing the other side as their own lawyer. Deliver your opening statement. Challenge the other side's claims or outline your defense strategy. Be assertive and logical. 5-7 sentences.` },
         evidence_presentation: { speaker: 'Judge', prompt: 'You are the AI Judge. Review and present key evidence from both sides. Summarize what each piece suggests, note gaps or inconsistencies. 6-8 sentences.' },
-        prosecution_argument: { speaker: 'Prosecution Lawyer', prompt: 'You are the Prosecution Lawyer. Present main legal arguments. Cite relevant Indian laws. Connect evidence to claims. 6-8 sentences.' },
-        defense_argument: { speaker: 'Defense Lawyer', prompt: 'You are the Defense Lawyer. Present counter-arguments. Challenge prosecution reasoning. Cite defense-favorable laws. 6-8 sentences.' },
-        judge_questions: { speaker: 'Judge', prompt: 'You are the AI Judge. Ask 3-4 critical questions to both sides that address key uncertainties. Format as numbered questions addressed to specific parties.' },
-        closing_prosecution: { speaker: 'Prosecution Lawyer', prompt: 'You are the Prosecution Lawyer. Deliver closing statement. Summarize strongest points, remind court of key evidence. 5-7 sentences.' },
-        closing_defense: { speaker: 'Defense Lawyer', prompt: 'You are the Defense Lawyer. Deliver closing statement. Summarize why defense should prevail. Be convincing. 5-7 sentences.' },
-        rebuttal_prosecution: { speaker: 'Prosecution Lawyer', prompt: 'You are the Prosecution Lawyer. Respond to the user\'s argument with a strong rebuttal. Address their points directly and counter with evidence and law. 4-6 sentences.' },
-        rebuttal_defense: { speaker: 'Defense Lawyer', prompt: 'You are the Defense Lawyer. Respond to the user\'s argument with a strong rebuttal. Address their points directly and counter with evidence and law. 4-6 sentences.' },
-        judge_response: { speaker: 'Judge', prompt: 'You are the AI Judge. Acknowledge the user\'s argument. Comment on its legal merit, ask follow-up questions if needed, and direct the proceedings. 3-5 sentences.' },
+        prosecution_argument: { speaker: opponentRole, prompt: `You are the ${opponentRole} (AI). Present main legal arguments. Cite relevant Indian laws. Connect evidence to your claims. Be thorough and persuasive. 6-8 sentences.` },
+        defense_argument: { speaker: opponentRole, prompt: `You are the ${opponentRole} (AI). Present counter-arguments. Challenge the other side's reasoning. Cite defense-favorable laws. Be thorough and persuasive. 6-8 sentences.` },
+        judge_questions: { speaker: 'Judge', prompt: 'You are the AI Judge. Ask 3-4 critical questions addressed to BOTH sides (the user who is their own lawyer, and the AI opponent lawyer). These should address key uncertainties in the case. Format as numbered questions specifying who they are directed to.' },
+        opponent_answer_judge: { speaker: opponentRole, prompt: `You are the ${opponentRole} (AI). The Judge asked questions to both sides. Answer the questions directed to your side thoroughly, citing law and evidence. 4-6 sentences.` },
+        closing_prosecution: { speaker: opponentRole, prompt: `You are the ${opponentRole} (AI). Deliver closing statement. Summarize strongest points, remind court of key evidence, and explain why your side should prevail. 5-7 sentences.` },
+        closing_defense: { speaker: opponentRole, prompt: `You are the ${opponentRole} (AI). Deliver closing statement. Summarize why your side should prevail. Be convincing. 5-7 sentences.` },
       };
 
       const config = phasePrompts[phase || ''] || { speaker: 'Judge', prompt: 'Provide a brief court proceeding update.' };
 
-      const result = await callAI([
+      const result = await callAI(LOVABLE_API_KEY, [
         {
           role: "system",
           content: `${config.prompt}
@@ -161,7 +162,7 @@ Case Analysis: ${analysis}
 Previous proceedings:
 ${prevArgs}
 
-IMPORTANT: Do NOT use any markdown formatting (no **, ##, bullets). Write in plain conversational court language. Stay strictly within Indian legal framework. Do not fabricate laws or sections.`
+IMPORTANT: Do NOT use any markdown formatting (no **, ##, bullets). Write in plain conversational court language. Stay strictly within Indian legal framework. Do not fabricate laws or sections. Remember: the user is acting as their own lawyer — there is no separate AI lawyer for the user's side.`
         },
         {
           role: "user",
@@ -174,17 +175,18 @@ IMPORTANT: Do NOT use any markdown formatting (no **, ##, bullets). Write in pla
       return jsonResponse({ speaker: config.speaker, phase, content: result.content });
     }
 
-    // ACTION: USER ARGUMENT — AI responds to user's own argument
+    // ACTION: USER ARGUMENT — AI responds to user's own argument (extra rounds)
     if (body.action === 'user_argument') {
       const { caseAnalysis, previousArguments, userRole, userMessage } = body;
       const analysis = JSON.stringify(caseAnalysis);
       const prevArgs = previousArguments?.map(a => `[${a.speaker}]: ${a.content}`).join('\n') || '';
+      const opponentRole = userRole === 'complainant' ? 'Defense Lawyer' : 'Prosecution Lawyer';
 
       // Judge acknowledges user's argument
-      const judgeResult = await callAI([
+      const judgeResult = await callAI(LOVABLE_API_KEY, [
         {
           role: "system",
-          content: `You are the AI Judge in an Indian courtroom. The ${userRole === 'complainant' ? 'complainant' : 'accused'} has just presented their own argument. Acknowledge their argument, evaluate its legal merit briefly, and direct the opposing counsel to respond. Be neutral and formal. 3-5 sentences.
+          content: `You are the AI Judge in an Indian courtroom. The ${userRole === 'complainant' ? 'complainant' : 'accused'} (who is acting as their own lawyer) has just presented an additional argument. Acknowledge their argument, evaluate its legal merit briefly, and direct the opposing counsel to respond. Be neutral and formal. 3-5 sentences.
 
 ${langInstruction}
 
@@ -206,11 +208,10 @@ IMPORTANT: Do NOT use any markdown. Plain conversational court language only.`
       if (judgeResult.error) return errorResponse(judgeResult);
 
       // Opposing counsel rebuts
-      const opposingSpeaker = userRole === 'complainant' ? 'Defense Lawyer' : 'Prosecution Lawyer';
-      const rebuttalResult = await callAI([
+      const rebuttalResult = await callAI(LOVABLE_API_KEY, [
         {
           role: "system",
-          content: `You are the ${opposingSpeaker} in an Indian courtroom. The opposing party just argued: "${userMessage}". The judge acknowledged it. Now deliver a strong, evidence-based rebuttal. Challenge their points using law and facts. 4-6 sentences.
+          content: `You are the ${opponentRole} in an Indian courtroom. The opposing party (who is acting as their own lawyer) just argued: "${userMessage}". The judge acknowledged it. Now deliver a strong, evidence-based rebuttal. Challenge their points using law and facts. 4-6 sentences.
 
 ${langInstruction}
 
@@ -234,7 +235,7 @@ IMPORTANT: Do NOT use any markdown. Plain conversational court language only.`
       return jsonResponse({
         responses: [
           { speaker: 'Judge', content: judgeResult.content, phase: 'Judge Response' },
-          { speaker: opposingSpeaker, content: rebuttalResult.content, phase: 'Rebuttal' },
+          { speaker: opponentRole, content: rebuttalResult.content, phase: 'Rebuttal' },
         ]
       });
     }
@@ -245,10 +246,10 @@ IMPORTANT: Do NOT use any markdown. Plain conversational court language only.`
       const analysis = JSON.stringify(caseAnalysis);
       const allArgs = previousArguments?.map(a => `[${a.speaker}]: ${a.content}`).join('\n\n') || '';
 
-      const result = await callAI([
+      const result = await callAI(LOVABLE_API_KEY, [
         {
           role: "system",
-          content: `You are an AI Judge delivering a final judgment in an Indian courtroom simulation. You must be completely neutral and base your judgment strictly on law, evidence, and logical reasoning.
+          content: `You are an AI Judge delivering a final judgment in an Indian courtroom simulation. The user acted as their own lawyer. You must be completely neutral and base your judgment strictly on law, evidence, and logical reasoning.
 
 ${langInstruction}
 
@@ -259,6 +260,9 @@ CASE SUMMARY:
 
 LEGAL ANALYSIS:
 [Analysis of the legal issues and applicable laws]
+
+EVALUATION OF ARGUMENTS:
+[Assessment of arguments presented by the user (acting as own lawyer) and the AI opponent lawyer]
 
 EVALUATION OF EVIDENCE:
 [Assessment of evidence presented by both sides]
@@ -280,7 +284,7 @@ Case Analysis: ${analysis}
 Full proceedings:
 ${allArgs}
 
-IMPORTANT: Be fair, neutral, and thorough. Do not fabricate legal sections.`
+IMPORTANT: Be fair, neutral, and thorough. Do not fabricate legal sections. Evaluate the user's arguments on the same standard as the AI lawyer's arguments.`
         },
         {
           role: "user",
