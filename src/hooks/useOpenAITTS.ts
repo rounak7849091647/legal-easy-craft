@@ -15,27 +15,35 @@ export const useOpenAITTS = (): OpenAITTSHook => {
   const [isLoading, setIsLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const objectUrlRef = useRef<string | null>(null);
 
   const isSupported = typeof window !== 'undefined';
 
-  const stop = useCallback(() => {
+  const cleanupAudio = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      audioRef.current.src = '';
+      audioRef.current.removeAttribute('src');
+      audioRef.current.load();
       audioRef.current = null;
     }
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
+  }, []);
+
+  const stop = useCallback(() => {
+    cleanupAudio();
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
-    // Also stop any browser TTS fallback
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
     setIsSpeaking(false);
     setIsLoading(false);
-  }, []);
+  }, [cleanupAudio]);
 
   const speak = useCallback(
     async (text: string, language: string = 'en-IN') => {
@@ -69,11 +77,12 @@ export const useOpenAITTS = (): OpenAITTSHook => {
           throw new Error(`TTS request failed: ${response.status}`);
         }
 
-        setIsLoading(false);
-
-        // Response is raw audio/mpeg binary from OpenAI TTS API
+        // Stream-friendly: get blob as it arrives
         const audioBlob = await response.blob();
         const audioUrl = URL.createObjectURL(audioBlob);
+        objectUrlRef.current = audioUrl;
+
+        setIsLoading(false);
 
         const audio = new Audio();
         audio.preload = 'auto';
@@ -82,15 +91,13 @@ export const useOpenAITTS = (): OpenAITTSHook => {
 
         audio.onended = () => {
           setIsSpeaking(false);
-          URL.revokeObjectURL(audioUrl);
-          audioRef.current = null;
+          cleanupAudio();
         };
 
         audio.onerror = (e) => {
           console.error('Audio playback error:', e);
           setIsSpeaking(false);
-          URL.revokeObjectURL(audioUrl);
-          audioRef.current = null;
+          cleanupAudio();
         };
 
         audio.onplay = () => {
@@ -110,7 +117,7 @@ export const useOpenAITTS = (): OpenAITTSHook => {
         fallbackSpeak(text, language);
       }
     },
-    [isSupported, stop]
+    [isSupported, stop, cleanupAudio]
   );
 
   return { isSpeaking, speak, stop, isSupported, isLoading };
@@ -122,7 +129,7 @@ function fallbackSpeak(text: string, language: string) {
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text.substring(0, 500));
   utterance.lang = language === 'hinglish' ? 'hi-IN' : language;
-  utterance.rate = 0.9;
+  utterance.rate = 0.95;
   utterance.pitch = 1.0;
   window.speechSynthesis.speak(utterance);
 }
