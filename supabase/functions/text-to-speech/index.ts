@@ -2,25 +2,24 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 // OpenAI TTS voices optimized for Indian languages
-// Using 'alloy' as default - it has good multilingual support
 const VOICE_MAP: Record<string, string> = {
-  'en-IN': 'nova',      // Clear female voice for Indian English
-  'hi-IN': 'onyx',      // Deep male voice, works well with Hindi
-  'hinglish': 'nova',   // Clear for mixed language
-  'ta-IN': 'shimmer',   // Expressive female voice for Tamil
-  'te-IN': 'shimmer',   // Expressive female voice for Telugu
-  'bn-IN': 'alloy',     // Balanced voice for Bengali
-  'mr-IN': 'alloy',     // Balanced voice for Marathi
-  'gu-IN': 'alloy',     // Balanced voice for Gujarati
-  'kn-IN': 'shimmer',   // Expressive for Kannada
-  'ml-IN': 'shimmer',   // Expressive for Malayalam
-  'pa-IN': 'onyx',      // Deep voice for Punjabi
-  'or-IN': 'alloy',     // Balanced for Odia
-  'as-IN': 'alloy',     // Balanced for Assamese
+  'en-IN': 'nova',
+  'hi-IN': 'onyx',
+  'hinglish': 'nova',
+  'ta-IN': 'shimmer',
+  'te-IN': 'shimmer',
+  'bn-IN': 'alloy',
+  'mr-IN': 'alloy',
+  'gu-IN': 'alloy',
+  'kn-IN': 'shimmer',
+  'ml-IN': 'shimmer',
+  'pa-IN': 'onyx',
+  'or-IN': 'alloy',
+  'as-IN': 'alloy',
 };
 
 const DEFAULT_VOICE = 'alloy';
@@ -43,9 +42,10 @@ serve(async (req) => {
     }
 
     const voice = VOICE_MAP[language] || DEFAULT_VOICE;
-    
+
     console.log(`TTS - Language: ${language}, Voice: ${voice}, Text length: ${text.length}`);
 
+    // Use tts-1 (fastest model) with opus format (smallest, lowest latency)
     const response = await fetch("https://api.openai.com/v1/audio/speech", {
       method: "POST",
       headers: {
@@ -53,39 +53,37 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "tts-1-hd",  // High definition model for best quality
+        model: "tts-1",
         input: text.substring(0, 4096),
         voice: voice,
-        response_format: "mp3",
-        speed: 1.0,
+        response_format: "opus",
+        speed: 1.05,
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error("OpenAI TTS API error:", response.status, errorText);
-      
-      // Return specific status codes for client-side handling
+
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limit exceeded", fallback: true }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      
+
       return new Response(
         JSON.stringify({ error: "TTS API error", fallback: true }),
         { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Return audio directly as binary
-    const audioBuffer = await response.arrayBuffer();
-
-    return new Response(audioBuffer, {
+    // Stream audio directly back — no buffering the entire response
+    return new Response(response.body, {
       headers: {
         ...corsHeaders,
-        "Content-Type": "audio/mpeg",
+        "Content-Type": "audio/ogg",
+        "Transfer-Encoding": "chunked",
       },
     });
   } catch (error) {
